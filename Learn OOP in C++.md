@@ -58,3 +58,7 @@ Friend Functions; A friend function is an independent function which has access 
 
 ## Data Hiding
 
+Data hiding is an essential process in the OOP cycle.
+
+In layman’s terms, data hiding refers to the concept of **hiding the inner workings of a class** and simply providing an **interface** through which the outside world can interact with the class without knowing what’s going on inside.
+
