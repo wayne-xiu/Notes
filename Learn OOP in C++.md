@@ -1,5 +1,7 @@
 # Learn Object-Oriented Programming in C++
 
+[toc]
+
 ## Introduction
 
  **Object-oriented** programming is based on the idea of an `object`. An `object` is an entity with some *data* and *operations*. Data is also referred to as *properties* of the object whereas operations include accessing and modifying those  properties along with other functions that depict the behavior of the  object. 
@@ -100,4 +102,14 @@ class Honda: public Vehicle, public Cars
 class Cars: public Vehicle
 class Honda: public Cars
 ```
+
+## Polymorphism
+
+exhibits many forms or behaviors; overriding
+
+Polymorphism only works with a pointer and reference types (a base class pointers points to the derived class objects)
+
+A virtual function is a member function which is declared within the base class and is *overridden* by the derived class. When referring to a derived class object using a pointer or a reference to the base class, we can call a virtual function for that object and execute the derived class's version of the function. Virtual functions ensure the correct function is called for an object. They are mainly used to achieve Runtime polymorphism (template achieves Compile time polymorphism)
+
+abstract class and pure virtual function
 
