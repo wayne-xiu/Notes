@@ -62,3 +62,42 @@ Data hiding is an essential process in the OOP cycle.
 
 In layman’s terms, data hiding refers to the concept of **hiding the inner workings of a class** and simply providing an **interface** through which the outside world can interact with the class without knowing what’s going on inside.
 
+Data hiding can be divided into two primary components:
+
+1. Encapsulation
+2. Abstraction
+
+![data hiding](Media/data hiding.png)
+
+Abstraction focuses on revealing only the relevant parts of the application while keeping the inner implementation hidden.
+
+abstraction using classes; abstraction using header files
+
+## Inheritance
+
+HAS-A and IS-A relationship
+
+```c++
+class derivedClassName : modeOfInheritance baseClassName
+    // mode: public, private, protected
+```
+
+Protected and public data members are accessible to derived classes
+
+Construction order: base -> derived;
+
+Destruction order: derived -> base
+
+![modes of inheritance](Media/modes of inheritance.png)
+
+Multiple inheritance and multilevel inheritance
+
+```c++
+class Honda: public Vehicle, public Cars
+```
+
+```c++
+class Cars: public Vehicle
+class Honda: public Cars
+```
+
