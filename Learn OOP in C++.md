@@ -69,7 +69,7 @@ Data hiding can be divided into two primary components:
 1. Encapsulation
 2. Abstraction
 
-![data hiding](Media/data hiding.png)
+![dataHiding](Media/dataHiding.png)
 
 Abstraction focuses on revealing only the relevant parts of the application while keeping the inner implementation hidden.
 
@@ -90,7 +90,7 @@ Construction order: base -> derived;
 
 Destruction order: derived -> base
 
-![modes of inheritance](Media/modes of inheritance.png)
+![modesOfInheritance](Media/modesOfInheritance.png)
 
 Multiple inheritance and multilevel inheritance
 
@@ -122,7 +122,7 @@ Composition, aggregation and association are used to link different classes toge
 - Part-of (dependent)
 - Has-a (independent with reference)
 
-![part of](Media/part of.png)
+![part-of](Media/part-of.png)
 
 ![has-a](Media/has-a.png)
 
