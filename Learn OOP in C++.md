@@ -113,3 +113,30 @@ A virtual function is a member function which is declared within the base class 
 
 abstract class and pure virtual function
 
+## Composition, Aggregation and Association
+
+OOD (object-oriented design) deals with the use of different class objects to create the design of an application.
+
+Composition, aggregation and association are used to link different classes together through a variety of relationships. 
+
+- Part-of (dependent)
+- Has-a (independent with reference)
+
+![part of](Media/part of.png)
+
+![has-a](Media/has-a.png)
+
+Composition is accessing other classes objects in your class and owner class owns the object and is responsible for its lifetime. Composition relationships are Part-of relationships
+
+> Note: In composition, the lifetime of the owned object depends on the lifetime of the owner
+
+Aggregation follows the Has-a model.
+
+> Note: In aggregation, the lifetime of the owned object does not depend on the lifetime of the owner
+
+In composition, the parent **contains** a child object. This bounds the child to its parent. In aggregation, the parent only contains a **reference** to the child, which removes the child’s dependency (a looser relationship, e.g. people dies, but county still exists).
+
+Association is the relationship between the unrelated objects of the classes. Example is student and teacher objects sharing a connection but can exist independently. Association is Has-a relationship
+
+
+
