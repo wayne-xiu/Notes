@@ -29,3 +29,43 @@ Route-finding: Start on the goal, keep marking squares in the maze in order of i
 
 ## Binary Search
 
+Repeatedly dividing in half the portion of the list
+
+```c++
+int binarySearch(vector<int>& arr, int goal) {
+    size_t min = 0;
+    size_t max = arr.size()-1;
+    size_t mid;
+    while (min <= max) {
+        mid = (min+max)/2;
+        if (arr[mid] < goal)
+            min = mid + 1;
+        else if (arr[mid] > goal)
+            max = mid - 1;
+        else if (arr[mid] == goal)
+            return mid;
+    }
+    return -1;
+}
+```
+
+Binary search time complexity: $log_2(n)$
+
+## Asymptotic Analysis
+
+- big-$\Theta$: an asymptotically tight bound on the running time
+- big-O: asymptotic upper bounds (may be worse than worst case)
+- big-$\Omega$: asymptotic lower bounds (run time at least)
+
+Note that exponential function $a^n$ where (a>1) grows faster than any polynomial $n^b$
+
+big-$\Theta$ notation asymptotically bound the growth of a running time to within constant factors above and below.
+
+Because big-O notation gives only an asymptotic upper bound, and not an  asymptotically tight bound, we can make statements that at first blush  seem incorrect, but are technically correct. For example, it is  absolutely correct to say that binary search runs in **O(n)** time. That's because the running time grows no faster than a constant times n. In fact, it grows slower. 
+
+## Selection Sort
+
+swap function
+
+Find minimum in subarray
+
