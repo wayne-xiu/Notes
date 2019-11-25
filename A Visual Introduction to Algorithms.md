@@ -69,3 +69,7 @@ swap function
 
 Find minimum in subarray
 
+Selection sort time complexity: $\Theta(n^2)$
+
+## Insertion Sort
+
