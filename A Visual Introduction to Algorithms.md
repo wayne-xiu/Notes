@@ -73,3 +73,14 @@ Selection sort time complexity: $\Theta(n^2)$
 
 ## Insertion Sort
 
+Sum up the running times for insertion sort:
+
+- worst case: $\Theta(n^2)$
+- Best case: $\Theta(n)$
+- Average case for random array: $\Theta(n^2)$
+- "Almost sorted" case: $\Theta(n)$
+
+note: the worst case for insertion sort is a reverse-sorted array
+
+## Recursion Algorithms
+
