@@ -84,3 +84,26 @@ note: the worst case for insertion sort is a reverse-sorted array
 
 ## Recursion Algorithms
 
+base case and recursive case
+
+basic idea behind recursive algorithms: To solve a problem, solve a subproblem that is a smaller instance of the problem, and then use the solution to that smaller instance to solve the original problem
+
+is a string palindrome
+
+```c++
+bool isPalindrome(std::string str) {
+  // base case #1
+  if (str.size() == 0 || str.size() == 1)
+    return true;
+
+  // base case #2
+  if (str[0] != str[str.size()-1])
+    return false;
+
+  // recursive case
+  return isPalindrome(str.substr(1, str.size()-2));
+}
+```
+
+## Towers of Hanoi
+
