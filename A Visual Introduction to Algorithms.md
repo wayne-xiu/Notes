@@ -107,3 +107,43 @@ bool isPalindrome(std::string str) {
 
 ## Towers of Hanoi
 
+Solve the towers of Hanoi recursively.
+
+- n == 1, move 1
+- n >= 2
+  - recursively solve the subproblem of moving disks 1 through n-1 to spare peg
+  - move disk n (biggest) to the desired peg
+  - recursively solve the subproblem of moving disks 1 through n-1 from spare peg to the desired peg
+- $2^n-1 = (2^{n-1}-1)*2+1$
+
+```c++
+// two helper functions.
+// 1) moveDisk(fromPeg, toPeg);
+//    It moves the top disk from the fromPeg to the toPeg.
+// 2) getSparePeg(fromPeg, toPeg);
+//    It returns the remaining peg.
+void moveDisk(int fromPegId, int toPegId);
+int getSparePeg(int peg1, int peg2);
+
+void solveHanoi(int disks, int fromPeg, int toPeg) {
+    if (disks == 0)
+        return;
+    if (disks == 1)
+        moveDisk(fromPeg, toPeg);
+    if (disks > 1) {
+        int sparePeg = getSparePeg(fromPeg, toPeg);
+        solveHanoi(disks-1, fromPeg, sparePeg);
+        moveDisk(fromPeg, toPeg);
+        solveHanoi(disks-1, sparePeg, toPeg);
+    }
+}
+```
+
+## Merge Sort
+
+![SortingComplexity](Media/SortingComplexity.png)
+
+Both merge sort and quicksort uses the paradigm, divide-and-conquer, which based on recursion to break a problem into subproblems that are similar to the original problem, recursively solves the subproblems and finally combines the solution to the subproblems to solve the original problem.
+
+divide, conquer and combine
+
