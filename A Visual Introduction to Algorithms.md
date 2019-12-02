@@ -147,3 +147,98 @@ Both merge sort and quicksort uses the paradigm, divide-and-conquer, which based
 
 divide, conquer and combine
 
+```c++
+// Takes in an array and recursively merge sorts it
+void mergeSort(vector<int>& array, int p, int r) {
+    if (p < r) {
+        int mid = p + (r-p)/2;
+        mergeSort(array, p, mid);
+        mergeSort(array, mid+1, r);
+        //merge(&array[0], p, mid, r);
+        merge(array, p, mid, r);
+    }
+};
+```
+
+Linear-time merging
+
+$\Theta(n)$ when merging n elements
+
+```c++
+void merge(vector<int>& array, int p, int q, int r) {
+    int i, j, k;
+    int n1 = q-p+1;
+    int n2 = r-q;
+	
+    // create left, right temp arrays and copy array data [p, q], [q+1, r]
+    int L[n1], R[n2];
+    for (i = 0; i < n1; ++i)
+        L[i] = array[p+i];
+    for (j = 0; j < n2; ++j)
+        R[j] = array[q+1+j];
+
+    // compare and copy back to array
+    i = 0;
+    j = 0;
+    k = p;
+
+    while (i < n1 && j < n2) {
+        if (L[i] <= R[j]) {
+            array[k] = L[i];
+            i++;
+        }
+        else {
+            array[k] = R[j];
+            j++;
+        }
+        k++;
+    }
+    
+    // copy the remaining elements of L, if there are any
+    while ( i < n1) {
+        array[k] = L[i];
+        i++;
+        k++;
+    }
+    // copy the remaining elements of R, if there are any
+    while (j < n2) {
+        array[k] = R[j];
+        j++;
+        k++;
+    }
+}
+```
+
+Computer scientists draw trees upside-down from how actual trees grow. A tree is a graph with no cycles (paths that start and end at the same place). Convention is to call the vertices in a tree its nodes.
+
+Running time of $\Theta(n lg n)$
+
+Note, during merging, the entire array being sorted are copied and merge sort does not work in place.
+
+## Quick Sort
+
+Like merge sort, quicksort uses divide-and-conquer, and so it's a recursive algorithm. The way that quicksort uses divide-and-conquer is a little different from how merge sort does. In merge sort, the divide step does hardly anything, and all the real work happens in the combine step. Quicksort is the opposite: all the real work happens in the divide step. In fact, the combine step in quicksort does absolutely nothing.
+
+Quicksort works in place. And its worst-case running time is as bad as selection sort and insertion sort: $\Theta(n^2)$; but average-case running time is $\Theta(n lgn)$. The constant factor hidden in the big-$\Theta$ notation for qicksort is quite good. In practice, quicksort outperforms merge sort, and it significantly outperforms selection sort and insertion sort.
+
+1. Partitioning the array using the rightmost element as the pivot such that all elements that are less than or equal to the pivot are to its left
+2. Conquer by recursively sorting the left and right sub-arrays
+3. Combine by doing nothing
+
+Base case is subarray of size 0 or 1. In merge sort, you never see a subarray with no elements, but it is possible in quicksort.
+
+```c++
+void quickSort(vector<int>& array, int p, int r) {
+    if (p < r) {
+        // pivot is partitioning index, array[pivot] is now at right place
+        int pivot = partition(array, p, r);
+        quickSort(array, p, pivot-1);
+        quickSort(array, pivot+1, r);
+    }
+};
+```
+
+Linear-time partitioning
+
+The real work of quicksort happens during the divide step, which partitions subarray around a pivot.
+
