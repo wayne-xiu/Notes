@@ -240,5 +240,72 @@ void quickSort(vector<int>& array, int p, int r) {
 
 Linear-time partitioning
 
-The real work of quicksort happens during the divide step, which partitions subarray around a pivot.
+The real work of quicksort happens during the divide step, which partitions subarray around a pivot. We can choose any element in the subarray as the pivot, but in practice, we usually choose the rightmost element as the pivot for easy implementation.
+
+We maintain two indices q and j into the subarray that divide it up into four groups.
+
+- The elements in array [p, q-1] are "group L", consisting of elements known to be less than or equal to the pivot
+- The elements in array [q, j-1] are "group G", consisting of elements known to be greater than the pivot
+- The elements in array [j, r-1] are "group U", consisting of elements whose relationship to the pivot is unknown, because they have not yet been compared
+- The elements in array [r] is "group P", the pivot
+
+![quickSort groups](Media/quickSort groups.png)
+
+Initially, j==q==p. At each step, we compare A[j], the leftmost element in group U with the pivot. If A[j] is greater than the pivot, then we just **increment j**, so that the line dividing group G and U slides over one position to the right.
+
+![quickSort groups-2](Media/quickSort groups-2.png)
+
+If instead A[j] is less than or equal to the pivot, then we **swap A[j] with A[q]**  (the leftmost element in Group G), **increment j, and increment q**, thereby sliding the line dividing group L and G and the line dividing groups G and U over one position to the right. (note: swap means the sorting is unstable?)
+
+Once we get to the pivot, group U is empty. We swap the pivot with the leftmost element in group G (**swap A[r] with A[q]**). This swap puts the pivot between L and G, and it does the right thing even if group L or group G is empty. (If group L is empty, then q never increased from its initial value of p, and so the pivot moves to the leftmost position in the subarray. If group G is empty, then q was incremented every time j was, and so once j reaches the index r of the pivot, q equal r, and the swap leave the pivot if the rightmost position of the subarray.) The partition function that implements this idea also returns the index q where it ended up putting the pivot, so that the quicksort function, which calls it, knows where the partitions are.
+
+- Each element A[j] is compared once with the pivot
+- A[j] may or may not be swapped with A[q], q may or may not be incremented (happens when less, equal)
+- j is always incremented
+
+The time to partition is $\Theta(n)$: linear-time partitioning
+
+```c++
+int partition(vector<int>& array, int p, int r) {
+    // Compare array[j] with array[r], for j = p, p+1,...r-1
+    // maintaining that:
+    //  array[p..q-1] are values known to be <= to array[r]
+    //  array[q..j-1] are values known to be > array[r]
+    //  array[j..r-1] haven't been compared with array[r]
+    // If array[j] > array[r], just increment j.
+    // If array[j] <= array[r], swap array[j] with array[q],
+    //   increment q, and increment j.
+    // Once all elements in array[p..r-1]
+    //  have been compared with array[r],
+    //  swap array[r] with array[q], and return q.
+    int pivot = array[r];
+    int q = p, j = p;
+
+    for (j = p; j <r; ++j) {
+        if (array[j] <= pivot) {
+            swap(array, j, q);
+            q++;
+        }  // no else needed here; j increment is what is needed
+    }
+    swap(array, r, q);
+
+    return q;
+}
+```
+
+Analysis of quicksort
+
+As in merge sort, the time for a given recursive class on an n-element subarray is $\Theta(n)$. In merge sort, that was the time for merging, but in quick sort it's the time for partitioning.
+
+- Worst-case running time: the pivot chosen is either the smallest or largest. When quicksort always have the most unbalanced partitions possible, the total partitioning time is $\Theta(n^2)$: $cn + c(n-1) + c(n-2) + ... + 2c = c/2*(n-2)(n+1)$
+- Best-case running time: occurs when the partitions are as evenly balanced as possible. The running time: $\Theta(nlgn)$
+- Average-case running time: needs some mathematical skills to get that the average-case running time is also $\Theta(nlgn)$. example of a 3-to-1 split. $log_{4/3}n = lgn/lg(4/3)$; longer but the running time is still $\Theta(nlgn)$
+
+Randomized quicksort: randomly choose an element as the pivot instead of the rightmost (if swap with the current rightmost element, then it's the same as earlier analysis).
+
+We can improve the chance of getting a split that's at worst 3-to-1. Randomly choose 3 elements as pivot candidates and select the *median*
+
+## Graphs
+
+
 
