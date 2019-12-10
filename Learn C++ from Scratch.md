@@ -58,5 +58,24 @@ int main()
 
 ## Classes and Inheritance
 
+Independent, self-managing modules and their interactions
+
+use public member functions to access and manipulate private member variables
+
+Constructors
+
+Inherited new class is a specialized version of the existing base class. Inheritance establishes an "is a" relationship between classes
+
+Polymorphism & Virtual Functions
+
+- A virtual function is a member function which is declared in the base class using the keyword virtual and is re-defined (overriden) by the derived class
+- The term Polymorphism means the ability to take many forms. It occurs if there is a hierarchy of classes which are all related to each other by inheritance
+
+Without virtual function, the base class pointer to derived class object would only call the function defined in the base. This happens due **static linkage** which means the call is getting set only once by the compiler which is in the base class.
+
+Virtual function is called according to the actual type of the object it referred to
+
+
+
 
 
