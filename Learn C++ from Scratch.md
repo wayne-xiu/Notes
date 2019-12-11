@@ -75,6 +75,50 @@ Without virtual function, the base class pointer to derived class object would o
 
 Virtual function is called according to the actual type of the object it referred to
 
+## Templates
+
+Templates are the mechanism by which C++ implements the generic concept. compile time polymorphism
+
+```c++
+template<typename Type>
+template<class Type>
+```
+
+Type is our generic data type's name, and when the template is to be used, it would be the same as if Type was a typedef for your datatype
+
+template classes
+
+When the definition of the member function is outside the class, we have to add the prefix (template<typename T>) for template beforehand (again).
+
+```c++
+#include <iostream>
+using namespace std;
+
+template <class T>
+class Score
+{
+private:
+    T value;
+public:
+    static int counter;
+    Score()  {counter++;}
+};
+
+template<class T>
+int Score<T>::counter = 0;
+
+int main()
+{
+    Score<int> x;
+    Score<int> y;
+    Score<double> z;
+    cout << Score<int>::counter<< endl;
+    cout << Score<double>::counter<< endl;
+    return 0;
+}
+// output of above code is 2, 1
+```
+
 
 
 
