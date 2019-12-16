@@ -63,5 +63,72 @@ List of common complexities
 - nested for-loop with index modification: $O(n)$ - TODO
 - loops with log(n) time complexity: $O(log_k(n))$
 
+## Introduction to Arrays
+
+same data element type; contiguous in memory; static (compile time, on the stack) or dynamic (run time, on the heap) array no bounds checking
+
+dynamic arrays in memory are stored using a reference pointer which points to the first element of the array. For example, if we create int* arr = new int[3], then the variable will point to the start of the array. Memory assigned to arr will be on the stack. The memory created by new keyword will be on heap.
+
+```c++
+// Write an ArrayList that could resize and insert element
+class ArrayList {
+    int* arr;
+    int num_elements;
+    int capacity;
+public:
+    ArrayList(int size) {
+        arr = new int[size];
+        num_elements = 0;
+        capacity = size;
+    }
+    void insert(int val) {
+        if (num_elements >= capacity)
+            resize();
+        arr[num_elements] = val;
+        num_elements++;
+    }
+    void resize() {
+        int* temp = new int[capacity*2];
+        capacity *= 2;
+        for (int i = 0; i < num_elements; ++i)
+            temp[i] = arr[i];
+        delete[] arr;
+        arr = temp;
+    }
+    int length() {
+        return num_elements;
+    }
+    int getAt(int index) {
+        return arr[index];
+    }
+    void print() {
+        for (int i = 0; i < num_elements; ++i)
+            cout << arr[i] << " ";
+        cout << endl;
+    }
+};
+```
+
+
+
+Multidimensional arrays
+
+2D array as an array of the one-dimensional array
+
+```c++
+data_type arr[row][col];
+// dynamic
+datatype** arr = new datatype* [row];
+for (int i = 0; i < row; ++i)
+    arr[i] = new datatype[col];
+
+// free memory
+for (int i = 0; i < row; ++i)
+    delete[] arr[i];
+delete[] arr;
+```
+
+
+
 
 
