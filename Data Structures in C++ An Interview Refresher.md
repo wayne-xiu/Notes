@@ -130,5 +130,28 @@ delete[] arr;
 
 
 
+## Introduction to Linked Lists
+
+```c++
+class Node {
+    int data;
+    Node* nextElement;
+public:
+    Node() {
+        nextElement = nullptr;
+    }
+};
+
+class LinkedList {
+    Node* head;
+public:
+    LinkedList() {
+        head = nullptr;
+    }
+}
+```
+
+For any operations on the list, we need to traverse it from the head.
+
 
 
