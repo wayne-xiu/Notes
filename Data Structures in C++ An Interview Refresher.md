@@ -151,7 +151,13 @@ public:
 }
 ```
 
-For any operations on the list, we need to traverse it from the head.
+For any operations on the list, we need to traverse it from the head. The main difference between arrays and linked lists is memory allocation. In linked lists, there is no concept of indexing.
+
+> Note: even when a linked list is empty, the head node must always exist
+
+Insertion at head, tail and any n-th index
+
+
 
 The main difference between array and linked list is memory allocation.
 
