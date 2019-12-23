@@ -155,9 +155,9 @@ For any operations on the list, we need to traverse it from the head. The main d
 
 > Note: even when a linked list is empty, the head node must always exist
 
+The main difference between array and linked list is memory allocation.
+
 Insertion at head, tail and any n-th index
 
 
-
-The main difference between array and linked list is memory allocation.
 
