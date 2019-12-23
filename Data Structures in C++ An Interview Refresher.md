@@ -153,5 +153,5 @@ public:
 
 For any operations on the list, we need to traverse it from the head.
 
-
+The main difference between array and linked list is memory allocation.
 
