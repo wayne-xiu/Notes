@@ -140,7 +140,7 @@ Pizza with pan baked dough, hot sauce and pepperoni+salami topping. Mmm.
 
 ### Factory
 
-A utility class that creates an instance of class from a family of derived classes.
+A utility class that creates an instance of a class from a family of derived classes.
 
 ### Abstract Factory
 
@@ -156,7 +156,85 @@ We want to decide at run time what object is to be created based on some configu
 
 Define an interface for creating an object, but let subclasses decide which class to instantiate. Factory Method lets a class defer instantiation to subclasses.
 
+Everyone who uses the factory will only care about the interface, which should remain consistent throughout the life of the application.
+
+```c++
+#include <stdexcept>
+#include <iostream>
+#include <memory>
+
+using namespace std;
+
+// 2: Abstract Factory
+class Pizza {
+public:
+    virtual int getPrice() const = 0;
+    virtual ~Pizza() = default;
+};
+class HamAndMushroomPizza: public Pizza {
+public:
+    virtual int getPrice() const override { return 850; }
+    virtual ~HamAndMushroomPizza() {}
+};
+class DeluxePizza: public Pizza {
+public:
+    virtual int getPrice() const override { return 1050; }
+    virtual ~DeluxePizza() = default;
+};
+class HawaiianPizza: public Pizza {
+public:
+    virtual int getPrice() const override { return 1150; }
+    virtual ~HawaiianPizza() = default;
+};
+
+class PizzaFactory {
+public:
+    enum PizzaType {
+        HamMushroom,
+        Deluxe,
+        Hawaiian
+    };
+    static unique_ptr<Pizza> createPizza(PizzaType pizzaType) {
+        switch(pizzaType) {
+        case HamMushroom: return make_unique<HamAndMushroomPizza>();
+        case Deluxe: return make_unique<DeluxePizza>();
+        case Hawaiian: return make_unique<HawaiianPizza>();
+        }
+        throw "invalid pizza type";
+    }
+};
+void pizza_information(PizzaFactory::PizzaType pizzatype) {
+    unique_ptr<Pizza> pizza = PizzaFactory::createPizza(pizzatype);
+    cout << "Pirce of " << pizzatype << " is " << pizza->getPrice() << endl;
+}
+
+
+int main()
+{
+    // 2: Abstract Factory
+    pizza_information(PizzaFactory::HamMushroom);
+    pizza_information(PizzaFactory::Deluxe);
+    pizza_information(PizzaFactory::Hawaiian);
+
+    return 0;
+}
+```
+
+
+
 ### Prototype
+
+A prototype pattern is used when the type of objects to create is determined by a prototypical instance, which is cloned to produce new object. This pattern is used, for example, when the inherent cost of creating a new object in the standard way (e.g. using new) is prohibitively expensive for a given application.
+
+#### Implementation
+
+Declare an abstract base class that specifies a pure virtual clone() method. Any class that needs a "polymorphic constructor" capability derives itself from the abstract base class, and implements the clone() operation
+
+```c++
+
+```
+
+The client code first invokes the factory method. This factory method, depending on the parameter, finds out the concrete class. On this concrete class, the clone() method is called and the object is returned by the factory method.
 
 ### Singleton
 
