@@ -231,18 +231,244 @@ A prototype pattern is used when the type of objects to create is determined by 
 Declare an abstract base class that specifies a pure virtual clone() method. Any class that needs a "polymorphic constructor" capability derives itself from the abstract base class, and implements the clone() operation
 
 ```c++
+#include <iostream>
+#include <memory>
+#include <unordered_map>
+#include <string>
 
+using namespace std;
+
+class Record {
+public:
+    virtual ~Record() {}
+    virtual void print() = 0;
+    virtual unique_ptr<Record> clone() = 0;
+};
+
+class CarRecord: public Record {
+private:
+    string m_carName;
+    int m_ID;
+public:
+    CarRecord(string carName, int ID): m_carName(carName), m_ID(ID) {}
+    void print() override {
+        cout << "Car Record" << endl
+             << "Name: " << m_carName << endl
+             << "Number: " << m_ID << endl;
+    }
+    unique_ptr<Record> clone() override {
+        return make_unique<CarRecord>(*this);
+    }
+};
+class BikeRecord: public Record {
+private:
+    string m_bikeName;
+    int m_ID;
+public:
+    BikeRecord(string bikeName, int ID): m_bikeName(bikeName), m_ID(ID) {}
+    void print() override {
+        cout << "Bike Record" << endl
+             << "Name: " << m_bikeName << endl
+             << "Number: " << m_ID << endl;
+    }
+    unique_ptr<Record> clone() override {
+        return make_unique<BikeRecord>(*this);
+    }
+};
+class PersonRecord: public Record {
+private:
+    string m_personName;
+    int m_age;
+public:
+    PersonRecord(string personName, int age): m_personName(personName), m_age(age) {}
+    void print() override {
+        cout << "Person Record" << endl
+             << "Name: " << m_personName << endl
+             << "Age: " << m_age << endl;
+    }
+    unique_ptr<Record> clone() override {
+        return make_unique<PersonRecord>(*this);
+    }
+};
+
+enum RecordType {
+    CAR,
+    BIKE,
+    PERSON
+};
+class RecordFactory {
+private:
+    unordered_map<RecordType, unique_ptr<Record>, hash<int> > m_records;
+public:
+    RecordFactory() {
+        m_records[CAR] = make_unique<CarRecord>("Ferrari", 5050);
+        m_records[BIKE] = make_unique<BikeRecord>("Yamaha", 2525);
+        m_records[PERSON] = make_unique<PersonRecord>("Tom", 25);
+    }
+    unique_ptr<Record> createRecord(RecordType recordType) {
+        return m_records[recordType]->clone();
+    }
+};
+
+int main()
+{
+    RecordFactory recordFactory;
+    auto record = recordFactory.createRecord(CAR);
+    record->print();
+    record = recordFactory.createRecord(BIKE);
+    record->print();
+    record = recordFactory.createRecord(PERSON);
+    record->print();
+
+    return 0;
+}
 ```
 
 The client code first invokes the factory method. This factory method, depending on the parameter, finds out the concrete class. On this concrete class, the clone() method is called and the object is returned by the factory method.
 
+The client, instead of writing code that invokes the new operator on a hard-wired class name, calls the clone() member function on the prototype, class a factory member function with a parameter designating the particular concrete derived class desired, or invokes the clone() member function through some mechanism provided by another design pattern.
+
 ### Singleton
+
+The Singleton pattern ensures that a class has only one instance and provides a global point of access to that instance.
+
+#### Check list
+
+- Define a private static attribute in the "single instance" class
+- Define a public static accessor function in the class
+- Do "lazy initialization" (creation on first use) in the accessor function
+- Define all constructors to be protected or private
+- Clients may only use the accessor function to manipulate the Singleton
+
+Like a global variable, the Singleton exists outside of the scope of any functions. Traditional implementation uses a static member function of the Singleton class, which will create a single instance of the Singleton class on the first call, and forever return that instance.
+
+With use of the singleton, the first time the object is accessed, the object will also be created. You now have an object which will always exist, in relation to being used, and will never exist if never used.
+
+```c++
+/* Place holder for thread synchronization mutex */
+class Mutex {
+    // placeholder for code to create, use and free a mutex
+};
+/* Place holder for thread ssynchronization lock */
+class Lock {
+public:
+    Lock(Mutex& m): mutex(m) { /* placeholder code to acquire the mutex */}
+    ~Lock() { /* placeholder code to release the mutex */ }
+private:
+    Mutex& mutex;
+};
+class Singleton {
+public:
+    static Singleton* GetInstance();
+    int a;
+    ~Singleton() { cout << "In Destructor" << endl; }
+private:
+    Singleton(int _a): a(_a) { cout << "In Constructor" << endl; }
+    static Mutex mutex;
+    // not defined to prevent copying
+    Singleton(const Singleton& other);
+    Singleton& operator= (const Singleton& other);
+};
+
+Mutex Singleton::mutex;
+
+Singleton* Singleton::GetInstance() {
+    Lock lock(mutex);
+    cout << "Get Instance" << endl;
+
+    static Singleton inst(1);
+    return &inst;
+}
+
+int main()
+{
+    Singleton* singleton = Singleton::GetInstance();
+    cout << "The value of the singleton: " << singleton->a << endl;
+    
+    Singleton* singleton2 = Singleton::GetInstance();
+    cout << "The value of the singleton: " << singleton2->a << endl;
+
+    return 0;
+}
+```
+
+
 
 ## Structural Patterns
 
 ### Adapter
 
+Convert the interface of a class into another interface that clients expect. Adapter lets classes work together that couldn't otherwise because of incompatible interfaces.
+
+```c++
+// Adapter
+class Hindu {  // Abstract target
+public:
+    virtual ~Hindu() = default;
+    virtual void performsHinduRitual() const = 0;
+};
+class HinduFemale: public Hindu {  // Concrete target
+public:
+    virtual void performsHinduRitual() const override {
+        cout << "Hindu girl performs Hindu ritual." << endl;
+    }
+};
+
+class Muslim {  // Abstract adapter
+public:
+    virtual ~Muslim() = default;
+    virtual void performMuslimRitual() const = 0;
+};
+class MuslimFemale: public Muslim {  // Concrete adapter
+public:
+    virtual void performMuslimRitual() const override {
+        cout << "Muslim gril performs Muslim ritual." << endl;
+    }
+};
+
+class HinduRitual {
+public:
+    void carryOutRitual (Hindu* hindu) {
+        cout << "On with the Hindu rituals!" << endl;
+        hindu->performsHinduRitual();
+    }
+};
+
+class HinduAdapter: public Hindu {  // Adapter
+private:
+    Muslim* muslim;
+public:
+    HinduAdapter(Muslim* m): muslim(m) {}
+    virtual void performsHinduRitual() const override {
+        muslim->performMuslimRitual();
+    }
+};
+
+int main()
+{
+    HinduFemale* hinduGirl = new HinduFemale;
+    MuslimFemale* muslimGirl = new MuslimFemale;
+
+    HinduRitual hinduRitual;
+    // hinduRitual.carryOutRitual(muslimGirl);  // won't compile
+    HinduAdapter* adaptedMuslim = new HinduAdapter(muslimGirl);
+
+    hinduRitual.carryOutRitual(hinduGirl);
+    hinduRitual.carryOutRitual(adaptedMuslim);
+
+    delete adaptedMuslim;
+    delete muslimGirl;
+    delete hinduGirl;
+
+    return 0;
+}
+```
+
+
+
 ### Bridge
+
+The Bridge Pattern is used to separate out the interface from its implementation.
 
 ### Composite
 
