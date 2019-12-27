@@ -602,9 +602,228 @@ int main()
 
 The decorator pattern helps to attach additional behavior or responsibilities to an object dynamically. Decorators provide a flexible alternative to subclassing for extending functionality. This is also called "wrapper".
 
+```c++
+// Decorator
+class Car {  // Abstract base class
+protected:
+    string _str;
+public:
+    Car() { _str = "Unknown Car"; }
+    virtual string getDescription() { return _str; }
+    virtual double getCost() = 0;
+    virtual ~Car() { cout << "~Car()\n"; }
+};
+class OptionsDecorator: public Car {  // Decorator base class
+public:
+    virtual string getDescription() = 0;
+    virtual ~OptionsDecorator() { cout << "~OptionsDecorator()\n"; }
+};
+
+class CarModel1: public Car {
+public:
+    CarModel1() { _str = "CarModel1"; }
+    virtual double getCost() override {
+        return 31000.23;
+    }
+    ~CarModel1() { cout << "~CarModel1()\n"; }
+};
+
+class Navigation: public OptionsDecorator {
+private:
+    Car* _b;
+public:
+    Navigation(Car* b): _b(b) {}
+    string getDescription() override {
+        return _b->getDescription() + ", Navigation";
+    }
+    double getCost() {
+        return 300.56+_b->getCost();
+    }
+    ~Navigation() {
+        cout << "~Navigation()\n";
+        delete _b;
+    }
+};
+class PremiumSoundSystem: public OptionsDecorator {
+private:
+    Car* _b;
+public:
+    PremiumSoundSystem(Car* b): _b(b) {}
+    string getDescription() override {
+        return _b->getDescription() + ", PremiumSoundSystem";
+    }
+    double getCost() {
+        return 0.3+_b->getCost();
+    }
+    ~PremiumSoundSystem() {
+        cout << "~PremiumSoundSystem()\n";
+        delete _b;
+    }
+};
+class ManualTransmission: public OptionsDecorator {
+private:
+    Car* _b;
+public:
+    ManualTransmission(Car* b): _b(b) {}
+    string getDescription() override {
+        return _b->getDescription() + ", ManualTransmission";
+    }
+    double getCost() {
+        return 0.3+_b->getCost();
+    }
+    ~ManualTransmission() {
+        cout << "~ManualTransmission()\n";
+        delete _b;
+    }
+};
+
+int main()
+{
+    Car* b = new CarModel1();
+    cout << "Base model of " << b->getDescription() << " cost $" << b->getCost() << endl;
+
+    b = new Navigation(b);
+    cout << b->getDescription() << " will cost you $" << b->getCost() << endl;
+    b = new PremiumSoundSystem(b);
+    cout << b->getDescription() << " will cost you $" << b->getCost() << endl;
+    b = new ManualTransmission(b);
+    cout << b->getDescription() << " will cost you $" << b->getCost() << endl;
+
+    delete b;
+
+    return 0;
+}
+
+```
+
+
+
 ### Facade
 
+The Facade Pattern hides the complexities of the system by providing an interface to the client from where the client can access the system on a unified interface. Faced defines a higher-level interface that makes the subsystem easier to use. For instance making one class method perform a complex process by calling several other classes.
+
+```c++
+// Facade
+class Alarm {
+public:
+    void alarmOn() {
+        cout << "Alarm is on and house is secured" << endl;
+    }
+    void alarmOff() {
+        cout << "Alarm is off and you can go into the house" << endl;
+    }
+};
+class Ac {
+public:
+    void acOn() {
+        cout << "AC is on" << endl;
+    }
+    void acOff() {
+        cout << "AC is off" << endl;
+    }
+};
+class Tv {
+public:
+    void tvOn() {
+        cout << "TV is on" << endl;
+    }
+    void tvOff() {
+        cout << "TV is off" << endl;
+    }
+};
+
+class HouseFacde {
+private:
+    Alarm alarm;
+    Ac ac;
+    Tv tv;
+public:
+    void goToWork() {
+        ac.acOff();
+        tv.tvOff();
+        alarm.alarmOn();
+    }
+    void comeHome() {
+        alarm.alarmOff();
+        ac.acOn();
+        tv.tvOn();
+    }
+};
+
+int main()
+{
+    HouseFacde hf;
+    hf.goToWork();
+    hf.comeHome();
+
+    return 0;
+}
+
+```
+
+
+
 ### Flyweight
+
+Flyweight (i.e. very light) pattern to save memory (basically) by sharing properties of objects. Move shareable properties out of the objects to some external data structure and provide each object with the link to that data structure.
+
+```c++
+// Flyweight (very light)
+#define NUMBER_OF_SAME_TYPE_CHARS = 3;
+
+// Actual flyweight objects class (declaration)
+class FlyweightCharacter;
+class FlyweightCharacterAbstractBuilder {
+    FlyweightCharacterAbstractBuilder() {}
+    ~FlyweightCharacterAbstractBuilder() {}
+public:
+    static vector<float> fontSize;
+    static vector<string> fontNames;
+
+    static void setFontsAndNames();
+    static FlyweightCharacter createFlyweightCharacter(unsigned short fontSizeIndex,
+                                                       unsigned short fontNameIndex,
+                                                       unsigned short positionInStream);
+};
+vector<float> FlyweightCharacterAbstractBuilder::fontSize(3);
+vector<string> FlyweightCharacterAbstractBuilder::fontNames(3);
+void FlyweightCharacterAbstractBuilder::setFontsAndNames() {
+    fontSize[0] = 1.0;
+    fontSize[1] = 2.0;
+    fontSize[2] = 3.0;
+
+    fontNames[0] = "first_font";
+    fontNames[1] = "second_font";
+    fontNames[2] = "third_font";
+}
+
+class FlyweightCharacter {
+    unsigned short fontSizeIndex;  // index instead of actual font size
+    unsigned short fontNameIndex;
+    unsigned positionInStream;
+public:
+    FlyweightCharacter(unsigned short fsIndex, unsigned short fnIndex, unsigned posInStream):
+        fontSizeIndex(fsIndex), fontNameIndex(fnIndex), positionInStream(posInStream) {}
+    void print() {
+        cout << "Font Size: " << FlyweightCharacterAbstractBuilder::fontSize[fontSizeIndex]
+                << ", font Name: " << FlyweightCharacterAbstractBuilder::fontNames[fontNameIndex]
+                   << ", character stream position: " << positionInStream << endl;
+    }
+    ~FlyweightCharacter() {}
+};
+
+FlyweightCharacter FlyweightCharacterAbstractBuilder::createFlyweightCharacter(unsigned short fontSizeIndex, unsigned short fontNameIndex, unsigned short positionInStream) {
+    FlyweightCharacter fc(fontSizeIndex, fontNameIndex, positionInStream);
+
+    return fc;
+}
+
+int main() {
+    return 0;
+}
+```
+
+
 
 ### Proxy
 
