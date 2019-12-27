@@ -470,9 +470,137 @@ int main()
 
 The Bridge Pattern is used to separate out the interface from its implementation.
 
+```c++
+// 7: Bridge
+// Implementor
+class DrawingAPI {
+public:
+    virtual void drawCircle(double x, double y, double radius) = 0;
+    virtual ~DrawingAPI() {}
+};
+// Concrete implementorA
+class DrawingAPI1: public DrawingAPI {
+public:
+    void drawCircle(double x, double y, double radius) override {
+        cout << "API1.circle at " << x << ":" << y << " " << radius << endl;
+    }
+};
+class DrawingAPI2: public DrawingAPI {
+public:
+    void drawCircle(double x, double y, double radius) override {
+        cout << "API2.circle at " << x << ":" << y << " " << radius << endl;
+    }
+};
+
+// Abstraction
+class Shape {
+public:
+    virtual ~Shape(){}
+    virtual void draw() = 0;
+    virtual void resizeByPercentage(double pct) = 0;
+};
+// Refined Abstraction
+class CircleShape: public Shape {
+public:
+    CircleShape(double x, double y, double radius, DrawingAPI* drawingAPI):
+        m_x(x), m_y(y), m_radius(radius), m_drawingAPI(drawingAPI) {}
+    void draw() override {
+        m_drawingAPI->drawCircle(m_x, m_y, m_radius);
+    }
+    void resizeByPercentage(double pct) override {
+        m_radius *= pct;
+    }
+private:
+    double m_x, m_y, m_radius;
+    DrawingAPI* m_drawingAPI;
+};
+
+
+int main()
+{
+    CircleShape circle1(1, 2, 3, new DrawingAPI1());
+    CircleShape circle2(5, 7, 11, new DrawingAPI2());
+    circle1.resizeByPercentage(2.5);
+    circle2.resizeByPercentage(2.5);
+    circle1.draw();
+    circle2.draw();
+
+    return 0;
+}
+
+```
+
+
+
 ### Composite
 
+Composite lets clients treat individual objects and compositions of objects uniformly. The composite pattern can represent both the conditions. In this pattern, one can develop tree structures for representing part-whole hierarchies.
+
+```c++
+#include <iostream>
+#include <memory>
+#include <algorithm>
+
+// 8: Composite
+class Graphic {
+public:
+    virtual void print() const = 0;
+    virtual ~Graphic() {}
+};
+class Ellipse: public Graphic {
+public:
+    void print() const override {
+        cout << "Ellipse with ID: " << m_id << endl;
+    }
+    Ellipse(int id): m_id(id) {}
+private:
+    int m_id;
+};
+class CompositeGraphic: public Graphic {
+public:
+    void print() const override {
+        for (Graphic* a: graphicList_)
+            a->print();
+    }
+    void add(Graphic* aGraphic) {
+        graphicList_.push_back(aGraphic);
+    }
+private:
+    vector<Graphic*> graphicList_;
+};
+
+int main()
+{
+    const unique_ptr<Ellipse> ellipse1(new Ellipse(1));
+    const unique_ptr<Ellipse> ellipse2(new Ellipse(2));
+    const unique_ptr<Ellipse> ellipse3(new Ellipse(3));
+    const unique_ptr<Ellipse> ellipse4(new Ellipse(4));
+
+    const unique_ptr<CompositeGraphic> graphic(new CompositeGraphic());
+    const unique_ptr<CompositeGraphic> graphic1(new CompositeGraphic());
+    const unique_ptr<CompositeGraphic> graphic2(new CompositeGraphic());
+
+    graphic1->add(ellipse1.get());
+    graphic1->add(ellipse2.get());
+    graphic1->add(ellipse3.get());
+
+    graphic2->add(ellipse4.get());
+
+    // composite graphic of composite graphic
+    graphic->add(graphic1.get());
+    graphic->add(graphic2.get());
+
+    graphic->print();
+
+    return 0;
+}
+```
+
+
+
 ### Decorator
+
+The decorator pattern helps to attach additional behavior or responsibilities to an object dynamically. Decorators provide a flexible alternative to subclassing for extending functionality. This is also called "wrapper".
 
 ### Facade
 
