@@ -802,7 +802,7 @@ class FlyweightCharacter {
     unsigned short fontNameIndex;
     unsigned positionInStream;
 public:
-    FlyweightCharacter(unsigned short fsIndex, unsigned short fnIndex, unsigned posInStream):
+    FlyweightCharacter(unsigned short fsIndex, unsigned short fnIndex, unsigned short posInStream):
         fontSizeIndex(fsIndex), fontNameIndex(fnIndex), positionInStream(posInStream) {}
     void print() {
         cout << "Font Size: " << FlyweightCharacterAbstractBuilder::fontSize[fontSizeIndex]
@@ -818,7 +818,22 @@ FlyweightCharacter FlyweightCharacterAbstractBuilder::createFlyweightCharacter(u
     return fc;
 }
 
-int main() {
+int main()
+{
+    vector<FlyweightCharacter> chars;
+    FlyweightCharacterAbstractBuilder::setFontsAndNames();
+    // unsigned short limit = NUMBER_OF_SAME_TYPE_CHARS;
+    unsigned short limit = 3;
+
+    for (unsigned short i = 0; i < limit; ++i) {
+        chars.push_back(FlyweightCharacterAbstractBuilder::createFlyweightCharacter(0, 0, i));
+        chars.push_back(FlyweightCharacterAbstractBuilder::createFlyweightCharacter(1, 1, i+1*limit));
+        chars.push_back(FlyweightCharacterAbstractBuilder::createFlyweightCharacter(2, 2, i+2*limit));
+    }
+
+    for (unsigned short i = 0; i < limit; ++i)
+        chars[i].print();
+
     return 0;
 }
 ```
@@ -827,13 +842,116 @@ int main() {
 
 ### Proxy
 
+The Proxy Pattern will provide an object a surrogate or placeholder for another object to control access to it. It is used when you need to represent a complex object with a simpler one. If creation of an object is expensive, it can be postponed until the very need arises and meanwhile a simpler object can serve as a placeholder. This placeholder object is called the "Proxy" for the complex object.
+
+```c++
+// Proxy
+class ICar {
+public:
+    virtual ~ICar() { cout << "ICar destructor!" << endl; }
+    virtual void DriveCar() = 0;
+};
+class DICar: public ICar {
+public:
+    void DriveCar() override {
+        cout << "Car has been driven!" << endl;
+    }
+};
+
+class ProxyCar: public ICar {
+public:
+    ProxyCar(int driver_age): driver_age_(driver_age) {}
+    void DriveCar() override {
+        if (driver_age_ > 16)
+            real_car_->DriveCar();
+        else
+            cout << "Sorry, the driver is too young to drive." << endl;
+    }
+private:
+    unique_ptr<ICar> real_car_ = make_unique<DICar>();
+    int driver_age_;
+};
+
+int main() {
+    unique_ptr<ICar> car = std::make_unique<ProxyCar>(16);
+    car->DriveCar();
+
+    car = std::make_unique<ProxyCar>(25);
+    car->DriveCar();
+
+    return 0;
+}
+```
+
+
+
 ### Curiously Recurring Template
 
 ### Interface-based Programming (IBP)
 
+Interface-based programming is closely related with Modular Programming and Object-Oriented Programming. It defines the application as a collection of inter-coupled modules (interconnected and which plug into each other via interface). Modules can be unplugged, replaced, or ungraded, without the need of compromising the contents of other modules.
+
+IBP increases the modularity of the application and the total system complexity is greatly reduced. The entire system is viewed as Components and the interfaces that helps them to co-act.
+
+This is particularly convenient when third parties develop additional components for the established system. They just have to develop components that satisfy the interface specified by the parent application vendor.
+
 ## Behavioral Patterns
 
 ### Chain of Responsibility
+
+Chain of Responsibility has the intent to avoid coupling the sender of a request to its receiver by giving more than one object a chance to handle the request.
+
+```c++
+// Chain of Responsibility
+class Handler {
+protected:
+    Handler* next;
+public:
+    Handler() {
+        next = nullptr;
+    }
+    virtual ~Handler() {}
+    virtual void request(int value) = 0;
+    void setNextHandler(Handler* nextInLine) {
+        next = nextInLine;
+    }
+};
+class SpecialHandler: public Handler {
+private:
+    int myLimit;
+    int myId;
+public:
+    SpecialHandler(int limit, int id): myLimit(limit), myId(id) { }
+    ~SpecialHandler() {}
+    void request(int value) override {
+        if (value < myLimit)
+            cout << "Handler " << myId << " handled the request with a limit of " <<
+                    myLimit << endl;
+        else if (next != nullptr)
+            next->request(value);
+        else
+            cout << "Sorry, I am the last handler (" << myId << ") and I can't handle the request." << endl;
+    }
+};
+
+int main() {
+    Handler* h1 = new SpecialHandler(10, 1);
+    Handler* h2 = new SpecialHandler(20, 2);
+    Handler* h3 = new SpecialHandler(30, 3);
+
+    h1->setNextHandler(h2);
+    h2->setNextHandler(h3);
+
+    h1->request(18);
+    h1->request(40);
+
+    delete h1;
+    delete h2;
+    delete h3;
+}
+```
+
+
 
 ### Command
 
