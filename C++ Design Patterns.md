@@ -955,7 +955,82 @@ int main() {
 
 ### Command
 
+Command pattern is an Object behavior pattern that decouples sender and receiver by encapsulating a request as an object, thereby letting you parameterize clients with different requests, queue or log requests, and support undo-able operations. It can also be thought as an object oriented equivalent of call back method.
+
+Call back: It is a function that is registered to be called at later point of time based on user actions.
+
+```c++
+// Command
+// the command interface
+class Command {
+public:
+    virtual void execute() = 0;
+};
+// Receiver class
+class Light {
+public:
+    Light() {}
+    void turnOn() {
+        cout << "The light is on" << endl;
+    }
+    void turnOff() {
+        cout << "The light is off" << endl;
+    }
+};
+// the command for turning on the light
+class FlipUpCommand: public Command {
+public:
+    FlipUpCommand(Light& light): theLight(light) {}
+    virtual void execute() override {
+        theLight.turnOn();
+    }
+private:
+    Light& theLight;
+};
+class FlipDownCommand: public Command {
+public:
+    FlipDownCommand(Light& light): theLight(light) {}
+    virtual void execute() override {
+        theLight.turnOff();
+    }
+private:
+    Light& theLight;
+};
+class Switch {
+public:
+    Switch(Command& flipUpCommand, Command& flipDownCommand): flipUpCommand(flipUpCommand),
+        flipDownCommand(flipDownCommand) { }
+    void flipUp() {
+        flipUpCommand.execute();
+    }
+    void flipDown() {
+        flipDownCommand.execute();
+    }
+private:
+    Command& flipUpCommand;
+    Command& flipDownCommand;
+};
+
+int main()
+{
+    Light lamp;
+    FlipUpCommand switchUp(lamp);
+    FlipDownCommand switchDown(lamp);
+
+    Switch s(switchUp, switchDown);
+    s.flipUp();
+    s.flipDown();
+
+    return 0;
+}
+
+```
+
+
+
 ### Interpreter
+
+Given a language, define a representation for its grammar along with an interpreter that uses the representation to interpret sentences in the language.
 
 ### Iterator
 
