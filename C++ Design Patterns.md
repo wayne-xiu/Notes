@@ -1030,13 +1030,472 @@ int main()
 
 ### Interpreter
 
-Given a language, define a representation for its grammar along with an interpreter that uses the representation to interpret sentences in the language.
+Given a language, define a representation for its grammar along with an interpreter that uses the representation to interpret sentences in the language. -TODO
+
+```c++
+// Interpreter
+namespace wikibooks_design_patterns {
+    // based on Java sample around here
+typedef std::string String;
+struct Expression;
+typedef std::map<String, Expression*> Map;
+typedef std::list<Expression*> Stack;
+
+struct Expression {
+public:
+    virtual int interpret(Map variables) = 0;
+    virtual ~Expression() {}
+};
+
+class Number: public Expression {
+private:
+    int number;
+public:
+    Number(int number): number(number) {}
+    int interpret(Map variables) override {
+        return number;
+    }
+};
+
+class Plus: public Expression {
+private:
+    Expression* leftOperand;
+    Expression* rightOperand;
+public:
+    Plus(Expression* left, Expression* right) {
+        leftOperand = left;
+        rightOperand = right;
+    }
+    ~Plus() {
+        delete leftOperand;
+        delete rightOperand;
+    }
+    int interpret(Map variables) override {
+        return leftOperand->interpret(variables) + rightOperand->interpret(variables);
+    }
+};
+
+class Minus: public Expression {
+private:
+    Expression* leftOperand;
+    Expression* rightOperand;
+public:
+    Minus(Expression* left, Expression* right) {
+        leftOperand = left;
+        rightOperand = right;
+    }
+    int interpret(Map variables) override {
+        return leftOperand->interpret(variables) - rightOperand->interpret(variables);
+    }
+};
+
+class Variable: public Expression {
+private:
+    String name;
+public:
+    Variable(String name): name(name) {}
+    int interpret(Map variables) override {
+        if (variables.end() == variables.find(name))
+            return 0;
+        return variables[name]->interpret(variables);
+    }
+};
+
+// While the interpreter pattern does not address parsing, a parser is provided for completeness
+class Evaluator: public Expression {
+private:
+    Expression* syntaxTree;
+public:
+    Evaluator(String expression) {
+        Stack expressionStack;
+
+        size_t last = 0;
+        for (size_t next = 0; String::npos != last; last = (String::npos == next) ? next: (1+next)) {
+            next = expression.find(' ', last);
+            String token(expression.substr(last, (String::npos == next) ? (expression.length()-last): (next-last)));
+
+            if (token == "+") {
+                Expression* right = expressionStack.back();
+                expressionStack.pop_back();
+                Expression* left = expressionStack.back();
+                expressionStack.pop_back();
+                Expression* subExpression = new Plus(right, left);
+                expressionStack.push_back(subExpression);
+            }
+            else if (token == "-") {
+                // it's necessary to remove first the right operand from the stack
+                Expression* right = expressionStack.back();
+                expressionStack.pop_back();
+                Expression* left = expressionStack.back();
+                expressionStack.pop_back();
+                Expression* subExpression = new Minus(left, right);
+                expressionStack.push_back(subExpression);
+            }
+            else
+                expressionStack.push_back(new Variable(token));
+        }
+        syntaxTree = expressionStack.back();
+        expressionStack.pop_back();
+    }
+    ~Evaluator() {
+        delete syntaxTree;
+    }
+    int interpret(Map context) override {
+        return syntaxTree->interpret(context);
+    }
+};
+
+}
+
+int main()
+{
+    using namespace wikibooks_design_patterns;
+    Evaluator sentence("w x z - +");
+    static const int sequences[][3] = {{5, 10, 42}, {1, 3, 2}, {7, 9, -5}};
+    for (size_t i = 0; sizeof(sequences)/sizeof(sequences[0]) > i; ++i) {
+        Map variables;
+        variables["w"] = new Number(sequences[i][0]);
+        variables["x"] = new Number(sequences[i][1]);
+        variables["z"] = new Number(sequences[i][2]);
+        int result = sentence.interpret(variables);
+        for (Map::iterator it = variables.begin(); variables.end()!=it; ++it)
+            delete it->second;
+
+        cout << "Interpreter result: " << result << endl;
+    }
+
+    return 0;
+}
+```
+
+
 
 ### Iterator
 
+The basic idea of the iterator is that it permits the traversal of a container (like a pointer moving across an array). However, to get to the next element of a container, you need not know anything about how the container is constructed. This is the iterators job.
+
+How would we traverse a linked list, when the memory is not contiguous?
+
+```C++
+// Iterator
+class IteratorCannotMoveToNext{};  // Error class
+class Node {
+public:
+    int mValue;
+    Node* mNextNode;
+    Node* mPrevNode;
+    Node(): mValue(0), mNextNode(nullptr), mPrevNode(nullptr) {}
+    Node(int value): mValue(value), mNextNode(nullptr), mPrevNode(nullptr) {}
+};
+class MyIntLList {
+public:
+    MyIntLList(): mSize(0) {}
+    ~MyIntLList() {
+        while(!Empty())
+            pop_front();
+    }
+    int Size() const {
+        return mSize;
+    }
+    bool Empty() {
+        return mSize == 0;
+    }
+    void push_back(int value) {
+        Node* newNode = new Node(value);
+        newNode->mPrevNode = mTail;
+        mTail->mNextNode = newNode;
+        mTail = newNode;
+        mSize++;
+    }
+    void pop_front() {
+        if (Empty())
+            return;
+        Node* tempnode = mHead;
+        mHead = mHead->mNextNode;
+        delete tempnode;
+        mSize--;
+    }
+
+    // iterator definition go here
+    class Iterator {
+    public:
+        Iterator(Node* position): mCurrNode(position) {}
+        // Prefix increment
+        const Iterator& operator++ () {
+            if (mCurrNode == nullptr  || mCurrNode->mNextNode == nullptr)
+                throw IteratorCannotMoveToNext();
+            mCurrNode = mCurrNode->mNextNode;
+            return *this;
+        }
+        // Postfix increment
+        Iterator operator++ (int) {
+            Iterator tempItr = *this;
+            ++(*this);
+            return tempItr;
+        }
+        bool operator!= (const Iterator& rhs) {
+            return !(this->mCurrNode == rhs.mCurrNode);
+        }
+        // Dereferencing operator returns the current node,
+        // which should then be dereferenced for the int
+        Node* operator* () {
+            return mCurrNode;
+        }
+    private:
+        Node* mCurrNode;
+    };
+
+    Iterator Begin() { return Iterator(mHead); }
+    Iterator End() { return Iterator(nullptr); }
+
+private:
+    Node* mHead;
+    Node* mTail;
+    int mSize;
+};
+
+int main()  // TODO - fix issues
+{
+    MyIntLList myList;
+    for (int i = 0; i < 10; ++i)
+        myList.push_back(i);
+    for (MyIntLList::Iterator it = myList.Begin(); it != myList.End(); ++it)
+        (*it)->mValue += 42;
+
+    return 0;
+}
+
+// TODO - Implementation of iterator design pattern with a generic template
+```
+
+
+
 ### Mediator
 
+Define an object that encapsulates how a set of objects interact. Mediator promotes loose coupling by keeping objects from referring to each other explicitly, and it lets you vary their interaction independently.
+
+```c++
+// Mediator (coordinating colleagues as middleware)
+class MediatorInterface;
+class ColleagueInterface {
+private:
+    string name;
+public:
+    ColleagueInterface(const string& newName): name(newName) {}
+    string getName() const {
+        return name;
+    }
+    virtual void sendMessage(const MediatorInterface&, const string&) const = 0;
+    virtual void receiveMessage(const ColleagueInterface*, const string&) const = 0;
+};
+
+class Colleague: public ColleagueInterface {
+public:
+    using ColleagueInterface::ColleagueInterface;
+    virtual void sendMessage(const MediatorInterface&, const string&) const override;
+private:
+    virtual void receiveMessage(const ColleagueInterface*, const string&) const override;
+};
+
+class MediatorInterface {
+private:
+    list<ColleagueInterface*> colleagueList;
+public:
+    const list<ColleagueInterface*>& getColleagueList() const {
+        return colleagueList;
+    }
+    virtual void distributeMessage(const ColleagueInterface*, const string&) const = 0;
+    virtual void registerColleague(ColleagueInterface* colleague) {
+        colleagueList.emplace_back(colleague);
+    }
+};
+class Mediator: public MediatorInterface {
+    virtual void distributeMessage(const ColleagueInterface *, const string &) const override;
+};
+
+void Colleague::sendMessage(const MediatorInterface& mediator, const string& message) const {
+    mediator.distributeMessage(this, message);
+}
+void Colleague::receiveMessage(const ColleagueInterface* sender, const string& message) const {
+    cout << getName() << " received the message from " << sender->getName() << ": " << message << endl;
+}
+void Mediator::distributeMessage(const ColleagueInterface* sender, const string& message) const {
+    for (const ColleagueInterface* x: getColleagueList()) {
+        if (x != sender) // Do not send the message back to the sender
+            x->receiveMessage(sender, message);
+    }
+}
+
+int main()
+{
+    Colleague* bob = new Colleague("Bob"), *sam = new Colleague("Sam"), *frank = new Colleague("Frank"), *tom = new Colleague("Tom");
+    Colleague* staff[] = {bob, sam, frank, tom};
+    Mediator mediatorStaff, mediatorSamsBuddies;
+    for (Colleague* x: staff) {
+        mediatorStaff.registerColleague(x);
+    }
+    bob->sendMessage(mediatorStaff, "I'm quitting this job!");
+
+    cout << endl;
+    mediatorSamsBuddies.registerColleague(frank);
+    mediatorSamsBuddies.registerColleague(tom);
+    sam->sendMessage(mediatorSamsBuddies, "Hooray! He's gone! Let's go for a drink, guys!");
+
+    return 0;
+}
+
+```
+
+
+
 ### Memento
+
+Without violating encapsulation, the Memento Pattern will capture and externalize an object's internal state so that the object can be restored to this state later. Though the GoF uses friend as a way to implement this pattern it is not the best design. It can also be implemented using PIMPL (pointer to implementation or opaque pointer). Best use case is 'Undo-Redo' in an editor.
+
+The Originator (the object to be saved) creates a snap-shot of itself as a Memento object, and passes that reference to the Caretaker object. The Caretaker object keeps the Memento until such as time as the Originator may want to revert to a previous state as recorded in the Memento object.
+
+```c++
+// Memento
+const string NAME = "Object";
+
+template <typename T>
+string toString(const T& t) {
+    stringstream ss;
+    ss << t;
+    return ss.str();
+}
+
+class Memento;
+class Object {
+private:
+    int value;
+    string name;
+    double decimal;  // and suppose there are loads of other data members
+public:
+    Object(int newValue): value(newValue), name(NAME+toString(value)), decimal((float)value/100) {}
+    void doubleValue() {
+        value *= 2;
+        name = NAME + toString(value);
+        decimal = (float)value/100;
+    }
+    void increaseByONe() {
+        value++;
+        name = NAME + toString(value);
+        decimal = (float)value/100;
+    }
+    int getValue() const {
+        return value;
+    }
+    string getName() const {
+        return name;
+    }
+    double getDecimal() const {
+        return decimal;
+    }
+    Memento* createMemento() const;
+    void reinstateMemento(Memento* mem);
+};
+
+class Memento {
+private:
+    Object object;
+public:
+    Memento(const Object& obj): object(obj) {}
+    Object snapshot() const {
+        return object;
+    }
+};
+
+Memento* Object::createMemento() const {
+    return new Memento(*this);
+}
+void Object::reinstateMemento(Memento *mem) {
+    *this = mem->snapshot();
+}
+
+class Command {
+private:
+    typedef void (Object::*Action)();
+    Object* receiver;
+    Action action;
+    static vector<Command*> commandList;
+    static vector<Memento*> mementoList;
+    static int numCommands;
+    static int maxCommands;
+public:
+    Command(Object* newReceiver, Action newAction): receiver(newReceiver), action(newAction) {}
+    virtual void execute() {
+        if (mementoList.size() < numCommands + 1)
+            mementoList.resize(numCommands+1);
+        mementoList[numCommands] = receiver->createMemento();
+        if (commandList.size() < numCommands + 1)
+            commandList.resize(numCommands + 1);
+        commandList[numCommands] = this;
+        if (numCommands > maxCommands)
+            maxCommands = numCommands;
+        numCommands++;
+        (receiver->*action)();
+    }
+    static void undo() {
+        if (numCommands == 0) {
+            cout << "There is nothing to undo at this point." << endl;
+            return;
+        }
+        commandList[numCommands-1]->receiver->reinstateMemento(mementoList[numCommands-1]);
+        numCommands--;
+    }
+    static void redo() {
+        if (numCommands > maxCommands) {
+            cout << "There is nothing to redo at this point." << endl;
+            return;
+        }
+        Command* commandRedo = commandList[numCommands];
+        (commandRedo->receiver->*(commandRedo->action))();
+        numCommands++;
+    }
+
+};
+vector<Command*> Command::commandList;
+vector<Memento*> Command::mementoList;
+int Command::numCommands = 0;
+int Command::maxCommands = 0;
+
+int main()
+{
+    int i;
+    cout << "Plese enter an integer: ";
+    cin >> i;
+    Object* object = new Object(i);
+
+    Command* commands[3];
+    commands[1] = new Command(object, &Object::doubleValue);
+    commands[2] = new Command(object, &Object::increaseByONe);
+
+    cout << "0.Exit, 1.Double, 2.Increase by one, 3.Undo, 4.Redo: ";
+    cin >> i;
+
+    while (i != 0) {
+        if (i == 3)
+            Command::undo();
+        else if (i == 4)
+            Command::redo();
+        else if (i > 0 && i <= 2)
+            commands[i]->execute();
+        else {
+            cout << "Enter a proper choice: ";
+            cin >> i;
+            continue;
+        }
+        cout << "  " << object->getValue() << " " << object->getName() << " " << object->getDecimal() << endl;
+        cout << "0.Exit, 1.Double, 2.Increase by one, 3.Undo, 4.Redo: ";
+        cin >> i;
+    }
+
+    return 0;
+}
+```
+
+
 
 ### Observer
 
