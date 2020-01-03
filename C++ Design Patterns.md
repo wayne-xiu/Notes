@@ -1499,6 +1499,8 @@ int main()
 
 ### Observer
 
+
+
 ### State
 
 ### Strategy

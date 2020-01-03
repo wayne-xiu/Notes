@@ -132,23 +132,145 @@ delete[] arr;
 
 ## Introduction to Linked Lists
 
+### Singly Linked List (SLL)
+
 ```c++
 class Node {
+public:
     int data;
     Node* nextElement;
-public:
     Node() {
         nextElement = nullptr;
     }
 };
 
 class LinkedList {
-    Node* head;
 public:
     LinkedList() {
         head = nullptr;
     }
-}
+    bool isEmpty() const {
+        return (head == nullptr) ? true : false;
+    }
+    bool printList() const {
+        if (isEmpty()) {
+            cout << "List is empty!" << endl;
+            return false;
+        }
+        Node* temp = head;
+        cout << "List: ";
+        while (temp != nullptr) {
+            cout << temp->data << "->";
+            temp = temp->nextElement;
+        }
+        cout << "null" << endl;
+        return true;
+    }
+    // Insertion at head, tail and index position
+    void insertAtHead(int value) {
+        Node* newNode = new Node();
+        newNode->data = value;
+        newNode->nextElement = head;
+        head = newNode;
+        //cout << value << " inserted at head!  ";
+    }
+    void insertAtTail(int value) {
+        Node* newNode = new Node();
+        newNode->data = value;
+        newNode->nextElement = nullptr;
+        if (isEmpty())
+            head = newNode;
+        else {
+            Node* last = head;
+            while (last->nextElement != nullptr)
+                last = last->nextElement;
+            last->nextElement = newNode;
+        }
+        //cout << value << " inserted at tail!  ";
+    }
+    void insertAtIndex(int value, int index) {
+        if (index == 0)
+            insertAtHead(value);
+        else {
+            Node* current = head;
+            for (int i = 1; i < index; ++i) {
+                if (current->nextElement != nullptr) {
+                    current = current->nextElement;
+                } else {
+                    cout << "Can't insert at " << index << endl;
+                    return;
+                }
+            }
+            Node* newNode = new Node();
+            newNode->data = value;
+            newNode->nextElement = current->nextElement;
+            current->nextElement = newNode;
+            //cout << value << " insert at position " << index << "! ";
+        }
+    }
+    
+    // Search
+    bool search(int value) const {
+        Node* temp = head;
+        while (temp != nullptr) {
+            if (temp->data == value)
+                return true;
+            temp = temp->nextElement;
+        }
+        return false;
+    }
+    
+    // Deletion at head, tail and by value
+    bool deleteAtHead() {
+        if (isEmpty()) {
+            cout << "List is empty" << endl;
+            return false;
+        }
+        Node* currentNode = head;
+        head = head->nextElement;
+
+        delete currentNode;
+        return true;
+    }
+    bool deleteAtTail() {
+        if (isEmpty()) {
+            cout << "List is empty" << endl;
+            return false;
+        }
+        if (head->nextElement == nullptr)
+            return deleteAtHead();
+        Node* currentNode = head;
+        Node* prevNode = nullptr;
+        while (currentNode->nextElement != nullptr) {
+            prevNode = currentNode;
+            currentNode = currentNode->nextElement;
+        }
+        prevNode->nextElement = nullptr;
+        delete currentNode;
+        return true;
+    }
+    bool deleteByValue(int value) {
+        if (isEmpty()) {
+            cout << "List is empty" << endl;
+            return false;
+        }
+        if (head->data == value)
+            return deleteAtHead();
+        Node* currentNode = head;
+        while (currentNode != nullptr && currentNode->nextElement != nullptr) {
+            if (currentNode->nextElement->data == value) {
+                Node* temp = currentNode->nextElement;
+                currentNode->nextElement = temp->nextElement;
+                delete temp;
+                return true;
+            }
+            currentNode = currentNode->nextElement;
+        }
+        return false;
+    }
+private:
+    Node* head;
+};
 ```
 
 For any operations on the list, we need to traverse it from the head. The main difference between arrays and linked lists is memory allocation. In linked lists, there is no concept of indexing.
@@ -158,6 +280,112 @@ For any operations on the list, we need to traverse it from the head. The main d
 The main difference between array and linked list is memory allocation.
 
 Insertion at head, tail and any n-th index
+
+Search
+
+Deletion at the head, at the tail and by value
+
+### Doubly Linked List (DLL)
+
+For SLL, we have to keep track of previous elements;
+
+For DLL, in insertion and deletion, we need to change two pointers instead of one.
+
+```c++
+class Node {
+public:
+    int data;
+    Node* nextElement;
+    Node* previousElement;
+    Node() {
+        nextElement = nullptr;
+        previousElement = nullptr;
+    }
+};
+
+class DoublyLinkedList {
+public:
+    DoublyLinkedList() {
+        head = nullptr;
+    }
+    bool isEmpty() {
+        return head == nullptr;
+    }
+    Node* getHead() {
+        return head;
+    }
+    bool printList() {
+        if (isEmpty()) {
+            cout << "List is empty" << endl;
+            return false;
+        }
+        Node* temp = head;
+        cout << "List: ";
+        while (temp != nullptr) {
+            cout << temp->data << "<->";
+            temp = temp->nextElement;
+        }
+        cout << "null" << endl;
+        return true;
+    }
+
+    // Insertion
+    bool insertAtHead(int value) {
+        Node* newNode = new Node();
+        newNode->data = value;
+        newNode->previousElement = nullptr;
+        newNode->nextElement = head;
+        if (head != nullptr)
+            head->previousElement = newNode;
+        head = newNode;
+        cout << value << " inserted at head!  ";
+        return true;
+    }
+
+    // Deletion
+    bool deleteAtHead() {
+        if (isEmpty()) {
+            cout << "List is empty" << endl;
+            return false;
+        }
+        head = head->nextElement;
+        head->previousElement = nullptr;
+        return true;
+    }
+    bool deleteByValue(int value) {
+        if (isEmpty()) {
+            cout << "List is empty" << endl;
+            return false;
+        }
+        if (head->data == value)
+            return deleteAtHead();
+        Node* currentNode = head;
+        while (currentNode != nullptr) {
+            if (currentNode->data == value) {
+                currentNode->previousElement->nextElement = currentNode->nextElement;
+                if (currentNode->nextElement != nullptr)
+                    currentNode->nextElement->previousElement = currentNode->previousElement;
+                cout << value << " deleted!" << endl;
+                return true;
+            }
+            currentNode = currentNode->nextElement;
+        }
+        return false;
+    }
+private:
+    Node* head;
+};
+```
+
+
+
+DLL compared with SLL:
+
+- DLL can be traversed in both directions
+- Nodes in DLL require extra memory to store the previousNode pointer
+- Deletion in DLL is more efficient as we do not need to keep track of the previous node
+
+Keep a Tail pointer in LLs (especially DLL) will improve the functionality performance
 
 
 
