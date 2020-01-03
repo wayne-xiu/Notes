@@ -1499,9 +1499,325 @@ int main()
 
 ### Observer
 
+The Observer Pattern defines a one-to-many dependency between objects so that when one object changes state, all its dependents are notified and updated automatically.
+
+a system event or application state change. The notification should be automated after an interested party subscribed to the system event or application state change. There also should be a way to unsubscribe.
+
+Observers and observables probably should be represented by objects. The observer objects will be notified by the observable objects.
+
+The observable object registers its own observers (this). Observables put its own observers in a list; Observer has observable as one member variable by reference.
+
+````c++
+// Observer
+class ObserverBoardInterface {
+public:
+    virtual void update (float a, float b, float c) = 0;
+};
+class DisplayBoardInterface {
+public:
+    virtual void show() = 0;
+};
+// Observable
+class WeatherDataInterface {
+public:
+    virtual void registerOb(ObserverBoardInterface* ob) = 0;
+    virtual void removeOb(ObserverBoardInterface* ob) = 0;
+    virtual void notifyOb() = 0;
+};
+class ParaWeatherData: public WeatherDataInterface {
+public:
+    void SensorDataChange(float a, float b, float c) {
+        m_humidity = a;
+        m_temperature = b;
+        m_pressure = c;
+        notifyOb();
+    }
+    void registerOb(ObserverBoardInterface* ob) override {
+        m_obs.push_back(ob);
+    }
+    void removeOb(ObserverBoardInterface* ob) override {
+        m_obs.remove(ob);
+    }
+protected:
+    void notifyOb() override {
+        list<ObserverBoardInterface*>::iterator pos = m_obs.begin();
+        while (pos != m_obs.end()) {
+            dynamic_cast<ObserverBoardInterface*>(*pos)->update(m_humidity, m_temperature, m_pressure);
+            ++pos;
+        }
+    }
+private:
+    float m_humidity;
+    float m_temperature;
+    float m_pressure;
+    list<ObserverBoardInterface*> m_obs;
+};
+
+class CurrentConditionBoard: public ObserverBoardInterface, public DisplayBoardInterface {
+public:
+    CurrentConditionBoard(ParaWeatherData& a): m_data(a) {
+        m_data.registerOb(this);
+    }
+    void update(float h, float t, float p) override {
+        m_h = h;
+        m_t = t;
+        m_p = p;
+    }
+    void show() override {
+        cout << "__________CurrentConditionBoard_______________" << endl;
+        cout << "humidity: " << m_h << endl;
+        cout << "temperature: " << m_t << endl;
+        cout << "pressure: " << m_p << endl;
+        cout << "______________________________________________" << endl;
+    }
+
+private:
+    float m_h;
+    float m_t;
+    float m_p;
+    ParaWeatherData& m_data;
+};
+class StatisticBoard: public ObserverBoardInterface, public DisplayBoardInterface {
+public:
+    StatisticBoard(ParaWeatherData& a): m_maxt(-1000), m_mint(1000), m_avet(0), m_count(0), m_data(a) {
+        m_data.registerOb(this);
+    }
+    void update(float h, float t, float p) override {
+        ++m_count;
+        if (t > m_maxt)
+            m_maxt = t;
+        if (t < m_mint)
+            m_mint = t;
+        m_avet = (m_avet*(m_count-1) + t)/m_count;
+    }
+    void show() override {
+        cout << "__________StatisticBoard_______________" << endl;
+        cout << "highest temperature: " << m_maxt << endl;
+        cout << "lowest temperature: " << m_mint << endl;
+        cout << "average temperature: " << m_avet << endl;
+        cout << "_______________________________________" << endl;
+    }
+
+private:
+    float m_maxt;
+    float m_mint;
+    float m_avet;
+    int m_count;
+    ParaWeatherData& m_data;
+};
+
+
+int main() {
+    ParaWeatherData* wdata = new ParaWeatherData();
+    CurrentConditionBoard* currentB = new CurrentConditionBoard(*wdata);
+    StatisticBoard* statisticB = new StatisticBoard(*wdata);
+
+    wdata->SensorDataChange(10.2, 28.2, 1001);
+    wdata->SensorDataChange(12, 30.12, 1003);
+    wdata->SensorDataChange(10.2, 26, 806);
+    wdata->SensorDataChange(10.3, 35.9, 900);
+
+    currentB->show();
+    statisticB->show();
+
+    wdata->removeOb(currentB);  // currentB no longer observing
+    wdata->SensorDataChange(100, 40, 1900);
+
+    currentB->show();
+    statisticB->show();
+
+    delete statisticB;
+    delete currentB;
+    delete wdata;
+
+    return 0;
+}
+````
+
 
 
 ### State
+
+The State Pattern allows an object to alter its behavior when its internal state changes. The object will appear as having changed its class.
+
+```c++
+// State
+enum Input {DUCK_DOWN, STAND_UP, JUMP, DIVE};
+
+class Fighter;
+class StandingState; class JumpingState; class DivingState;
+
+class FighterState {
+public:
+    static shared_ptr<StandingState> standing;
+    static shared_ptr<DivingState> diving;
+
+    virtual ~FighterState() = default;
+
+    virtual void handleInput(Fighter&, Input) = 0;
+    virtual void update(Fighter&) = 0;
+};
+
+class DuckingState: public FighterState {
+public:
+    DuckingState(): chargingTime(0) {}
+    virtual void handleInput(Fighter &, Input) override;
+    virtual void update(Fighter &) override;
+private:
+    int chargingTime;
+    static const int FullRestTime = 5;
+};
+class StandingState: public FighterState {
+public:
+    virtual void handleInput(Fighter &, Input) override;
+    virtual void update(Fighter &) override;
+};
+class JumpingState: public FighterState {
+public:
+    JumpingState() {
+        jumpingHeight = rand()%5+1;
+    }
+    virtual void handleInput(Fighter &, Input) override;
+    virtual void update(Fighter &) override;
+private:
+    int jumpingHeight;
+};
+class DivingState: public FighterState {
+public:
+    virtual void handleInput(Fighter &, Input) override;
+    virtual void update(Fighter &) override;
+};
+
+shared_ptr<StandingState> FighterState::standing (new StandingState);
+shared_ptr<DivingState> FighterState::diving (new DivingState);
+
+class Fighter {
+public:
+    Fighter(const string& newName): name(newName), state(FighterState::standing) {}
+    string getName() const {
+        return name;
+    }
+    int getFatigueLevel() const {
+        return fatigueLevel;
+    }
+    virtual void handleInput(Input input) {
+        state->handleInput(*this, input);  // delegate input handling to 'state'
+    }
+    void changeState(shared_ptr<FighterState> newState) {
+        state = newState;
+        updateWithNewState();
+    }
+    void standsUp() {
+        cout << getName() << " stands up." << endl;
+    }
+    void ducksDown() {
+        cout << getName() << " ducks down." << endl;
+    }
+    void jumps() {
+        cout << getName() << " jumps into the air." << endl;
+    }
+    void dives() {
+        cout << getName() << " makes a dive attack in the middle of the jumpt!" << endl;
+    }
+    void feelsStrong() {
+        cout << getName() << " feels strong" << endl;
+    }
+    void changeFatigueLevelBy(int change) {
+        fatigueLevel += change;
+        cout << "fatigueLevel = " << fatigueLevel << endl;
+    }
+private:
+    virtual void updateWithNewState() {
+        state->update(*this);  // delegate updating to 'state'
+    }
+private:
+    string name;
+    shared_ptr<FighterState> state;
+    int fatigueLevel = rand()%10;
+};
+
+void StandingState::handleInput(Fighter& fighter, Input input) {
+    switch(input) {
+    case STAND_UP: cout << fighter.getName() << " remains standing." << endl; return;
+    case DUCK_DOWN: fighter.changeState(shared_ptr<DuckingState> (new DuckingState)); return fighter.ducksDown();
+    case JUMP: fighter.jumps(); return fighter.changeState(shared_ptr<JumpingState>(new JumpingState));
+    default: cout << "One cannot do that while standing. " << fighter.getName() << " remains standing by default." << endl;
+    }
+}
+void StandingState::update(Fighter& fighter) {
+    if (fighter.getFatigueLevel() > 0)
+        fighter.changeFatigueLevelBy(-1);
+}
+
+void DuckingState::handleInput(Fighter& fighter, Input input) {
+    switch (input) {
+    case STAND_UP: fighter.changeState(FighterState::standing); return fighter.standsUp();
+    case DUCK_DOWN:
+        cout << fighter.getName() << " remains in ducking position, ";
+        if (chargingTime < FullRestTime)
+            cout << "recoving in the meantime." << endl;
+        else
+            cout << "fully recovered." << endl;
+        return update(fighter);
+    default:
+        cout << "One cannot do that while ducking. " << fighter.getName() << " remains in ducking position by default." << endl;
+        update(fighter);
+    }
+}
+void DuckingState::update(Fighter& fighter) {
+    chargingTime++;
+    cout << "Charging time = " << chargingTime << "." << endl;
+    if (fighter.getFatigueLevel() > 0)
+        fighter.changeFatigueLevelBy(-1);
+    if (chargingTime >= FullRestTime && fighter.getFatigueLevel() <= 3)
+        fighter.feelsStrong();
+}
+
+void JumpingState::handleInput(Fighter& fighter, Input input) {
+    switch(input) {
+    case DIVE: fighter.changeState(FighterState::diving);
+        return fighter.dives();
+    default:
+        cout << "One cannot do that in the middle of a jump. " << fighter.getName() << " lands from his jump and is now in standing position." << endl;
+        fighter.changeState(FighterState::standing);
+    }
+}
+void JumpingState::update(Fighter& fighter) {
+    fighter.changeFatigueLevelBy(2);
+}
+
+void DivingState::handleInput (Fighter& fighter, Input)  {
+    std::cout << "Regardless of what the user input is, " << fighter.getName() << " lands from his dive and is now standing again." << std::endl;
+    fighter.changeState (FighterState::standing);
+}
+
+void DivingState::update (Fighter& fighter) {
+    fighter.changeFatigueLevelBy(2);
+}
+
+int main() {
+    srand(time(nullptr));
+    Fighter rex("Rex the Fighter"), borg("Borg the Fighter");
+    cout << rex.getName() << " and " << borg.getName() << " are currently standing" << endl;
+    int choice;
+    auto chooseAction = [&choice](Fighter& fighter) {
+        cout << endl << DUCK_DOWN + 1 << ") Duck down " << STAND_UP+1 << ") Stand up " << JUMP + 1
+             << ") Jump " << DIVE+1 << ") Dive in the middle of a jump" << endl;
+        cout << "Choice for " << fighter.getName() << "? ";
+        cin >> choice;
+        const Input input1 = static_cast<Input>(choice-1);
+        fighter.handleInput(input1);
+    };
+    while (true) {
+        chooseAction(rex);
+        chooseAction(borg);
+    }
+
+    return 0;
+}
+```
+
+
 
 ### Strategy
 
