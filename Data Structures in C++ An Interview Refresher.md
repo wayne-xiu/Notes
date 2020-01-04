@@ -387,5 +387,75 @@ DLL compared with SLL:
 
 Keep a Tail pointer in LLs (especially DLL) will improve the functionality performance
 
+Reverse a  DLL by iterative pointer manipulation
+
+```c++
+void reverse() {
+    Node* temp = nullptr;
+    Node* current = head;
+    while (current != nullptr) {
+        temp = current->previousElement;
+        current->previousElement = current->nextElement;
+        current->nextElement = temp;
+        current = current->previousElement;
+    }
+    if (temp != nullptr)
+        head = temp->previousElement;
+}
+```
+
+Detect loops in a linked list
+
+```c++
+bool detectLoop() {
+    Node* slow = head;
+    Node* fast = head;
+    while (slow && fast && fast->nextElement) {
+        slow = slow->nextElement;
+        fast = fast->nextElement->nextElement;
+        if (slow == fast)  // if meets
+            return true;
+    }
+    return false;
+}
+// helper for testing
+void insertLoop() {
+    Node* temp = head;
+    while (temp->nextElement)
+        temp = temp->nextElement;
+    temp->nextElement = head;
+}
+```
+
+Find middle value of a linked list
+
+```c++
+    int findMid() {
+        if (isEmpty())
+            return 0;
+//        int length = this->length();
+//        int mid = (length % 2) ? (length/2+1) : length/2;
+//        Node* temp = head;
+//        for (int i = 1; i < mid; ++i)
+//            temp = temp->nextElement;
+//        return temp->data;
+        Node* current = head;
+        if (current->nextElement == nullptr)
+            return current->data;
+        Node* middle = current;
+        current = current->nextElement->nextElement;
+        while (current != nullptr) {
+            middle = middle->nextElement;
+            current = current->nextElement;
+            if (current != nullptr)
+                current = current->nextElement;
+        }
+        if (middle != nullptr)
+            return middle->data;
+        return 0;
+    }
+
+```
+
 
 
