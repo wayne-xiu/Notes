@@ -1821,7 +1821,77 @@ int main() {
 
 ### Strategy
 
+Defines a family of algorithms, encapsulates each one, and make them interchangeable. Strategy lets the algorithm vary independently from clients who use it.
+
+```c++
+// Strategy
+class StrategyInterface {
+public:
+    virtual void execute() const = 0;
+};
+class ConcreteStrategyA: public StrategyInterface {
+public:
+    void execute() const override {
+        cout << "Called ConcreteStrategyA execute method." << endl;
+    }
+};
+class ConcreteStrategyB: public StrategyInterface {
+public:
+    void execute() const override {
+        cout << "Called ConcreteStrategyB execute method." << endl;
+    }
+};
+class ConcreteStrategyC: public StrategyInterface
+{
+    public:
+        void execute() const override
+        {
+            cout << "Called ConcreteStrategyC execute method" << endl;
+        }
+};
+
+class Context {
+private:
+    StrategyInterface* m_strategy;
+public:
+    explicit Context(StrategyInterface* strategy): m_strategy(strategy) {}
+    void set_strategy(StrategyInterface* strategy) {
+        m_strategy = strategy;
+    }
+    void execute() const {
+        m_strategy->execute();
+    }
+};
+
+int main() {
+    ConcreteStrategyA concreteStrategyA;
+    ConcreteStrategyB concreteStrategyB;
+    ConcreteStrategyC concreteStrategyC;
+
+    Context contextA(&concreteStrategyA);
+    Context contextB(&concreteStrategyB);
+    Context contextC(&concreteStrategyC);
+
+    contextA.execute();
+    contextB.execute();
+    contextC.execute();
+
+    contextA.set_strategy(&concreteStrategyB);
+    contextA.execute();
+    contextA.set_strategy(&concreteStrategyC);
+    contextA.execute();
+
+    return 0;
+}
+```
+
+
+
 ### Template Method
+
+By defining a skeleton of an algorithm in an operation, deferring some steps to subclasses, the Template Method lets subclasses redefine certain steps of that algorithm without changing the algorithm structure.
+
+
 
 ### Visitor
 
