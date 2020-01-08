@@ -457,5 +457,29 @@ Find middle value of a linked list
 
 ```
 
+Remove duplicates from a linked list
+
+```c++
+void removeDuplicates() {
+    Node* start = head;
+    Node* startNext, *dup;
+    while (start != nullptr && start->nextElement != nullptr) {
+        startNext = start;
+        while (startNext->nextElement != nullptr) {
+            if (start->data == startNext->nextElement->data) {
+                dup = startNext->nextElement;  // sequence matters
+                startNext->nextElement = startNext->nextElement->nextElement;
+                delete(dup);
+            }
+            else
+                startNext = startNext->nextElement;
+        }
+        start = start->nextElement;
+    }
+}
+```
+
+$O(n^2)$
+
 
 
