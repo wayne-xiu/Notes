@@ -2054,7 +2054,133 @@ int main() {
 
 The Visitor Pattern will represent an operation to be performed on the elements of an object structure by letting you define a new operation without changing the classes of the elements on which it operates.
 
+```c++
+// Visitor
+class Wheel;
+class Engine;
+class Body;
+class Car;
+
+// interface to all car "parts"
+struct CarElementVisitor {
+    virtual void visit(Wheel& wheel) = 0;
+    virtual void visit(Engine& engine) = 0;
+    virtual void visit(Body& body) = 0;
+
+    virtual void visit(Car& car) = 0;
+};
+
+// interface to one part
+class CarElement {
+public:
+    virtual void accept(CarElementVisitor& visitor) = 0;
+};
+class Wheel: public CarElement {
+public:
+    explicit Wheel(const string& name): name_(name) {}
+    const string& getName() const {
+        return name_;
+    }
+    void accept(CarElementVisitor &visitor) override {
+        visitor.visit(*this);
+    }
+private:
+    string name_;
+};
+class Engine: public CarElement {
+public:
+    void accept(CarElementVisitor &visitor) override {
+        visitor.visit(*this);
+    }
+};
+class Body: public CarElement {
+public:
+    void accept(CarElementVisitor &visitor) override {
+        visitor.visit(*this);
+    }
+};
+
+class Car {
+public:
+    Car() {
+        elements_.push_back(make_unique<Wheel>("front left"));
+        elements_.push_back(make_unique<Wheel>("front right"));
+        elements_.push_back(make_unique<Wheel>("back left"));
+        elements_.push_back(make_unique<Wheel>("back right"));
+        elements_.push_back(make_unique<Engine>());
+        elements_.push_back(make_unique<Body>());
+    }
+//    Car(const Car&) = delete;
+//    Car& operator=(const Car&) = delete;
+//    ~Car() = default;
+
+    vector<unique_ptr<CarElement>>& getElements() {
+        return elements_;
+    }
+private:
+    vector<unique_ptr<CarElement>> elements_;
+};
+
+class CarElementPrintVisitor: public CarElementVisitor {
+public:
+    void visit(Wheel &wheel) override {
+        cout << "visiting " << wheel.getName() << " wheel" << endl;
+    }
+    void visit(Engine &engine) override {
+        cout << "visiting engine" << endl;
+    }
+    void visit(Body &body) override {
+        cout << "visiting body" << endl;
+    }
+    void visit(Car &car) override {
+        cout << endl << "Visiting car" << endl;
+//        vector<unique_ptr<CarElement>> elements;
+//        elements = car.getElements();
+        for (auto& it: car.getElements()) {
+            it->accept(*this);
+        }
+        cout << "visisted car" << endl;
+    }
+};
+
+class CarELementDoVisitor: public CarElementVisitor {
+public:
+    void visit(Wheel &wheel) override {
+        cout << "Kicking my " << wheel.getName() << " wheel" << endl;
+    }
+    void visit(Engine &engine) override {
+        cout << "Starting my engine" << endl;
+    }
+    void visit(Body &body) override {
+        cout << "Moving my body" << endl;
+    }
+
+    void visit(Car &car) override {
+        cout << "Starting my car" << endl;
+//        vector<unique_ptr<CarElement>> elements = car.getElements();
+        for (auto& it: car.getElements()) {
+            it->accept(*this);
+        }
+        cout << "Stopped car" << endl;
+    }
+};
+
+int main() {
+    Car car;
+    CarElementPrintVisitor printVisitor;
+    CarELementDoVisitor doVisitor;
+
+    printVisitor.visit(car);
+    cout << endl;
+    doVisitor.visit(car);
+    return 0;
+}
+```
+
 
 
 ### Model-View-Controller (MVC)
 
+MVC is a pattern often used by applications that need the ability to maintain multiple views of the same data. It is widely used for graphic user interface programming, it splits the code in 3 pieces: model, view and controller
+
+The model is the actual data representation (e.g. Array vs. Linked List) or other objects representing a database. The view is an interface to reading the model or a fact client GUI. The controller provides the interface of changing or modifying the data, and then selecting the "Next Best View (NBV)".
