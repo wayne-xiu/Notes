@@ -307,5 +307,24 @@ We can improve the chance of getting a split that's at worst 3-to-1. Randomly ch
 
 ## Graphs
 
+![socialGraph](Media/socialGraph.png)
 
+The social network is a **graph**. The names are the **vertices** of the graph. Each line is an **edge**, connecting two vertices. The above graph is **undirected** with pair (u, v) equivalent to (v, u). There are **directed graphs** as well. The vertices connected by an edge are **adjacent** or **neighbors**. The number of edges incident on a vertex is the **degree** of the vertex. We call a **path** between two vertices with the fewest edges a **shortest path**. With a path goes from a particular vertex back to itself, that a **cycle**. The number we put on an edge is its **weight**, and a graph with weighted edges is a **weighted graph**. We call a directed graph with no cycles, a **directed acyclic graph** or **DAG**. The order of the vertices in the directed edge pairs matters. The number of edges leaving a vertex is its **out-degree** and the number of edges entering is the **in-degree**.
+
+Notation for graph sizes: e.g. $\Theta(V)$, $\Theta(lgE)$
+
+Graph representation
+
+- Edge lists
+- Adjacency matrix
+
+For a graph with $\mid V\mid$ vertices, an adjacency matrix is a $\mid V\mid*\mid V \mid$ matrix of 0s or 1s (or edge weights). For an undirected graph, the adjacency matrix is *symmetric*
+
+- Adjacency lists
+
+adjacency lists combines adjacency matrices with edge lists. For each vertex i, store an array of vertices adjacent to it. If the graph is weighted, then each item in the adjacency list is either a two-item array or an object, giving the vertex number and the edge weight.
+
+Adjacency lists takes $2\mid E \mid$ space for undirected graph, and $\mid E \mid$ for directed graph
+
+## Breadth-first Search
 
