@@ -38,9 +38,27 @@ File formats, network protocols (client/server, peer-to-peer, middleware service
 
 > Whenever you create a file format or client/server protocol, you should also create an API for it. This allows details of the specification, and any further changes to it, to be centralized and hidden
 
-
-
 ## Qualities
+
+Model the problem domain; provide a good abstraction
+
+Unified Modeling Language (UML)
+
+UML class diagrams: UML specification defines a collection of visual notations to model object-oriented software systems. A single class is represented with a box that is segment into three parts:
+
+1. Upper section contains the class name
+2. Middle section lists attributes of the class
+3. Lower section enumerates methods of the class
+
+For class attributes and methods, use symbols to indicate access level:
+
+- +indicates public
+- -indicates private
+- #indicates protected
+
+Relationships between classes:
+
+- *Association*: A 
 
 ## Patterns
 

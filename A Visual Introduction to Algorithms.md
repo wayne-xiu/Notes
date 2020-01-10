@@ -328,3 +328,14 @@ Adjacency lists takes $2\mid E \mid$ space for undirected graph, and $\mid E \mi
 
 ## Breadth-first Search
 
+BFS finds shortest paths from a given source vertex to all other vertices, in terms of the number of edges in the paths. e.g. the Oracle of Bacon web maintains an undirectional graph in which each vertex corresponds to an actor or actress, and if two people appeared in the same film, then there is an edge incident on their vertices. A breath-first search from the vertex for Kevin Bacon finds the shortest chain to all other actors (within 6 steps).
+
+Breadth-first search assigns two values to each vertex:
+
+1. A **distance**, giving the minimum number of edges in any path from the source vertex to vertex v
+2. The **predecessor** vertex of v along some shortest path from the source vertex. The source vertex's predecessor is some special value, such as *null*, indicating that it has no predecessor.
+
+always visiting all vertices at distance k from the source before visiting any vertex at distance k+1. visit only the neighbors whose distance is currently *null*. Use a **queue** to keep tracker of vertices that have already been visited but have not yet been visited from.
+
+
+
