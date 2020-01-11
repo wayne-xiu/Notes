@@ -58,7 +58,26 @@ For class attributes and methods, use symbols to indicate access level:
 
 Relationships between classes:
 
-- *Association*: A 
+- *Association*: A simple dependency between two classes where neither owns the other, shown as solid line. Association can be directional, indicated with >
+- *Aggregation*: A "has-a" or whole/part relationship where neither class owns the other, shown as a line with hollow diamond
+- *Composition*: A "has-a" relationship where the lifetime of the part is managed by the whole, represented as a line with a filled diamond
+- *Generalization*: A subclass relationship between classes, shown as a line with a hollow triangle arrowhead
+
+what is the difference between aggregation and composition?
+
+universally unique identifier (UUID)
+
+object modeling being minimally complete
+
+information hiding with *physical hiding* and *logical hiding*
+
+> A declaration introduces the name and type of a symbol to the compiler. A definition provides the full details for that symbol, be it a function body or a region of memory
+
+Generally speaking, provide declarations in .h files and associated definitions in .cpp files. For API design practice, strive to limit API headers to only provide declarations. 
+
+
+
+
 
 ## Patterns
 
