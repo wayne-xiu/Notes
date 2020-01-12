@@ -69,11 +69,43 @@ universally unique identifier (UUID)
 
 object modeling being minimally complete
 
-information hiding with *physical hiding* and *logical hiding*
+information hiding with *physical hiding* (declaration and definition) and *logical hiding* (encapsulation)
 
 > A declaration introduces the name and type of a symbol to the compiler. A definition provides the full details for that symbol, be it a function body or a region of memory
 
 Generally speaking, provide declarations in .h files and associated definitions in .cpp files. For API design practice, strive to limit API headers to only provide declarations. 
+
+> Java provides public, private, protected and package-private level of visibility. Package-private means that a member can only be accessed by classes within the same package. This is the default visibility in Java. Package-private is a great way to allow other classes in a JAR file to access internal members without exposing them globally to your clients.
+>
+> C++ does not have package-private visibility. Instead it uses friendship to allow named classes and functions to access protected and private members of a class.
+
+> Encapsulation is the process of separating the public interface of an API from its underlying implementation
+
+"Wallhack" in CS, a modified OpenGL driver that renders walls partially or fully transparent.
+
+In terms of good API design, you should never make member variables public (use setter, getter)
+
+Caching: a classic optimization technique is to store the value of a frequently requested calculation and then directly return that value for future requests. Synchronization: to make thread safe, the standard way to do this is to add mutex locking whenever a value is accessed. This would only be possible if you have wrapped access to the data values in getter/setter methods. Make the value being read-only by not providing a setter method.
+
+> Data members of a class should always be declared private, never public or protected
+
+hide implementation methods as well. The key point is that a class should define what to do, not how it is done.
+
+> Never return non-const pointers or references to private data members. This breaks encapsulation
+
+We still must distribute the header file, which declares private class members, to allow clients to compile their code again your API. This is an unfortunate limitation of the C++ language: all public, protected and private members of a class must appear in the declaration for that class. One popular technique to hid private members from the public header files is the **Pimpl** idiom. This involves isolating all of a class's private data members inside a separate implementation class in the .cpp file. The .h file then only needs to contain an opaque pointer to this implementation class. Strongly encouraged. Or at least attempt to remove private methods form the header when they are not necessary (only access public members or no members at all) by moving them to the .cpp file and converting them to static functions.
+
+> Prefer declaring private functionality as static functions within the .cpp file rather than exposing them in public headers as private methods. (Pimpl idiom is even better though).
+
+Hide any actual class that are purely implementation details. These classes should not be revealed as part of the public interface of your API.
+
+Minimally complete:
+
+1. Don't overpromise: every public API element is a promise. When in double, leave it out!
+2. Add virtual functions judiciously: virtual function calls must be resolved at run time by performing a vtable lookup, whereas non-virtual function calls can be resolved at compile time. Ultimately, you should only allow overriding if you explicitly intend for this to be possible. As a general rule of thumb, if your API doesn't call a particular method internally, then that method probably should not be virtual. Herb Sutter: prefer to make virtual functions private and only consider making them protected if derived classes need to invoke the virtual function's base implementation. As  a result, Sutter suggests that interfaces should be non-virtual and they should use the Template Method design pattern where appropriate (Non-Virtual Interface idiom - NVI). Always declare your destructor to be virtual if there are any virtual functions in your class. Never call virtual functions from your constructor or destructor. These calls will never be directed to a subclass.
+3. Convenience APIs: (convenience wrappers: utility routines that encapsulate multiple API calls to provide simpler higher-level operations). The important point is that you do not mix your convenience API int he same classes as your core API. Istead, produce supplementary classes that wrap certain public functionality of your core API. These convenience classes should be fully isolated from your core API. Convenience API should depend only on the public interface of your core API, not on any internal methods or classes. e.g. The OpenGL API is extremely powerful, but it is also aimed at a very low level. 
+
+
 
 
 
