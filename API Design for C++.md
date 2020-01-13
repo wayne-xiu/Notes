@@ -121,6 +121,14 @@ The take-home point in terms of API design is that if your API provides access t
 
 > Think of resource allocation and deallocation as object construction and destruction.
 
+Platform independent. A well-designed C++ API should always avoid platform-specific #if/#ifdef lines in its public headers, unless for interfacing with a platform-specific resource.
+
+> Never put platform-specific #if or #ifdef statements in your public APIs. It exposes implementation details and makes your API appear different on different platforms.
+
+5. Loosely coupled: Good APIs exhibit loose coupling (components inter-dependency) and high cohesion (strongly related the various functions). Circular dependency should be avoided. Whenever you have a choice, you should prefer declaring a function as a non-member non-friend function rather than a member function (Scott Meyers). Doing so improves encapsulation and reduces the degree of coupling of functions. 
+
+> Use a forward declaration for a class unless you actually need to #Include its full definition
+
 
 
 

@@ -335,7 +335,15 @@ Breadth-first search assigns two values to each vertex:
 1. A **distance**, giving the minimum number of edges in any path from the source vertex to vertex v
 2. The **predecessor** vertex of v along some shortest path from the source vertex. The source vertex's predecessor is some special value, such as *null*, indicating that it has no predecessor.
 
-always visiting all vertices at distance k from the source before visiting any vertex at distance k+1. visit only the neighbors whose distance is currently *null*. Use a **queue** to keep tracker of vertices that have already been visited but have not yet been visited from.
+always visiting all vertices at distance k from the source before visiting any vertex at distance k+1. visit only the neighbors whose distance is currently *null*. Use a **queue** to keep tracker of vertices that have already been visited but have not yet been visited from. A que has three operations:
+
+- enqueue (push_back)
+- dequeue (pop_front)
+- isEmpty()
+
+> notice that at each moment, the queue either contains vertices all with the same distance, or it contains vertices with distance k followed by vertices with distance k+1. That's how we ensure that we visit all vertices at distance k before visiting any vertices at distance k+1
+
+
 
 
 
