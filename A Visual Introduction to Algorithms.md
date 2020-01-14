@@ -343,7 +343,41 @@ always visiting all vertices at distance k from the source before visiting any v
 
 > notice that at each moment, the queue either contains vertices all with the same distance, or it contains vertices with distance k followed by vertices with distance k+1. That's how we ensure that we visit all vertices at distance k before visiting any vertices at distance k+1
 
+```c++
+struct BFSInfo {
+    BFSInfo(int _distance = -1, int _predecessor = -1):
+        distance(_distance), predecessor(_predecessor) {}
+    int distance;
+    int predecessor;
+};
 
+vector<BFSInfo> doBFS(vector<vector<int>> graph, int source) {
+    vector<BFSInfo> bfsInfo(graph.size());
+    bfsInfo[source].distance = 0;
 
+    queue<int> q;
+    q.push(source);
+    vector<int>::iterator it;
+    int currentDis = 0;
+    // Traverse the graphs
+    while (!q.empty()) {
+        int current = q.front();  // current node
+        bool visited = false;
+        q.pop();
+        for (it = graph[current].begin(); it != graph[current].end(); ++it) {
+            if (bfsInfo[*it].distance == -1) {
+                bfsInfo[*it].predecessor = current;
+                bfsInfo[*it].distance = currentDis+1;
+                q.push(*it);
+                visited = true;
+            }
+        }
+        if (visited)
+            currentDis++;
+    }
+    return bfsInfo;
+}
+```
 
+How long does breadth-first search take for a graph with vertex set V and edge set E? : $O(V+E)$, which actually means $O(max(E, V))$, depending on the relative size of E and V. A graph in which $\mid E \mid = \mid V \mid  -1$ is called a free tree. 
 
