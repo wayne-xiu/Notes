@@ -125,17 +125,127 @@ Platform independent. A well-designed C++ API should always avoid platform-speci
 
 > Never put platform-specific #if or #ifdef statements in your public APIs. It exposes implementation details and makes your API appear different on different platforms.
 
-5. Loosely coupled: Good APIs exhibit loose coupling (components inter-dependency) and high cohesion (strongly related the various functions). Circular dependency should be avoided. Whenever you have a choice, you should prefer declaring a function as a non-member non-friend function rather than a member function (Scott Meyers). Doing so improves encapsulation and reduces the degree of coupling of functions. 
+5. Loosely coupled: Good APIs exhibit loose coupling (components inter-dependency) and high cohesion (strongly related the various functions). Circular dependency should be avoided. Whenever you have a choice, you should prefer declaring a function as a non-member non-friend function rather than a member function (Scott Meyers). Doing so improves encapsulation and reduces the degree of coupling of functions. intentional redundancy; Manager classes: A manager class is one that owns and coordinates several lower-level classes. Callbacks, observers, and notifications: In C++, a callback is a pointer to a function within in module A that is passed to module B so that B can invoke the function in A at an appropriate time. Module B knows nothing about module A and has no include or link dependencies upon A. Callbacks are a popular technique to break cyclic dependencies in large projects. Observers is a more O-O solution than callbacks. The signals and slots concepts was introduced by Qt as a generic way to allow any event to be sent to any interested method to act upon. Signals can be thought of simply as callbacks with multiple targets (slots). All of the slots for a signal are called when that signal is invoked, or "emitted".
 
 > Use a forward declaration for a class unless you actually need to #Include its full definition
 
+![couplingNoManagerClass](Media/couplingNoManagerClass.png)
 
+![couplingWithManagerClass](Media/couplingWithManagerClass.png)
 
+```c++
+// signal/slot mechanism using boost::signal
+class MySlot {
+  public:
+    void operator()() const {
+        cout << "MySlot called" << endl;
+    }
+};
 
+// create instance
+MySlot slot;
+// create a signal with no arguments and a void return value
+boost::signal<void ()> signal;
+// connect slot to the signal
+signal.connect(slot);
+// emit the signal and thereby call all of the slots
+signal();
+```
 
-
+6. Stable, documented and tested
 
 ## Patterns
+
+A design pattern is a general solution to a common software design problem.
+
+- **Creational Patterns**
+
+  - Abstract Factory: Encapsulates a group of related factories
+  - Builder: Separates a complex object's construction from its representation
+  - Factory Method: Lets a class defer instantiation to subclasses
+  - Prototype: Specifies a prototypical instance of a class that can be cloned to produce new objects
+  - Singleton: Ensures a class has only one instance
+
+- **Structural Patterns**
+
+  - Adapter: Converts the interface of one class into another interface
+  - Bridge: Decouples an abstraction from its implementation so that both can be changed independently
+  - Composite: Composes objects into tree structures to represent part-whole hierarchies
+  - Decorator: Adds additional behavior to an existing object in a dynamic fashion
+  - Facade: Provides a unified higher-level interface to a set of interfaces in a subsystem
+  - Flyweight: Uses sharing to support large numbers of fine-grained objects efficiently
+  - Proxy: Provides a surrogate or placeholder for another object to control access to it
+
+- **Behavioral Patterns**
+
+  - Chain of Responsibility: Gives more than one receiver object a chance to handle a request from a sender object
+  - Command: Encapsulates a request or operation as an object, with support for undoable operations
+  - Interpreter: Specifies how to represent and evaluate sentences in a language
+  - Iterator: Provides a way to access the elements of an aggregate object sequentially
+  - Mediator: Defines an object that encapsulates how a set of objects interact
+  - Momento: Captures an object's internal state so that it can be restored to the same state later
+  - Observer: Allows a one-to-many notification of state changes between objects
+  - State: Allows an object to appear to change its type when its internal state changes
+  - Strategy: Defines a family of algorithms, encapsulates each one, and makes them interchangeable at run time
+  - Template Method: Defines a skeleton of an algorithm in an operation, deferring some steps to subclasses
+  - Visitor: Represents an operation to be performed on the elements of an object structure
+
+  
+
+### Pimpl Idiom
+
+Pimply completely hides internal details from your public header files. Essentially, it lets us move private member data and functions to the .cpp file. Indispensable tool for creating well-insulated APIs and can be considered a special case of the Bridge design pattern. (Use more Pimpl if only one thing learned from this book).
+
+Opaque pointer to declared type (not defined yet).
+
+> When using the pimpl idiom use a private nested implementation class. Only use a public nested Impl class (or a public non-nested class) if other classes or free functions in the .cpp must access Impl members
+
+Recommend putting all private member various and private methods in the Impl class.
+
+The default copy constructor and assignment operator will only perform a shallow copy, which is bad for pimpled classes (repeated deletion). We can
+
+1. Make class uncopyable: = delete or declare only or declare as private
+2. Explicitly define the copy semantics (performing deep copy)
+
+To avoid memory issues, we should ensure that the very first thing the constructor does is to allocate the Impl object (preferably via initialization list) and the very last thing the destructor does it to delete it.
+
+Alternatively, rely upon smart pointers. Also, a scoped pointer (unique_ptr) is non-copyable by definition.
+
+> Think about the copy semantics of the pimpl classes and consider using a smart pointer to manage initialization and destruction of the implementation pointer
+
+dirty tactics to gain access to your private member (actually legal)
+
+```c++
+#define private public  // make private members be public!
+#include "yourapi.h"    // can now access your private members
+#undef private      	// revert to default private semantics
+```
+
+With pimpl, the compiler will no longer catch changes to member variables within const methods.
+
+```c++
+void PimpledObject::constMethod() const {
+    mImpl->mName = "string changed by a const method";
+}
+```
+
+### Singleton
+
+enforce that only one instance of an object is ever created.
+
+
+
+### Factory Methods
+
+provides a generalized way to create instance of an object and can be a great way to hide implementation details for derived class.
+
+### API Wrapping Patterns
+
+Proxy, Adapter, Facade describe various solutions for wrapping an API on top of an existing incompatible or legacy interface. Proxy and Adapter provide one-to-one mapping of new classes to preexisting classes, whereas the Facade provides a simplified interface to a larger collection of classes.
+
+### Observer Pattern
+
+Allows conceptually unrelated classes to communicate by allowing one class (the observer) to register for notifications from another class (the object).
 
 ## Design
 
