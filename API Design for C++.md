@@ -233,15 +233,235 @@ void PimpledObject::constMethod() const {
 
 enforce that only one instance of an object is ever created.
 
+> A Singleton is a more elegant way to maintain global state, but you should always question whether you need global state
 
+The Singleton pattern involves creating a class with a static method that returns the same instance of the class every time it is called. Prefer returning a reference than a pointer in the getInstance() method (avoid potential deleting by clients)
+
+```c++
+class Singleton {
+  public:
+    static Singleton& getInstance();
+  private:
+    Singleton();
+    ~Singleton();
+    Singleton(const Singleton&) = delete;  // private state sufficies without delete
+    const Singleton& operator= (const Singleton&) = delete;
+};
+```
+
+> Declare the constructor, destructor, copy constructor, and assignment operation to be private (or protected) to enforce the Singleton property
+
+The relative order of initialization of non-local static objects in different translation units is undefined.
+
+thread safe and race condition
+
+> Creating a thread-safe Singleton in C++ is hard. Consider initializing it with a static constructor or an API initialization function
+
+Singleton vs. dependency injection: a technique where an object is passed into a class (injected) instead of having the class create and store the object itself (constructor injection or setter or even define a reusable interface to inject certain types of objects and then inherit from that interface in your classes)
+
+```c++
+class MyDataBase {
+    public:
+    MyDataBase(DataBase* db): mDatabase(db) {}
+    private:
+    Database* mDatabase;
+}
+```
+
+> Dependency injection makes it easier to test code that uses Singletons
+
+The Monostate pattern can be an alternative pattern to Singleton when there is no need to store state in the Singleton object itself. The Monostate allows multiple instances of a class to be created where all of those instances use the same static data
+
+```c++
+class Monostate {
+  public:
+    int getTheAnswer() const {  // multiple instaces will ge the same static variable
+        return sAnswer;
+    }
+  private:
+    static int sAnswer;
+};
+
+int Monostate::sAnswer = 42;
+```
+
+Robert Martin: Singleton enforces the structure of singularity by only allowing one instance to be created, whereas Monostate enforces the behavior of singularity by sharing the same data for all instances
+
+> Consider using Monostate instead of Singleton if you don't need lazy initialization of global data or if you want the singular nature of the class to be transparent
+
+All member functions can be declared static in certain Monostate. One drawback with the static method version Monostate is that you cannot subclass any of the static methods because static member functions cannot be virtual.
+
+Singleton is essentially a way to store global data and tends to be an indicator of poor design. Ofen it's useful to think about introducing a "session" or "execution context" object into your system early on. This is a single instance that holds all all of the state for your code rather than representing that state with multiple singletons.
+
+> There are several alternatives to the Singleton pattern, including dependency injection, the Monostate pattern, and the use of a session context
 
 ### Factory Methods
 
-provides a generalized way to create instance of an object and can be a great way to hide implementation details for derived class.
+provides a generalized way to create instance of an object and can be a great way to hide implementation details for derived class. In essence, a factory method is a generalization of a constructor. At a basic level, a factory method is simply a normal method call that can return an instance of a class. However, they are often used in combination with inheritance, where a derived class can override the factory method and return an instance of that derived class. Abstract base classes (ABC).
+
+ABC contains pure virtual member functions and couldn't be initialized using new.
+
+```c++
+// render.h
+class IRenderer {
+    public:
+    virtual ~IRenderer() {}
+    virtual bool loadScene(const string& filename) = 0;
+    virtual void setViewportSize(int w, int h) = 0;
+    virtual void setCameraPosition(double x, double y, double z) = 0;
+    virtual void setLookAt(double x, double y, double z) = 0;
+    virtual void Render() = 0;
+}
+```
+
+We can provide a default implementation for pure virtual methods for call in derived class but it would still have to be explicitly overridden and not all methods have to be pure virtual.
+
+In Java, this is referred as interface
+
+Always declare the destructor of an abstract base class (any class with virtual method(s) actually) to be virtual.
+
+```c++
+// renderfactory.h
+#include "renderer.h"
+class RendererFactory {
+    public:
+    IRenderer* createRenderer(const string& type);
+};
+```
+
+Factory method is just a normal method that can return an instance of an object (for derived class not ABC).
+
+```c++
+// rendererfactory.cpp; assuming you have 3 concrete derived classes (hidden from user)
+#include "renderfactory.h"
+#include "openglrenderer.h"
+#include "directxrenderer.h"
+#include "mesarenderer.h"
+
+IRender* RendererFactory::createRenderer(const string& type) {
+    if (type == "opengl")
+        return new OpenGLRenderer();
+    if (type == "directx")
+        return new DirectXRenderer();
+    if (type == "mesa")
+        return new MesaRenderer();
+    
+    return nullptr;
+}
+
+```
+
+The factory method allows users to decide which derived class to create at run time, not compile time as a normal constructor requires. Different classes are created based on user input or contents of a configuration file read at run time.
+
+> Note: the header files for the various concrete derived classes are only included in the factory's .cpp file. They don't appear in the renderfactory.h public header. In effect, these are private header files and do not need to be distributed with API. Users can never see the private details of different renders besides specify a render via a string variable or an enum
+
+> Use Factory Methods to provide more powerful class construction semantics and to hide subclass details
+
+To allow new derived classes to be added at run time, we can update the factory class to maintain a map that associates type names to object creation callbacks. This can be used to create extensible plugin interfaces for API
+
+The factory object must now hold state. This is the reason why most factory objects are also singletons.
+
+```c++
+// rendererfactory.h
+#include "renderer.h"
+#include <map>
+
+class RendererFactory {
+    public:
+    typedef IRenderer* (*CreateCallback)();
+    static void registerRenderer(const std::string& type, CreateCallback cb);
+    static void unregisterRenderer(const std::string& type);
+    static IRenderer* createRenderer(const std::string& type);
+    private:
+    typedef std::map<std::string, CreateCallback> callbackMap;
+    static callbackMap mRenderers;
+};
+```
+
+the associate .cpp file
+
+```c++
+#include "rendererfactory.h"
+
+// instantiate the static variable in RendererFactory
+RendererFactory::callbackMap RendererFactory::mRenderers;
+
+void RendererFactory::registerRenderer(const string& type, CreateCallback cb) {
+    mRenderers[type] = cb;
+}
+void RendererFactory::unregisterRenderer(const string& type) {
+    mRenderers.erase(type);
+}
+
+IRenderer* RendererFactory::createRenderer(const string& type) {
+    callbackMap::iterator = mRenderers.find(type);
+    if (it != mRenderers.end()) {
+        // call the creation callback to construct this derived type
+        return (it->second)();
+    }
+    return nullptr;
+}
+```
+
+API user can register/unregister new renders in the system. The compiler will ensure that the user's new renderer conforms to the IRenderer abstract interface
+
+```c++
+class UserRenderer: public IRenderer {
+    public:
+    ~UserRenderer() {}
+    bool loadScene(const std::string& filename) { return true; }
+    void setViewportSize(int w, int h) {}
+    void setCameraPosition(double x, double y, double z) {}
+    void setLookAt(double x, double y, double z) {}
+    void Render() { cout << "User render" << endl; }
+    static IRenderer* Create() { return new UserRenderer(); }
+};
+
+int main() {
+    // register new renderer
+    RenderFactory::registerRender("user", UserRender::Create);
+    // create an instance of new renderer
+    IRenderer* r = RendererFactory::CreateRenderer("user");
+    r->Render();
+    delete r;
+    
+    return 0;
+}
+```
+
+
 
 ### API Wrapping Patterns
 
 Proxy, Adapter, Facade describe various solutions for wrapping an API on top of an existing incompatible or legacy interface. Proxy and Adapter provide one-to-one mapping of new classes to preexisting classes, whereas the Facade provides a simplified interface to a larger collection of classes.
+
+Design a new cleaner API that hides the underlying legacy code or to expose a C++ API to a plain C interface for certain clients.
+
+**Proxy**
+
+The proxy class and the original class has the same one-to-one interface. This pattern is often implemented by making the proxy class store a copy of, or a pointer to the original class. Be careful with code duplication and changes to the original object
+
+```c++
+class Proxy {
+    public:
+    Proxy(): mOrig(new Original()) {}
+    ~Proxy() { delete mOrig; }
+    bool doSomething(int value) {
+        return mOrig->doSomething(value);
+    }
+    private:
+    Proxy(const Proxy&);
+    const Proxy& operator=(const Proxy&);
+    
+    Original* mOrig;
+}
+```
+
+An alternative solution is to use an abstract interface that is shared by both the proxy and original APIs (better synchronized)
+
+> A Proxy provides an interface that forwards function calls to another interface of the same form
+
+support resource sharing: Flyweight pattern, where multiple objects share the same underlying data to minimize memory footprint.
 
 ### Observer Pattern
 
