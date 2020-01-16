@@ -463,9 +463,59 @@ An alternative solution is to use an abstract interface that is shared by both t
 
 support resource sharing: Flyweight pattern, where multiple objects share the same underlying data to minimize memory footprint.
 
+**Adapter**
+
+Adapter pattern translates the interface for one class into a compatible but different interface (may be different from original)
+
+```c++
+class RectangelAdapter {
+    public:
+    RectangleAdapter(): mRect(new Rectangle()) {}
+    ~RectangleAdapter() {
+        delete mRect;
+    }
+    void Set(float x1, float y1, float x2, float y2) {
+        float w = x2-x1;
+        float h = y2-y1;
+        float cx = (x1+x2)/2;
+        float cy = (y1+y2)/2;
+        mRect->setDimensions(cx, cy, w, h);
+    }
+    private:
+    RectangleAdapter(const RectangleAdapter&) = delete;
+    const RectangleAdapter& operator= (const RectangleAdapter&) = delete;
+    
+    Rectangle* mRect;
+};
+```
+
+> An Adapter translates one interface into a compatible but different interface
+
+Adapters can be implemented using composition (as above) or inheritance, i.e object adapters or class adapters. Prefer to use private inheritance for class adapter so that only new interface is made public.
+
+We could create adapter classes that wrap the plain C API calls into C++ classes, which is more object-oriented.
+
+**Facade**
+
+The Facade design pattern presents a simplified interface for a larger collection of classes. In effect, it defines a higher-level interface that makes the underlying subsystem easier to use (similar to convenience APIs).
+
+![FacadeUML](Media/FacadeUML.png)
+
+> A Facade provides a simplified interface to a collection of other classes. In an encapsulating facade, the underlying classes are not accessible.
+
 ### Observer Pattern
 
 Allows conceptually unrelated classes to communicate by allowing one class (the observer) to register for notifications from another class (the object).
+
+> An Observer lets you decouple components and avoid cyclic dependencies. Compile-time coupling means that users cannot dynamically add new dependencies to the system at run time.
+
+**Model-View-Controller**
+
+MVC architecture isolates the business logic (Model) from the user interface (View) with the Controller receiving user input and coordinating the other two.
+
+Qt; e.g. checkbox button, the current on/off state of the button is stored in Model, the View draws the current state of the button on the screen, and the Controller updates the Model state and View display when the user clicks the button.
+
+> 
 
 ## Design
 
