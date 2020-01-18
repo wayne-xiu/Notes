@@ -515,7 +515,77 @@ MVC architecture isolates the business logic (Model) from the user interface (Vi
 
 Qt; e.g. checkbox button, the current on/off state of the button is stored in Model, the View draws the current state of the button on the screen, and the Controller updates the Model state and View display when the user clicks the button.
 
-> 
+> The MVC architectural pattern promotes the separation of core business logic or the Model, from the user interface, or View. It also isolates the Controller logic that affects changes in the Model and updates the View.
+
+View code can call Model code (to get state and update UI), but Model code should have no compile-time knowledge of View code.
+
+![MVC](Media/MVC.png)
+
+subject & observer - publisher & subscriber
+
+```c++
+#incldue <map>
+#include <vector>
+
+class IObserver {
+	public:
+    virtual ~IObserver() {}
+    virtual void Update(int message) = 0;
+};
+class ISubject {
+    public:
+    ISubject();
+    virtual ~ISubject();
+    virtual void Subscribe(int message, IObserver* observer);  // register
+    virtual void Unsubscribe(int message, IObserver* observer);  // de-register
+    virtual void Notify(int message);
+    private:
+    typedef vector<IObserver*> ObserverList;
+    typedef map<int, ObserverList> ObserverMap;
+    ObserverMap mObservers;
+};
+
+#incldue "observer.h"
+class MySubject: public ISubject {
+    public:
+    enum Message{ADD, REMOVE};
+}
+#include "subject.h"
+class MyObserver: public IObserver {
+    public:
+    explict MyObserver(const string& name): mName(name) {}
+    void update(int message) {
+        cout << mName << "Received message";
+        cout << message << endl;
+    }
+    private:
+    string mName;
+};
+
+int main() {
+    MyObserver observer1("observer1");
+    MyObserver observer2("observer2");
+    MyObserver observer3("observer3");
+    
+    MySubject subject;
+    subject.Subscribe(MySubject::ADD, &observer1);
+    subject.Subscribe(MySbbject::ADD, &observer2);
+    subject.Subscribe(MySUbject::REMOVE, &observer2);
+    subject.Subscribe(MySUbject::REMOVE, &observer3);
+    
+    subject.Notify(MySubject::ADD);
+    subject.Notify(MySubject::REMOVE);
+
+    return 0;
+}
+```
+
+subject.Notify() will traverse its list of observers that have been subscribed for the given message and calls the Update() method for each of them.
+
+Push and Pull observers
+
+- information is pushed to the observer (update with arguments); push-based solution is useful for sending small commonly used pieces of data, however, it may be inefficient for large data
+- observer query the subject object directly
 
 ## Design
 
