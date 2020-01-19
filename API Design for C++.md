@@ -589,6 +589,63 @@ Push and Pull observers
 
 ## Design
 
+architecture planning > class design > individual function calls
+
+You can't design what you don't understand
+
+![APIDesignFlow](Media/APIDesignFlow.png)
+
+technical debt
+
+- Evolution: have a functional system, hid old ugly code behind new well-designed APIs (wrapper patterns)
+- Revolution: implement completely new
+
+Design for the long term
+
+Good API design is about putting in place a stable logical interface to solve a problem. The beauty of APIs is that the underlying implementation can be as quick and dirty or as complete and elegant as you need.
+
+Software requriements
+
+- Business requirements: value in business
+- Functional requirements: how your API should behave
+- Non-functional requirements: software quality standards
+
+Non-functional requirements
+
+- Performance
+- Platform compataibility
+- Security
+- Scalability
+- Flexibility
+- Usability
+- Concurrency
+- Cost
+
+requirements documents where each requirement is given a unique identifier and a description
+
+> Use cases describe the requirements for your API from the perspective of the user.
+>
+> Use cases can be simple lists of short goal-oriented descriptions or can be more formal structured specifications that follow a prescribed templates
+
+Agile development is a general term of software development methods that align with the principles of the Agile Manifesto. Examples include Extreme Programming (XP), Scrum. The following qualities should be valued in Agile development:
+
+- Individual and interactions over process and tools
+- Working software over comprehensive documentation
+- Customer collaboration over contract negotiation
+- Responding to change over following a plan
+
+iterate on working code
+
+> User stories are a way to capture minimal requirements from users within an agile development process
+
+Elements of API Design
+
+An abstraction is a simplified description of something that can be understood without any knowledge of how it will be implemented programmatically. Complex programs exhibit hierarchies, or layers of abstractions.
+
+
+
+
+
 ## Styles
 
 ## Usage
