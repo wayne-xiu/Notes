@@ -1,5 +1,7 @@
 # C++ Standard Library including C++14 & C++17
 
+[toc]
+
 Components of STL
 
 ![STLComponent](Media/STLComponent.png)
@@ -16,3 +18,42 @@ Components of STL
 
 STL provides more than 100 algorithms. By specifying the execution policy, we can run most of the algorithms *sequential, parallel or parallel and vectorized*. A lot of algorithms can be further customized by *callable* like functions, function objects or lambda-functions.
 
+Text Processing
+
+- String
+- String View: std::string_view is quite cheap to copy and is a non-owning reference to a std::string
+- Regular Expression
+
+Multithreading 
+
+- Threads
+- Shared variables: coordinated with mutexes or locks
+- Thread-local variables
+- Condition variables: sender-receiver workflow
+- Tasks: similar to threads. While a programmer explicitly creates a thread, a task will be implicitly created by the C++ runtime. Tasks are like data channels. The promise puts data into the data channel; the future picks the value up.
+
+> All needed headers should always be explicitly specified, even though the compiler may add additional headers to the header files.
+
+nested namespaces
+
+```c++
+auto timeNow = std::chrono::system_clock::now();
+// or 
+using std::chrono::system_clock;
+auto timeNow = now();
+```
+
+> using directives should be used with great care in source files. That includes names, which accidently hide names in the local or surrounding namespace.
+>
+> Don't use using directive in header files.
+
+```c++
+// Namespace alias
+#include <chrono>
+namespace systemClock = std::chrono::system_clock;
+```
+
+## Useful Functions
+
+- min, max, minmax; By default, the less operator (<) is used for comparison, and can be customized. Functions that return true or false are called predicates
+- 
