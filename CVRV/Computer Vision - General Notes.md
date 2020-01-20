@@ -72,7 +72,7 @@ The world points are transformed to camera coordinates using the extrinsics para
 
 ![cameraExtrinsicIntrinsic](../Media/cameraExtrinsicIntrinsic.png)
 
-The origin of the camera's coordinate system is at its optical center and its x- and y-axis define the image plane.
+The origin of the camera's coordinate system is at its optical center and its x- and y-axis define the image plane. In a stereo system, the origin is located at the optical center of Camera 1.
 
 ![cameraExtrinsic](../Media/cameraExtrinsic.png)
 
@@ -80,7 +80,55 @@ The camera intrinsic parameters include focal length, the optical center (aka pr
 
 - Lens distortion model (radial and tangential)
 
-The camera matrix does not account for lens distortion.
+The camera matrix does not account for lens distortion. The (accurate) camera model includes the radial and tangential lens distortion.
+
+**Radial Distortion**
+
+Radial distortion occurs when light rays bend more near the edges of a lens than they do at tis optical center. The smaller the lens, the greater the distortion.
+
+![radialDistortion](../Media/radialDistortion.png)
+
+The radial distortion coefficients model this type of distortion.
+
+​														$$x_{distorted} = (1+k_1r^2+k_2r^4+k_3r^6)x$$
+
+​														$$y_{distorted} = (1+k_1r^2+k_2r^4+k_3r^6)y$$
+
+where
+
+- $x, y$ - Undistorted pixel locations. $x$ and $y$ are in normalized image coordinates. Normalized image coordinates are calculated from pixel coordinates by translating to the optical center and dividing by the focal length in pixels. Thus $x$ and $y$ are dimensionless
+- $k_1, k_2, k_3$ - Radial distortion coefficients of the lens (to be calibrated)
+- $r^2=x^2+y^2$
+
+Typically, two coefficients are sufficient for calibration. For severe distortion, such as in wide-angle lenses, we can select 3 coefficients including $k_3$
+
+**Tangential Distortion**
+
+Tangential distortion occurs when the lens and the image plane are not parallel.
+
+![tangentialDistortion](../Media/tangentialDistortion.png)
+
+​															$$x_{distorted} = x + [2p_1xy+p_2(r^2+2x^2)]$$
+
+​															$$y_{distorted} = y + [p_1(r^2+2y^2)+2p_2xy]$$
+
+where
+
+- $x, y$ - Undistorted pixel locations. $x$ and $y$ are in normalized image coordinates. Normalized image coordinates are calculated from pixel coordinates by translating to the optical center and dividing by the focal length in pixels. Thus $x$ and $y$ are dimensionless
+- $p_1, p_2$ - Tangential distortion coefficients of the lens
+- $r^2=x^2+y^2$
+
+![stereoSystem](../Media/stereoSystem.png)
+
+When you recontruct a 3-D scene using a calibrated stereo camera, the *reconstructScene* and *triangulate* functions return 3-D points with the origin at the optical center of Camera 1.
+
+**Calibration Pattern-Based Coordinate System**
+
+Points represented in a calibration pattern-based coordinate system are described with the origin located at the (0, 0) location of the calibration pattern (e.g. checkerboard).
+
+#### Single Camera Calibrator
+
+
 
 
 
