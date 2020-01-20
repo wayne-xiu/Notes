@@ -56,4 +56,46 @@ namespace systemClock = std::chrono::system_clock;
 ## Useful Functions
 
 - min, max, minmax; By default, the less operator (<) is used for comparison, and can be customized. Functions that return true or false are called predicates
-- 
+- std::move: the compiler converts the source arg to a rvalue reference
+
+> Move is cheaper than copy: 1. no superfluous allocation and deallocation of memory necessary 2. there are objects that can not be copied, e.g. a thread or lock
+
+- std::forward: empowers writing function templates, which can identically forward their arguments. Typical use cases for std::forward are factory functions or constructors. Factory functions are functions which create an object and must therefore identically pass the arguments. Constructors often use their arguments to initialize their base class with the identical arguments.
+
+```c++
+#include <utility>
+
+using std::initializer_list;
+struct MyData {
+    MyData(int, double, char) {}
+};
+
+template<typename T, typename... Args>
+T createT(Args&&... args) {  // universal reference
+    return T(std::forward<Args>(args)...);
+}
+
+int main() {
+    int a = createT<int>();
+    int b = createT<int>(1);
+
+    string s = createT<string>("Only for testing.");
+    MyData myData2 = createT<MyData>(1, 3.19, 'a');
+
+    typedef vector<int> IntVec;
+    IntVec intVec = createT<IntVec>(initializer_list<int>({1, 2, 3}));
+
+    cout << a << " " << b << endl;
+    for (auto item: intVec)
+        cout << item << " ";
+    cout << endl;
+
+    return 0;
+}
+
+```
+
+A universal reference (or forwarding reference) is an rvalue reference in a type deduction context
+
+> std::forward in combination with variadic templates allows completely generic functions, which can accept an arbitrary number of arguments and forward them unchanged.
+
