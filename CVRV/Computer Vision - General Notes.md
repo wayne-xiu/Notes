@@ -128,9 +128,15 @@ Points represented in a calibration pattern-based coordinate system are describe
 
 #### Single Camera Calibrator
 
+single camera calibration workflow
 
+![singleCameraCalWorkflow](../Media/singleCameraCalWorkflow.png)
 
+Use between 10 and 20 images of the calibration pattern (generally checkboard), at least three. Use uncompressed or lossless compression image formats.
 
+**Prepare the Checkboard**
+
+- 
 
 ## Lidar and Point Cloud Processing
 
