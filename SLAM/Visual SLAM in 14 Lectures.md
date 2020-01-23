@@ -120,6 +120,65 @@ $u_k$ - 运动传感器输入，$\omega_k$ - 运动噪声， $y_j$ - 路标， $
 
 ### 实践：编程基础
 
+Linux中，程序是具有执行权限的文件，可以是脚本或者二进制文件，不过不像windows那样限制后缀名。
+
+CMake: 后面的大多数库都使用cmake来管理源代码。In a cmake project
+
+- 用cmake命令生成一个makefile文件
+- 用make命令根据这个makefile文件的内容编译整个工程
+
+步骤
+
+1. 遵循cmake语法，建立CMakeLists.txt文件（我用Sublime CMake package）
+
+```c++
+# declare minimum cmake version reqirement
+cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
+
+# declare a cmake project
+#project(helloSLAM VERSION 0.1.0 LANGUAGES CXX and/or C)
+project(helloSLAM)
+
+# add executable
+add_executable(helloSLAM helloSLAM.cpp)
+```
+
+2. 工程分析
+   1. 自动生成以下中间文件- CMakeFiles folder, Makefile, cmake_install.cmake, CMakeCache.txt
+   2. MakeFile是最重要的-一个自动化编译的脚本，可以理解成系统自动生成的编译指令
+
+```C++
+camke .
+```
+
+3. 编译 - 生成可执行文件
+
+```c++
+make
+```
+
+4. 测试执行
+
+```c++
+./helloSLAM
+```
+
+cmake-make
+
+- cmake过程中处理了工程文件之间的关系
+- make过程实际调用了个g++来编译程序
+
+处理中间文件
+
+```c++
+mkdir build  // 中间文件都存在build文件夹中，build后可直接删除
+cd build
+cmake ..
+make
+```
+
+
+
 
 
 ## 3. 三维空间刚体运动
