@@ -179,6 +179,22 @@ make
 
 
 
+使用库：只有带有main函数的文件才会生成可执行程序。其他算法、程序的集合代码，往往打包成一个库。
+
+```c++
+add_library(hello libHelloSLAM.cpp)  // 静态库
+add_library(hello_shared SHARED libHelloSLAM.cpp)  // 共享库（.so in Linux, .dll in Windows)
+```
+
+Linux中，库文件分为静态库和共享库（.a, .so; windows中，.lib, .dll)。所有库都是一些函数打包后的集合，差别在于静态库每次被调用都会生成一个副本，而共享库则只有一个副本。
+
+库文件就是一个压缩包，里面有编译好的二进制函数。对于使用者，只要拿到头文件和库文件，就可以调用这个库了。
+
+```c++
+add_executable(useHello useHello.cpp)
+target_link_libraries(useHello hello_shared)  // 链接可执行到库文件
+```
+
 
 
 ## 3. 三维空间刚体运动
