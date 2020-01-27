@@ -195,9 +195,31 @@ add_executable(useHello useHello.cpp)
 target_link_libraries(useHello hello_shared)  // 链接可执行到库文件
 ```
 
+在IDE中调试
+
+```c++
+set(CMAKE_BUILD_TYPE "Debug")
+```
+
 
 
 ## 3. 三维空间刚体运动
+
+Eigen提供了C++中矩阵计算，它的Geometry模块提供了四元数等刚体运动的描述。
+
+$$a \times b = a^\wedge b$$
+
+相机运动是一个刚体运动，它保证了同一个向量在各个坐标系内的长度和夹角都不会发生变化。具状矩阵$R$ 由两组基之间的内积组成，刻画了旋转前后同一个向量的坐标变换关系。
+
+$SO(n)$是特殊正交群（Special Orthogonal Group）。$SO(3)$就是三维空间的旋转。
+
+齐次坐标的变换矩阵$T$, 引入了一个额外的自由度，但是把非线性变换变成了线性计算。特殊欧式群（Speical Euclidean Group）
+
+**Eigen**
+
+Eigen是一个纯头文件搭建起来的库，不需要链接库文件（没有）
+
+
 
 ## 4. 李群与李代数
 
