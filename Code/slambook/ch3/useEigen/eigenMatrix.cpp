@@ -10,12 +10,39 @@ using namespace std;
 int main() {
 	Eigen::Matrix<float, 2, 3> matrix_23;
 	Eigen::Vector3d v_3d;
-	Eigen::Matrix3d mamtrix_33 = Eigen::Matrix3d::Zero();
+	Eigen::Matrix3d matrix_33 = Eigen::Matrix3d::Zero();
+	// dynamic size matrix
 	Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> matrix_dynamic;
 	Eigen::MatrixXd matrix_x;
 
 	matrix_23 << 1, 2, 3, 4, 5, 6;
 	cout << matrix_23 << endl;
+
+	for (int i = 0; i < 1; ++i) {
+		for (int j = 0; j < 2; ++j)
+			cout << matrix_23(i, j) << endl;
+	}
+
+	v_3d << 3, 2, 1;
+
+	Eigen::Matrix<double, 2, 1> result = matrix_23.cast<double>() * v_3d;
+	cout << result << endl;
+
+	matrix_33 = Eigen::Matrix3d::Random();
+	cout << matrix_33 << endl << endl;
+
+	// matrix operations
+	cout << "Transpose: " << endl << matrix_33.transpose() << endl;
+	cout << "Elements sum: " << endl << matrix_33.sum() << endl;
+	cout << "Diagonal trace: " << endl << matrix_33.trace() << endl;
+	cout << "Multiplication: " << endl << matrix_33 * 10 << endl;
+	cout << "Inverse: " << endl << matrix_33.inverse() << endl;
+	cout << "Determinant: " << endl << matrix_33.determinant() << endl;
+	
+	// Eigen calculations
+	Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eigen_solver(matrix_33.transpose() * matrix_33);
+	cout << "Eigen values: " << endl << eigen_solver.eigenvalues() << endl;
+	cout << "Eigen vector: " << endl << eigen_solver.eigenvectors() << endl;
 
 	return 0;
 }
