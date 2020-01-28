@@ -9,6 +9,7 @@ using namespace std;
 
 int main() {
 	Eigen::Matrix<float, 2, 3> matrix_23;
+	// Eigen provides many built-in types through typedef, but still Eigen::Matrix in nature
 	Eigen::Vector3d v_3d;
 	Eigen::Matrix3d matrix_33 = Eigen::Matrix3d::Zero();
 	// dynamic size matrix
@@ -43,6 +44,22 @@ int main() {
 	Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eigen_solver(matrix_33.transpose() * matrix_33);
 	cout << "Eigen values: " << endl << eigen_solver.eigenvalues() << endl;
 	cout << "Eigen vector: " << endl << eigen_solver.eigenvectors() << endl;
+
+	// Solve Ax = b
+	Eigen::Matrix<double, MATRIX_SIZE, MATRIX_SIZE> matrix_A;
+	matrix_A = Eigen::MatrixXd::Random(MATRIX_SIZE, MATRIX_SIZE);
+	Eigen::Matrix<double, MATRIX_SIZE, 1> v_b;
+	v_b = Eigen::MatrixXd::Random(MATRIX_SIZE, 1);
+
+	clock_t time_stt = clock();
+	// using inverse directly
+	Eigen::Matrix<double, MATRIX_SIZE, 1> x = matrix_A.inverse()*v_b;
+	cout << "time use in normal inverse is: " << 1000*(clock() - time_stt)/(double)CLOCKS_PER_SEC << "ms" << endl;
+
+	// using matrix decomposition
+	time_stt = clock();
+	x = matrix_A.colPivHouseholderQr().solve(v_b);
+	cout << "time use in QR decompostion is: " << 1000*(clock() - time_stt)/(double)CLOCKS_PER_SEC << "ms" << endl;
 
 	return 0;
 }

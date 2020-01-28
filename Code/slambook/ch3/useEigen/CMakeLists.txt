@@ -5,10 +5,10 @@ set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_CXX_FLAGS "-O3")
 
 # 添加Eigen头文件
-# include_directories( "/usr/include/eigen3" )
+include_directories( "/usr/include/eigen3" )
 
 # in osx and brew install
 # include_directories( /usr/local/Cellar/eigen/3.3.3/include/eigen3 )
 # Windows
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../../../include)  # not recommended
+# include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../../../include)  # not recommended
 add_executable(eigenMatrix eigenMatrix.cpp)

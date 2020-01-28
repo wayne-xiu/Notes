@@ -219,6 +219,32 @@ $SO(n)$是特殊正交群（Special Orthogonal Group）。$SO(3)$就是三维空
 
 Eigen是一个纯头文件搭建起来的库，不需要链接库文件（没有）
 
+Eigen与MATLAB类似，几乎所有的数据都当作矩阵来处理。Eigen不支持自动类型转化（implicit cast），比如float，double相加会报错。
+
+### 旋转向量与欧拉角（Rotation vector & Euler angles）
+
+Rotationi matrix and Transformation matrix are redundance, it's hard to estimate or optimize.
+
+旋转向量（Axis-Angle）实际上就是李代数。从旋转向量到旋转矩阵的转换，通过罗德里格斯公式（Rodrigues's Formula）
+
+​											          $$\boldsymbol{R} = cos(\theta)\boldsymbol{I}+(1-cos(\theta))\boldsymbol{nn}^T+sin\theta \boldsymbol{n}^\wedge$$
+
+​																	$$\theta = arccos(\frac{tr(\boldsymbol{R})-1}{2})$$
+
+​																		$$\boldsymbol{Rn}=\boldsymbol{n}$$
+
+由于转轴上的向量在旋转后不发生改变，转轴$n$是矩阵$R$特征值为1对应的特征向量（求解后再归一化）。
+
+欧拉rpy的旋转顺序是zyx（临时轴）。Euler Angles的一个缺点是万向锁问题Gimbal Lock:在俯仰角为$\pm90^\circ$时，第三次旋转与第一次旋转将使用同一个轴，使得系统丢失了一个自由度-奇异性问题（singularity）。**由于这个原理，欧拉角不适于插值和迭代，也不会在滤波和优化中使用**。
+
+### 四元数
+
+
+
+
+
+
+
 
 
 ## 4. 李群与李代数
