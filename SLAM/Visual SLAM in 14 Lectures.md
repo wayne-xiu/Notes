@@ -239,11 +239,31 @@ Rotationi matrix and Transformation matrix are redundance, it's hard to estimate
 
 ### 四元数
 
+可以证明，我们找不到**不带奇异性的三维向量表示方式**。四元数（Quaternion）既是紧凑的也没有奇异性。
 
+​													$$\boldsymbol{q}=q_0+q_1i+q_2j+q_3k=[s, \boldsymbol{v}]$$
 
+四元数与旋转向量的关系
 
+​													$$\boldsymbol{q}=[cos\frac{\theta}{2}, n_xsin\frac{\theta}{2}, n_ysin\frac{\theta}{2}, n_zsin\frac{\theta}{2}]^T$$
 
+​											    	$$\begin{cases}\theta=2arccos(q_0) \\ [n_x, n_y, n_z]^T = [q_1, q_2, q_3]^T/sin\frac{\theta}{2} \end{cases}$$
 
+”转了一半“。在四元数中，任意的旋转都可以由两个互为相反数的四元数表示。
+
+**四元数表示旋转**
+
+一个三维空间点可以用一个虚四元数表示 $$\boldsymbol{p}=[0, x, y, z]=[0, \boldsymbol{v}]$$, then $p'=qpq^{-1}$, where $q=[cos\frac{\theta}{2}, \boldsymbol{n}sin\frac{\theta}{2}]$
+
+四元数到旋转矩阵
+
+​									$$\boldsymbol{R}=\begin{bmatrix}1-2q_2^2-2q_3^2&2q_1q_2-2q_0q_3&2q_1q_3+2q_0q_2\\2q_1q_2+2q_0q_3&1-2q_1^2-2q_3^2&2q_2q_3-2q_0q_1\\2q_1q_3-2q_0q_2&2q_2q_3+2q_0q_1&1-2q_2^2-2q_2^2\end{bmatrix}$$
+
+​								$$q_0=\frac{\sqrt{tr(\boldsymbol{R})+1}}{2}, q_1=\frac{m_{23}-m_{32}}{4q_0}, q_2=\frac{m_{31}-m_{13}}{4q_0}, q_3=\frac{m_{12}-m_{21}}{4q_0}$$
+
+由于$\boldsymbol{q}， -\boldsymbol{q}$表示同一旋转，事实上$\boldsymbol{R}$对应的四元数并不是唯一的。编程中，当$q_0$接近0时，其余3个分量会非常大，解不稳定。
+
+### 相似、仿射、射影变换
 
 
 
