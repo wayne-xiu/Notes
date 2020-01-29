@@ -265,6 +265,42 @@ Rotationi matrix and Transformation matrix are redundance, it's hard to estimate
 
 ### 相似、仿射、射影变换
 
+**相似变换**-缩放
+
+$$\boldsymbol{T}_S = \begin{bmatrix}s\boldsymbol{R}&\boldsymbol{t}\\ \boldsymbol{0}^T&1\end{bmatrix}$$
+
+**仿射变换**
+
+$$\boldsymbol{T}_A = \begin{bmatrix}\boldsymbol{A}&\boldsymbol{t}\\ \boldsymbol{0}^T&1\end{bmatrix}$$
+
+仿射变换之要求$\boldsymbol{A}$可逆，而不必正交。仿射变换也叫正交投影。经过仿射变换后，立方体不再是方的，但各个面仍然是平行四边形。
+
+**射影变换**
+
+$$\boldsymbol{T}_P = \begin{bmatrix}\boldsymbol{A}&\boldsymbol{t}\\ \boldsymbol{a}^T&v\end{bmatrix}$$
+
+射影变换是最一般的变换。$\boldsymbol{A}$可逆，$\boldsymbol{t}$为平移，$\boldsymbol{a}^T$为缩放，$v=0/1$。因此，2D有8个自由度，3D有15个自由度。
+
+从真实世界到相机照片的变换可以看成一个射影变换：方形不再是方形，甚至不是平行四边形。而是一个不规则的四边形。
+
+| 变换           | 矩阵形式                                                     | 自由度 | 不变性质             |
+| -------------- | ------------------------------------------------------------ | ------ | -------------------- |
+| Euler          | $$\begin{bmatrix}\boldsymbol{R}&\boldsymbol{t}\\ \boldsymbol{0}^T&1\end{bmatrix}$$ | 6      | 长度、夹角、体积     |
+| 相似           | $$\begin{bmatrix}s\boldsymbol{R}&\boldsymbol{t}\\ \boldsymbol{0}^T&1\end{bmatrix}$$ | 7      | 体积比               |
+| 仿射Affine     | $$\begin{bmatrix}\boldsymbol{A}&\boldsymbol{t}\\ \boldsymbol{0}^T&1\end{bmatrix}$$ | 12     | 平行性、体积比       |
+| 射影Projective | $$\begin{bmatrix}\boldsymbol{A}&\boldsymbol{t}\\ \boldsymbol{a}^T&v\end{bmatrix}$$ | 15     | 接触平面的相交和相切 |
+
+> 如果相机的焦距为无穷远，变换为仿射变换
+
+> Eigen's Geometry module provides two different kinds of geometric transformations:
+>
+> - Abstract transformations, such as rotations (angle-aixs, quaternion), translations, scalings. These transformations are not represented as matrices, but we can nevertheless mix them with matrices and vectors in expressions and conversion
+> - Projective or affine transformation matrices: Transform class. These are really matrices
+
+https://eigen.tuxfamily.org/dox/group__TutorialGeometry.html#TutorialGeoTransform
+
+
+
 
 
 ## 4. 李群与李代数
