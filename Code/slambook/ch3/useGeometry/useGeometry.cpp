@@ -1,3 +1,4 @@
+#define _USE_MATH_DEFINES
 #include <iostream>
 #include <cmath>
 
@@ -62,9 +63,17 @@ int main()
 
     // Affine3d: 4x4
     Eigen::Affine3d T_affine = Eigen::Affine3d::Identity();
-    cout << T_affine.affine() << endl;
-    cout << T_affine.linear() << endl;
-    cout << T_affine.translation() << endl;
+    T_affine.rotate(rotation_vector);
+    // T_affine.translate(Eigen::Vector3d(1, 3, 4));
+    T_affine.pretranslate(Eigen::Vector3d(1, 3, 4));
+    // cout << T_affine.affine() << endl;
+    cout << "Invertible matrix A of Affine:\n" << T_affine.linear() << endl;
+    cout << "Translation t of Affine:\n" << T_affine.translation().transpose() << endl;
+    v_rotated = T_affine * v;
+    cout << "(1, 0, 0) after affine transformation:\n" << v_rotated.transpose() << endl;
+    v_rotated = T_affine.linear() * v;
+    cout << "(1, 0, 0) after rotation:\n" << v_rotated.transpose() << endl;
+
     // Projective3d: 4x4
 
     return 0;

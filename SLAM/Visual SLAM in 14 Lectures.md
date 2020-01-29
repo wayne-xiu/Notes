@@ -299,9 +299,11 @@ $$\boldsymbol{T}_P = \begin{bmatrix}\boldsymbol{A}&\boldsymbol{t}\\ \boldsymbol{
 
 https://eigen.tuxfamily.org/dox/group__TutorialGeometry.html#TutorialGeoTransform
 
+实际中，我们至少定义两个坐标系：**世界坐标系**和**相机坐标系**
 
+$$\boldsymbol{p}_c=^cT_w\boldsymbol{p}_w$$
 
-
+实践当中，$^cT_w$更常见，而$^wT_c$更直观。
 
 ## 4. 李群与李代数
 

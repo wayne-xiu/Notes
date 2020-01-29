@@ -7,6 +7,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_BUILD_TYPE "Release")
 
-include_directories("/usr/include/eigen3")
+if (UNIX)
+    include_directories("/usr/include/eigen3")
+endif(UNIX)
+
+if (WIN32)
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../../../include)  # not recommended
+endif(WIN32)
 
 add_executable(useGeometry useGeometry.cpp)
