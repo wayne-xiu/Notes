@@ -115,11 +115,11 @@ int main() {
 		glColor3f(0.f, 0.8f, 0.f);
 		glVertex3f(0, 0, 0);
 		glVertex3f(0, 10, 0);
-    	glColor3f(0.2f, 0.2f, 1.f);
-    	glVertex3f(0, 0, 0);
-    	glVertex3f(0, 0, 10);
-    	glEnd();
+		glColor3f(0.2f, 0.2f, 1.f);
+		glVertex3f(0, 0, 0);
+		glVertex3f(0, 0, 10);
+		glEnd();
 
-    	pangolin::FinishFrame();
+		pangolin::FinishFrame();
 	}
 }
