@@ -307,6 +307,17 @@ $$\boldsymbol{p}_c=^cT_w\boldsymbol{p}_w$$
 
 ## 4. 李群与李代数
 
+把估计**什么样的相机位姿最符合当前观测数据**这样的问题构建为一个**优化**求解问题。旋转矩阵$\boldsymbol{R}$本身是带有约束的，不适合优化。
+
+$\boldsymbol{R}$, $\boldsymbol{T}$对加法是不封闭（$\boldsymbol{R_1}+\boldsymbol{R_2} \notin SO(3)$）的，但是对乘法是封闭的。
+
+群是一种集合加上一种运算的代数结构。满足一下条件：
+
+1. 封闭性：$\forall a_1, a_2 \in A, a_1*a_2 \in A$
+2. 结合律：$\forall a_1, a_2, a_3 \in A, (a_1*a_2)*a_3 = a_1*(a_2*a_3)$
+3. 幺元：$\exist a_0 \in A, s.t. \forall a \in A, a_0*a=a*a_0=a$
+4. 
+
 ## 5. 相机与图像
 
 ## 6. 非线性优化
