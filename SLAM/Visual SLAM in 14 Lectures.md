@@ -316,7 +316,41 @@ $\boldsymbol{R}$, $\boldsymbol{T}$对加法是不封闭（$\boldsymbol{R_1}+\bol
 1. 封闭性：$\forall a_1, a_2 \in A, a_1*a_2 \in A$
 2. 结合律：$\forall a_1, a_2, a_3 \in A, (a_1*a_2)*a_3 = a_1*(a_2*a_3)$
 3. 幺元：$\exist a_0 \in A, s.t. \forall a \in A, a_0*a=a*a_0=a$
-4. 
+4. 逆：$\forall a \in A, \exist a^{-1} \in A, s.t. a*a^{-1} = a_0$
+
+李群是指具有连续（光滑）性质的群。每个李群都有一个李代数。
+
+对于任意的向量$\boldsymbol{a}$有一个对应的反对称矩阵$\boldsymbol{A}$
+
+$\boldsymbol{a}^\wedge = \boldsymbol{A}; \boldsymbol{A}^\vee = \boldsymbol{a}$
+
+我们可以找到$\phi(t)$
+
+$\dot{R}(t)R(t)^T=\phi(t)^\wedge$
+
+so we further have
+
+$\dot{R}(t)=\phi(t)^\wedge R(t) = \begin{bmatrix} 0 & -\phi_3 & \phi_2 \\\phi_3 & 0 & -\phi_1 \\ -\phi_2 & \phi_1 & 0\end{bmatrix}R(t)$
+
+每对旋转矩阵求一次导数，只需左乘一个$\phi(t)^\wedge$矩阵即可。
+
+把$R(t)$在$t_0=0$附近一阶泰勒展开
+
+$R(t)=R(t_0)+\dot{R}(t)(t-t_0)=R(t_0) +\phi(t_0)^\wedge R(t_0)(t-t_0) = I + \phi(t_0)^\wedge(t)$
+
+$\phi$反映了$R$的导数性质，所以称它在$SO(3)$原点附近的正切空间（Tangent Space）上
+
+令$\phi(t_0)=\phi_0$, we have
+
+$\dot{R}(t)=\phi_0^\wedge R$
+
+求解关于$R$的微分方程，已知$R(0)=I$
+
+$R(t) = exp(\phi_0^\wedge)(t)$
+
+
+
+
 
 ## 5. 相机与图像
 
