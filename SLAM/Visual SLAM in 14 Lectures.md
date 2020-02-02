@@ -352,6 +352,42 @@ note:以上只对$t=0$附近有效。
 
 旋转矩阵$\boldsymbol{R}$与另一个反对称矩阵$\phi_0^\wedge$通过指数关系发生了联系。$\phi$描述了$\boldsymbol{R}$在局部的导数关系。$\phi$正是对应到$SO(3)$上的李代数$so(3)$。$exp(\phi^\wedge)$反映的正是李群与李代数之间的指数/对数映射。
 
+每个李群都有与之对应的李代数。李代数描述了李群的局部性质。李代数由一个集合$V$，一个数域$F$和一个二元运算$[,]$（李括号）组成。李代数$(V,F,[,])$具有如下性质: 封闭性，双线性，自反性，雅可比等价。三维向量上的叉积x是一个李括号。
+
+
+
+$SO(3)$对应的三维向量李代数$\phi$的李括号为
+
+$[\phi_1,\phi_2]=(\Phi_1\Phi_2-\Phi_2\Phi_1)^\vee$
+
+在不引起歧义的情况下，对三维向量和所对应的三维反对称矩阵不加区别
+
+$so(3)=\{\phi\in R^3, \Phi=\phi^\wedge \in R^{3\times3}\}$
+
+$SE(3)$对应的李代数$se(3)$位于$R^6$空间
+
+$se(3)=\{\xi=\begin{bmatrix}\rho \\ \phi \end{bmatrix} \in R^6, \rho \in R^3, \phi \in so(3), \xi^\wedge=\begin{bmatrix} \phi^\wedge & \rho \\ 0^T & 0\end{bmatrix} \in R^{4 \times 4}\}$
+
+$\xi$前三维为平移（但含义与变换矩阵中的平移不同），后三维为旋转。$^\wedge, ^\vee$表示“从向量到矩阵”和“从矩阵到向量“的关系（并不一定是反对称）。$se(3)$的李括号为
+
+$[\xi_1,\xi_2]=(\xi_1^\wedge\xi_2^\wedge-\xi_2^\wedge\xi_1^\wedge)^\vee$
+
+
+
+$exp(\phi^\wedge)$被称为指数映射(Exponential Map)。
+
+$$exp(\phi^\wedge)=exp((\theta \boldsymbol{a})^\wedge)=exp(\theta a^\wedge)=\sum_{n=0}^{\infty}\frac{1}{n!}(\theta a^\wedge)^n = I + \theta a^\wedge + \frac{1}{2!}\theta^2a^\wedge a^\wedge+\frac{1}{3!}\theta^3a^\wedge a^\wedge a^\wedge+\frac{1}{4!}\theta^4a^\wedge a^\wedge a^\wedge a^\wedge+...$$
+
+we can prove
+
+$a^\wedge a^\wedge = aa^T-I$
+
+$a^\wedge a^\wedge a^\wedge = -a^\wedge$
+
+
+
+
+
 ## 5. 相机与图像
 
 ## 6. 非线性优化
