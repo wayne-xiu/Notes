@@ -348,9 +348,9 @@ $\dot{R}(t)=\phi_0^\wedge R$
 
 $R(t) = exp(\phi_0^\wedge)(t)$
 
+note:以上只对$t=0$附近有效。
 
-
-
+旋转矩阵$\boldsymbol{R}$与另一个反对称矩阵$\phi_0^\wedge$通过指数关系发生了联系。$\phi$描述了$\boldsymbol{R}$在局部的导数关系。$\phi$正是对应到$SO(3)$上的李代数$so(3)$。$exp(\phi^\wedge)$反映的正是李群与李代数之间的指数/对数映射。
 
 ## 5. 相机与图像
 
