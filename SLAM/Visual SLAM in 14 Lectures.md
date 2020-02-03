@@ -384,7 +384,9 @@ $a^\wedge a^\wedge = aa^T-I$
 
 $a^\wedge a^\wedge a^\wedge = -a^\wedge$
 
+$$exp(\phi^\wedge)=aa^T-a^\wedge a^\wedge+(\theta-\frac{1}{3!}\theta^3+\frac{1}{5!}\theta^5-...)-(-\frac{1}{2!}\theta^2+\frac{1}{4!}\theta^4-...)a^\wedge a^\wedge \\ =a^\wedge a^\wedge+I+sin\theta a^\wedge-cos\theta a^\wedge a^\wedge \\ =(1-cos\theta)a^\wedge a^\wedge + I + sin\theta a^\wedge \\ = cos\theta I + (1-cos\theta)aa^T+sin\theta a^\wedge$$
 
+这个式子与罗德里格斯公式一致$R = cos\theta I + (1-cos\theta)aa^T+sin\theta a^\wedge$。这表明$so(3)$实际上就是由所谓的旋转向量组成的空间，而指数映射即罗德里格斯公式。通过它们，我们把$so(3)$中任意一个向量对应到一个位于$SO(3)$的旋转矩阵。反之，通过对数映射也能把$SO(3)$对应到$so(3)$。不过通常不通过泰勒展开来计算对数映射
 
 
 
