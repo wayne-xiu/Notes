@@ -388,6 +388,16 @@ $$exp(\phi^\wedge)=aa^T-a^\wedge a^\wedge+(\theta-\frac{1}{3!}\theta^3+\frac{1}{
 
 这个式子与罗德里格斯公式一致$R = cos\theta I + (1-cos\theta)aa^T+sin\theta a^\wedge$。这表明$so(3)$实际上就是由所谓的旋转向量组成的空间，而指数映射即罗德里格斯公式。通过它们，我们把$so(3)$中任意一个向量对应到一个位于$SO(3)$的旋转矩阵。反之，通过对数映射也能把$SO(3)$对应到$so(3)$。不过通常不通过泰勒展开来计算对数映射
 
+指数映射是一个满射，存在一对多的情况。如果把旋转角度固定在$\pm\pi$之间，那么李群和李代数是一一对应的。
+
+
+
+**SE(3)上的指数映射**
+
+$$exp(\xi^\wedge)=\begin{bmatrix}\sum_{n=0}^{\infty}\frac{1}{n!}(\phi^\wedge)^n & \sum_{n=0}^{\infty}\frac{1}{(n+1)!}(\phi^\wedge)^n\rho \\ O^T & 1\end{bmatrix} \\ \triangleq \begin{bmatrix}R & J\rho \\ 0^T & 1\end{bmatrix}=T$$
+
+where $J=\frac{sin\theta}{\theta}I+(1-\frac{sin\theta}{\theta})aa^T+\frac{1-cos\theta}{\theta}a^\wedge$
+
 
 
 ## 5. 相机与图像
