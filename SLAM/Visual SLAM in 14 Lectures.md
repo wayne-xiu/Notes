@@ -398,6 +398,38 @@ $$exp(\xi^\wedge)=\begin{bmatrix}\sum_{n=0}^{\infty}\frac{1}{n!}(\phi^\wedge)^n 
 
 where $J=\frac{sin\theta}{\theta}I+(1-\frac{sin\theta}{\theta})aa^T+\frac{1-cos\theta}{\theta}a^\wedge$
 
+$t=J\rho$ and $J$可以由$\phi$得到。
+
+总结图：
+
+
+
+**李代数求导与近似形式**
+
+使用李代数的一大动机是进行优化。遗憾的是
+
+$exp(\phi_1^\wedge)exp(\phi_2^\wedge)=exp((\phi_1+\phi_2)^\wedge)$是不成立的
+
+线性化BCH公式，可以近似表达为
+
+$ln(exp(\phi_1^\wedge)exp(\phi_2^\wedge))^\vee \approx \begin{cases} J_l(\phi_2)^{-1}\phi_1+\phi_2 & 当\phi_2为小量，左乘 \\ J_r(\phi_1)^{-1}\phi_2+\phi_1 & 当\phi_2为小量，右乘\end{cases}$
+
+解读：当一个旋转矩阵$R_2$（李代数为$\phi_2$）左乘一个微小旋转矩阵$R_1$（李代数为$\phi_1$）时，可以近似的看作，在原有的李代数$\phi_2$上加上了一项$J_l(\phi_2)^{-1}\phi_1$。同理，第二项描述了右乘一个微小位移的情况。李代数在BCH近似下，分成了左乘近似和右乘近似两种。
+
+左乘BCH近似雅可比前面见过
+
+$J_l=J=\frac{sin\theta}{\theta}I+(1-\frac{sin\theta}{\theta})aa^T+\frac{1-cos\theta}{\theta}a^\wedge$
+
+逆
+
+$J_l^{-1}=\frac{\theta}{2}cot\frac{\theta}{2}I+(1-\frac{\theta}{2}cot\frac{\theta}{2})aa^T-\frac{\theta}{2}a^\wedge$
+
+右乘雅可比仅需要对自变量取负号即可
+
+$J_r(\phi)=J_l(-\phi)$
+
+李群乘法与李代数加法的关系
+
 
 
 ## 5. 相机与图像
