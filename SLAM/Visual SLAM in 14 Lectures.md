@@ -402,7 +402,7 @@ $t=J\rho$ and $J$可以由$\phi$得到。
 
 总结图：
 
-
+![lieGroupLieAlgebraRelation](../Media/lieGroupLieAlgebraRelation.png)
 
 **李代数求导与近似形式**
 
