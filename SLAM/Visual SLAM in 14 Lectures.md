@@ -430,6 +430,12 @@ $J_r(\phi)=J_l(-\phi)$
 
 李群乘法与李代数加法的关系
 
+$\Delta R \cdot R=exp(\Delta \phi^\wedge)exp(\phi^\wedge)=exp((\phi+J_l^{-1}(\phi)\Delta \phi)^\wedge)$
+
+反之，在李代数上进行加法
+
+$exp((\phi + \Delta \phi)^\wedge)=exp((J_l\Delta\phi)^\wedge)exp(\phi^\wedge)=exp(\phi^\wedge)exp((J_r\Delta \phi)^\wedge)$
+
 
 
 ## 5. 相机与图像
