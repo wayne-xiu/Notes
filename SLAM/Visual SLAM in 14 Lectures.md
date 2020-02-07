@@ -430,6 +430,39 @@ $J_r(\phi)=J_l(-\phi)$
 
 李群乘法与李代数加法的关系
 
+$\Delta R \cdot R=exp(\Delta \phi^\wedge)exp(\phi^\wedge)=exp((\phi+J_l^{-1}(\phi)\Delta \phi)^\wedge)$
+
+反之，在李代数上进行加法
+
+$exp((\phi + \Delta \phi)^\wedge)=exp((J_l\Delta\phi)^\wedge)exp(\phi^\wedge)=exp(\phi^\wedge)exp((J_r\Delta \phi)^\wedge)$
+
+
+
+**SO(3)上的李代数求导**
+
+SO(3)是冗余的矩阵，不容易优化。李代数具有良好的加法运算。使用李代数解决求导问题分两种：
+
+1. 对李代数求导
+2. 对里群左乘或右乘微小扰动，然后对该扰动求导
+
+$$\frac{\partial(exp(\phi^\wedge)p)}{\partial\phi}= \lim_{\delta x->0}\frac{exp((\phi+\delta \phi)^\wedge)p-exp(\phi^\wedge)p}{\delta\phi}\\=\lim_{\delta\phi->0}\frac{\exp((J_l\delta\phi)^\wedge)exp(\phi^\wedge)p-exp(\phi^\wedge)p}{\delta\phi} \\ = \lim_{\delta\phi->0}\frac{(I+(J_l\delta\phi)^\wedge)exp(\phi^\wedge)p-exp(\phi^\wedge)p}{\delta\phi}\\=\lim_{\delta_\phi->0}\frac{(J_l\delta\phi)^\wedge exp(\phi^\wedge)p}{\delta\phi}\\=\lim_{\delta\phi->0}\frac{-(exp(\phi^\wedge)p)^\wedge J_l\delta\phi}{\delta\phi}\\=-(Rp)^\wedge J_l$$
+
+左乘扰动
+
+$$\frac{\partial(Rp)}{\partial\varphi}=\lim_{\varphi->0}\frac{exp(\varphi^\wedge)exp(\phi^\wedge)p-exp(\phi^\wedge)p}{\varphi}\\=\lim_{\varphi->0}\frac{(I+\varphi^\wedge)exp(\phi^\wedge)p-exp(\phi^\wedge)p}{\varphi}\\=\lim_{\varphi->0}\frac{\varphi^\wedge Rp}{\varphi}\\=\lim_{\varphi->0}\frac{-(Rp)^\wedge \varphi}{\varphi}=-(Rp)^\wedge$$
+
+相比较直接求导，省去了一个雅可比$J_l$的计算，扰动模型更为实用。
+
+
+
+**SE(3)上的扰动模型**李代数求导
+
+扰动项的李代数为$\delta\xi=[\delta\rho, \delta\phi]^T$
+
+$$\frac{\partial(Tp)}{\partial\delta\xi}=\lim_{\delta\xi->0}\frac{exp(\delta\xi)^\wedge exp(\xi^\wedge) p - exp(\xi^\wedge)p}{\delta\xi}\\=\lim_{\delta\xi->0}\frac{\delta\xi^\wedge exp(\xi^\wedge)p}{\delta\xi}\\=\lim_{\delta\xi->0}\frac{\begin{bmatrix} \delta\phi^\wedge & \delta\rho \\ O^T & 0\end{bmatrix}\begin{bmatrix} Rp+t \\ 1\end{bmatrix}}{\delta\xi}\\=\lim_{\delta\xi->0}\frac{\begin{bmatrix} \delta\phi^\wedge(Rp+t)+\delta\rho \\ 0^T\end{bmatrix}}{[\delta\rho, \delta\phi]^T}\\=\begin{bmatrix} I & -(Rp+t)^\wedge \\ 0^T & 0^T\end{bmatrix} \overset{def}{=} (Tp)^\bigodot $$
+
+最后一个自定义算符$\bigodot$把一个齐次空间坐标点变换为一个$4\times6$矩阵。
+
 
 
 ## 5. 相机与图像
