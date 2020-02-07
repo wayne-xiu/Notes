@@ -372,7 +372,7 @@ $\xi$前三维为平移（但含义与变换矩阵中的平移不同），后三
 
 $[\xi_1,\xi_2]=(\xi_1^\wedge\xi_2^\wedge-\xi_2^\wedge\xi_1^\wedge)^\vee$
 
-
+### 指数与对数映射
 
 $exp(\phi^\wedge)$被称为指数映射(Exponential Map)。
 
@@ -404,7 +404,9 @@ $t=J\rho$ and $J$可以由$\phi$得到。
 
 ![lieGroupLieAlgebraRelation](../Media/lieGroupLieAlgebraRelation.png)
 
-**李代数求导与近似形式**
+### 李代数求导与扰动模型
+
+李代数求导与近似形式**
 
 使用李代数的一大动机是进行优化。遗憾的是
 
@@ -462,6 +464,32 @@ $$\frac{\partial(Rp)}{\partial\varphi}=\lim_{\varphi->0}\frac{exp(\varphi^\wedge
 $$\frac{\partial(Tp)}{\partial\delta\xi}=\lim_{\delta\xi->0}\frac{exp(\delta\xi)^\wedge exp(\xi^\wedge) p - exp(\xi^\wedge)p}{\delta\xi}\\=\lim_{\delta\xi->0}\frac{\delta\xi^\wedge exp(\xi^\wedge)p}{\delta\xi}\\=\lim_{\delta\xi->0}\frac{\begin{bmatrix} \delta\phi^\wedge & \delta\rho \\ O^T & 0\end{bmatrix}\begin{bmatrix} Rp+t \\ 1\end{bmatrix}}{\delta\xi}\\=\lim_{\delta\xi->0}\frac{\begin{bmatrix} \delta\phi^\wedge(Rp+t)+\delta\rho \\ 0^T\end{bmatrix}}{[\delta\rho, \delta\phi]^T}\\=\begin{bmatrix} I & -(Rp+t)^\wedge \\ 0^T & 0^T\end{bmatrix} \overset{def}{=} (Tp)^\bigodot $$
 
 最后一个自定义算符$\bigodot$把一个齐次空间坐标点变换为一个$4\times6$矩阵。
+
+### 相似变换群与李代数
+
+单目视觉中使用的相似变换群Sim(3)，及对应李代数sim(3)
+
+单目中存在尺度不确定性与尺度漂移。
+
+$Sim(3) = \{S = \begin{bmatrix} sR & t \\ 0^T & 1\end{bmatrix} \in R^4\}$
+
+李代数$sim(3)$元素是一个7维向量$\zeta$, 前6维与$se(3)$相同
+
+$$sim(3) = \{\zeta|\zeta=\begin{bmatrix}\rho \\ \phi \\ \sigma\end{bmatrix} \in R^7, \zeta^\wedge = \begin{bmatrix} \sigma I +\phi^\wedge & \rho \\ 0^T & 0 \end{bmatrix} \in R^{4\times 4}\}$$
+
+关联$Sim(3), sim(3)$的仍是指数映射和对数映射。
+
+$$exp(\zeta^\wedge)=\begin{bmatrix}e^\sigma exp(\phi^\wedge) & J_s\rho \\ 0^t & 1\end{bmatrix}$$
+
+$$J_s=\frac{e^\sigma-1}{\sigma}I+\frac{\sigma e^\sigma sin\theta+(1-e^\sigma cos\theta)\theta}{\sigma^2+\theta^2}a^\wedge+(\frac{e^\sigma-1}{\sigma}-\frac{(e^\sigma cos\theta-1)\sigma +(e^\sigma sin\theta)\theta}{\sigma^2+\theta^2})a^\wedge a^\wedge$$
+
+符号的对应关系是
+
+$s=e^\sigma, R=exp(\phi^\wedge), t = J_s\rho$
+
+BCH与扰动模型类似
+
+
 
 
 
