@@ -491,7 +491,12 @@ BCH与扰动模型类似
 
 
 
+实践：Sophus
 
+sophus is a small library, generally don't need to be installed and could be integrated in the project. In case of not finding the sophus header file
+
+1. use "make install" instead of "make"
+2. find_package  是寻找SophusConfig.cmake文件，这里面说明了你的Sophus库安装在哪里，如果只是make了，没有make  install，那把Sophus的目录就放在当前项目根目录中，这个工程中的find_package会在当前目录中找这个配置文件。可以specify include_directories, link_libraries
 
 ## 5. 相机与图像
 

@@ -19,6 +19,5 @@ find_package(Sophus REQUIRED)
 include_directories(${Sophus_INCLUDE_DIRS})
 
 add_executable(useSophus useSophus.cpp)
-
-
-add_subdirectory(example)
+target_link_libraries(useSophus ${Sophus_LIBRARIES})
+# add_subdirectory(example)
