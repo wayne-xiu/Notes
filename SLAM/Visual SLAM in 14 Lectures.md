@@ -498,7 +498,41 @@ sophus is a small library, generally don't need to be installed and could be int
 1. use "make install" instead of "make"
 2. find_package  是寻找SophusConfig.cmake文件，这里面说明了你的Sophus库安装在哪里，如果只是make了，没有make  install，那把Sophus的目录就放在当前项目根目录中，这个工程中的find_package会在当前目录中找这个配置文件。可以specify include_directories, link_libraries
 
+Prove $Rp^\wedge R^T = (Rp)^\wedge$:
+
+for any 3D vector $u$, we have $(Rp)^\wedge Ru = (Rp)\times (Ru) = R(p\times u)=Rp^\wedge u = Rp^\wedge (R^TR)u = (Rp^\wedge R^T)Ru \\ \Rightarrow ((Rp)^\wedge - Rp^\wedge R^T)Ru = 0 \Rightarrow Rp^\wedge R^T = (Rp)^\wedge$
+
 ## 5. 相机与图像
+
+对视觉SLAM，观测主要是指相机成像的过程。
+
+由于相机镜头中透镜的存在，使得光线投影到成像平面的过程中会产生**畸变**。用针孔模型和畸变模型来描述投影过程。
+
+### 相机模型
+
+![pinHoleModel](../Media/pinHoleModel.png)
+
+物理成像关系
+
+$$\frac{Z}{f}=-\frac{X}{X'}=-\frac{Y}{Y'} \\ \Rightarrow X' = \frac{X}{Z}f, Y' = \frac{Y}{Z}f$$
+
+负号表示成像是倒立的。
+
+**图像/像素坐标系**
+
+设在物理成像平面上固定着一个像素平面$o-u-v$
+
+像素坐标系：原点$o'$位于图像的左上角，$u$轴向右与$x$轴平行，$v$轴向下与$y$轴平行。*像素坐标系与成像平面之间相差了一个缩放和一个原点的平移*
+
+$P'$与像素坐标$[u,v]^T$的关系为
+
+$$\begin{pmatrix}u \\ v \\ 1 \end{pmatrix}= \frac{1}{Z}\begin{pmatrix}f_x & 0 & c_x \\ 0 & f_y & c_y \\ 0 & 0 & 1\end{pmatrix} \begin{pmatrix}X \\ Y \\ Z \end{pmatrix} \triangleq \frac{1}{Z}KP$$
+
+where $f_x = \alpha f, f_y = \beta f$; $\alpha, \beta$的单位是$pixel/m$ or $pixel/mm$
+
+中间矩阵为**内参数矩阵**（camera intrinsics）$K$。通常认为，相机的内参在出厂后是固定的，不会在使用过程中发生变化。标定算法已经成熟。
+
+
 
 ## 6. 非线性优化
 
