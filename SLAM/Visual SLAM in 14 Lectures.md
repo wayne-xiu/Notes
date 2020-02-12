@@ -526,11 +526,57 @@ $$\frac{Z}{f}=-\frac{X}{X'}=-\frac{Y}{Y'} \\ \Rightarrow X' = \frac{X}{Z}f, Y' =
 
 $P'$与像素坐标$[u,v]^T$的关系为
 
-$$\begin{pmatrix}u \\ v \\ 1 \end{pmatrix}= \frac{1}{Z}\begin{pmatrix}f_x & 0 & c_x \\ 0 & f_y & c_y \\ 0 & 0 & 1\end{pmatrix} \begin{pmatrix}X \\ Y \\ Z \end{pmatrix} \triangleq \frac{1}{Z}KP$$
+$$\begin{pmatrix}u \\ v \\ 1 \end{pmatrix}=\begin{pmatrix} \alpha & 0 & c_x\\ 0 & \beta & c_y \\ 0 & 0 & 1\end{pmatrix} \begin{pmatrix} X' \\ Y' \\ 1\end{pmatrix}= \frac{1}{Z}\begin{pmatrix}f_x & 0 & c_x \\ 0 & f_y & c_y \\ 0 & 0 & 1\end{pmatrix} \begin{pmatrix}X \\ Y \\ Z \end{pmatrix} \triangleq \frac{1}{Z}KP$$
 
 where $f_x = \alpha f, f_y = \beta f$; $\alpha, \beta$的单位是$pixel/m$ or $pixel/mm$
 
-中间矩阵为**内参数矩阵**（camera intrinsics）$K$。通常认为，相机的内参在出厂后是固定的，不会在使用过程中发生变化。标定算法已经成熟。
+中间矩阵为**内参数矩阵**（camera intrinsics）$K$。通常认为，相机的内参在出厂后是固定的，不会在使用过程中发生变化。标定算法已经成熟（如著名的单目棋盘张正友标定法）。
+
+上式的$P$表达在相机坐标系下，实际上相机在运动
+
+$$ZP_{uv} = Z \begin{pmatrix}u \\ v \\ 1\end{pmatrix} = KP = K(RP_w+t)=KTP_w$$
+
+$P_w$为相机位姿在世界坐标系下，$R, t$是相机的外参数（camera extrinsics）。相比于不变的内参，外参会随着相机运动发生改变，也是SLAM中待估计的目标，代表着机器人的轨迹。在机器人或自动驾驶中，外参有时也解释成相机坐标系到机器人坐标系的变换，描述”相机安装在什么位置“
+
+投影过程可以理解为把一个世界坐标点先转换到相机坐标系，再除掉它最后一维的数值（即该点距离相机成像平面的深度），这相当于吧最后一维进行归一化处理，得到点P在相机归一化平面上的投影。归一化坐标可看成相机前方$z=1$处的平面上的一个点，这个平面也称为归一化平面。归一化坐标再左乘内参就得到了像素坐标。**点的深度在投影过程中丢失了**
+
+#### 畸变模型
+
+透镜自身的形状对光线传播的影响;组装中，透镜和成像平面不可能完全平行。
+
+对于相机坐标系上的点P，通过5个畸变系数来修正镜像径向和切向distortion
+
+$$\begin{cases} x_{distorted} = x(1+k_1r^2+k_2r^4+k_3r^6)+2p_1xy+p_2(r^2+2x^2) \\ y_{distorted} = y(1+k_1r^2+k_2r^4+k_3r^6)+p_1(r^2+2y^2)+2p_2xy\end{cases}$$
+
+将畸变后的点通过内参数矩阵投影到像素平面，得到该点在图像上的正确位置。
+
+在实际的图像系统中，还有其他很多的相机（仿射，透视）模型和畸变模型。对于SLAM中的普通相机，上述已经足够。
+
+有两种畸变矫正（undistort）做法：1. 对图像去畸变，然后计算空间位置。2.从畸变的图像上的点出发，按照畸变方程，讨论畸变前的空间位置。前者更常见。
+
+
+
+总结单目成像过程：
+
+1. 世界坐标系下一个固定的点$P_w$
+2. 由于相机在运动，相机坐标经变换$\tilde{P}_c=RP_w+t$
+3. 把$\tilde{P}_c$投影到归一化平面$Z=1$上，$P_c=[X/Z, Y/Z, 1]^T$
+4. 有畸变时，根据畸变参数计算$P_c$发生畸变后的坐标
+5. P的归一化坐标经过内参后，对应到它的像素坐标: $P_{uv}=KP_c$
+
+世界坐标，相机坐标，归一化坐标和像素坐标
+
+#### 双目相机模型
+
+单目深度信息缺失，从相机光心到归一化平面连线上的所有点，都可以投影到一个像素上。
+
+双目相机与人眼原理相似：通过同步采集左右相机的图像，计算图像间视差，以便估计每一个下个像素的深度。
+
+![dualCameraModel](../Media/dualCameraModel.png)
+
+
+
+
 
 
 
