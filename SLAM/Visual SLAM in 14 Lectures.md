@@ -586,8 +586,30 @@ $d$被称为**视差**。根据视差，我们可以估计一个像素与相机�
 
 RGB-D原理
 
-1. 红外机构光（Structured Light）：Kinect 1, Intel RealSense
-2. 飞行时间（Time of Flight, ToF）：Kinect 2
+1. 红外机构光（Structured Light）：Kinect 1, Intel RealSense。通过红外结构光发射器和接收器，根据返回的结构光图案，计算物体与自身之间的距离。
+2. 飞行时间（Time of Flight, ToF）：Kinect 2。通过脉冲光发射器和接收器，根据发送到返回之间的光束飞行时间，确定物体与自身的距离。ToF与激光传感器十分相似，激光是通过逐点扫描获取距离的，而ToF相机可以获得整个图像的像素深度。
+
+完成深度与彩色图像素之间的配对后，我们可以在同一个图像位置，读取到色彩信息和距离信息，计算像素的3D相机坐标，生成点云（Point Cloud）。既可以在图像层面，也可以在点云层面处理。
+
+红外光容易受到日光的干扰，不能在室外使用。对于透射材质的物体，接收不到反射光，无法测量。
+
+### 图像
+
+$$I(x,y):R^2 \mapsto R$$
+
+```c++
+unsigned char pixel = image[y][x];
+```
+
+一个像素数据
+
+- 灰度图：0-255, 8 bits
+- 深度图：0-65535, 16 bits
+- 彩色图：RGB channels
+
+OpenCV彩图的默认顺序是BGR
+
+
 
 
 
