@@ -38,6 +38,15 @@ int main(int arg, char** argv) {
 
     cv::imshow("distorted", image);
     cv::imshow("undistorted", image_undistort);
+    // cv::waitKey();
+
+    // using cv::Undistort
+    cv::Mat image_undistort_cv = cv::Mat(rows, cols, CV_8UC1);
+    cv::Mat camera_matrix = (cv::Mat_<double>(3, 3) << fx, 0, cx, 0, fy, cy, 0, 0, 1);
+    cv::Mat distort_coeffs = (cv::Mat_<double>(4, 1) << k1, k2, p1, p2);
+    cv::undistort(image, image_undistort_cv, camera_matrix, distort_coeffs);
+
+    cv::imshow("undistorted with OpenCV", image_undistort_cv);
     cv::waitKey();
 
     return 0;
