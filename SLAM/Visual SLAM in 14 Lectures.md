@@ -694,7 +694,21 @@ $$min J(x,y)=\sum_k e_{u,k}^TR_k^{-1}e_{u,k}+\sum_k \sum_j e_{z,k,j}^T Q_{k,j}^{
 
 ### 非线性最小二乘
 
+迭代寻找梯度并下降的过程。
 
+$$\lVert f(x+\Delta x)\rVert_2^2 \approx \lVert f(x)\rVert_2^2+J(x)\Delta x + \frac{1}{2} \Delta x^T H \Delta x$$
+
+Jacobian, Hessian matrix for 1st and 2nd order derivatives. 
+
+**Gauss-Newton Method**
+
+$$f(x+\Delta x) \approx f(x) + J(x)\Delta x$$
+
+$$\Delta x^* = arg\min_{\Delta x} \frac{1}{2} \lVert f(x)+J(x)\Delta x\rVert ^2$$
+
+
+
+**Levenberg-Marquardt Method**
 
 ## 7. 视觉里程计1
 
