@@ -708,9 +708,59 @@ $$\Delta x^* = arg\min_{\Delta x} \frac{1}{2} \lVert f(x)+J(x)^T\Delta x\rVert ^
 
 对$\Delta x$求导，并令其为零
 
-$$J(x)f(x)+J(x)J^T(x)\Delta x = 0$$
+$$J(x)f(x)+J(x)J^T(x)\Delta x = 0 \mapsto H(x)\Delta x = g(x)$$
 
-**Levenberg-Marquardt Method**
+这个方程是关于变量$\Delta x$的线性方程组，称为增量方程，或者正规方程(normal equation)。高斯牛顿法用$JJ^T$作为牛顿法中二阶Hessian矩阵的近似，从而省略了$H$的计算。**求解增量方程是整个优化问题的核心所在**
+
+> 1. 初始值$x_0$
+> 2. 对于k次迭代，求出当前的Jacobian$J(x_k)$和误差$f(x_k)$
+> 3. 求解增量方程$H\Delta x_k = g$
+> 4. 若$\Delta x_k$足够小，则停止。否则，令$x_{k+1}=x_k+\Delta x_k$，返回第二步
+
+实际中$JJ^T$只有半正定性，可能为singular or ill-conditioned，导致算法不稳定。也有可能求出的$\Delta x$步长太大，无法收敛。
+
+非线性优化领域，很多算法都是高斯牛顿法的变种。线性搜索法加入了一个步长，$\lVert f(x+\alpha \Delta x)\rVert^2$
+
+列文伯格-马夸尔特被认为比高斯牛顿法更健壮(robust)，也被称为阻尼牛顿法。
+
+**Levenberg-Marquardt (L-M) Method**
+
+高斯牛顿法采用的近似二阶泰勒展开只能在展开点附近有较好的近似效果。可以给$\Delta x$添加一个范围（Trust Region）。在信赖区域，认为近似是有效的；出了区域，近似可能会有问题
+
+改良版非线性优化框架
+
+>1. 初始值$x_0$，以及初始优化半径$\mu$
+>
+>2. 对于k次迭代，在高斯牛顿法的基础上加上信赖区域，求解：
+>
+>   $min_{\Delta x_k} \frac{1}{2} \lVert f(x_k)+J(x_k)^T\Delta x_k \rVert ^2, s.t. \lVert D\Delta x_k \rVert ^2 \le \mu$
+>
+>3. 计算$\rho = \frac{f(x+\Delta x) - f(x)}{J(x)^T \Delta x}$来确定信赖区域的范围
+>4. if $\rho > 3/4$, $\mu = 2\mu$
+>5. if $\rho < 1/4$, $\mu = 0.5\mu$
+>6. 如果$\rho$大于某阈值，则认为近似可行。令$x_{k+1}=x_k+\Delta x_k$
+>7. 判断算法是否收敛，如不收敛则返回第2步，否则结束
+
+马夸尔特提出将$D$取成非负数对角阵-实际中通常用$J^TJ$的对角元素平方根，是的在梯度小的维度上约束范围更大一些。
+
+对带不等式约束的优化问题，用拉格朗日乘子把约束项放到目标函数中，构成拉格朗日函数
+
+$$L(\Delta x_k, \lambda) = \frac{1}{2} \lVert f(x_k)+J(x_k)^T\Delta x_k \rVert ^2 + \frac{\lambda}{2}(\lVert D \Delta x_k \rVert ^2 - \mu)$$
+
+令该拉格朗日函数关于$\Delta x$的导数为零，它的核心仍是计算增量的线性方程
+
+$(H+\lambda D^T D)\Delta x_k = g$
+
+简化形式当$D=I$
+
+- $\lambda$较小时，$H$占主要地位，说明二次近似模型在该范围内是比较好的；列文伯格-马夸尔特更接近于高斯牛顿法
+- $\lambda$较大时，$\lambda I$占据主要地位，说明附近的二次近似不够好；列文伯格-马夸尔特方法更接近与一阶梯度下降法（最速下降）
+
+>- 最优化处理是基本数学工具，在深度学习等领域也有用
+>- 非线性优化的所偶迭代求解方案，都需要用户提供一个良好的初始值；视觉SLAM中，通常用ICP，PnP之类的算法提供优化初始值
+>- 如何求解线性增量方程组：视觉SLAM中，$\Delta x$的维度可一达到上千，甚至几十万的级别，对大矩阵求逆是不现实的。通常采用矩阵分解（QR， Cholesky)；利用SLAM特有的稀疏形式进行消元、分解。在很多开源的优化库上，维度为一万多的变量在一般计算机上可以在几秒甚至更短的时间内求解出来
+
+
 
 ## 7. 视觉里程计1
 
