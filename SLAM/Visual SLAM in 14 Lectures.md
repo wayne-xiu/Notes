@@ -696,17 +696,19 @@ $$min J(x,y)=\sum_k e_{u,k}^TR_k^{-1}e_{u,k}+\sum_k \sum_j e_{z,k,j}^T Q_{k,j}^{
 
 迭代寻找梯度并下降的过程。
 
-$$\lVert f(x+\Delta x)\rVert_2^2 \approx \lVert f(x)\rVert_2^2+J(x)\Delta x + \frac{1}{2} \Delta x^T H \Delta x$$
+$$\lVert f(x+\Delta x)\rVert_2^2 \approx \lVert f(x)\rVert_2^2+J(x)^T\Delta x + \frac{1}{2} \Delta x^T H \Delta x$$
 
-Jacobian, Hessian matrix for 1st and 2nd order derivatives. 
+Jacobian, Hessian matrix for 1st and 2nd order derivatives. 我们只需要关心$f$在迭代处的局部性质而非全局性质。
 
 **Gauss-Newton Method**
 
-$$f(x+\Delta x) \approx f(x) + J(x)\Delta x$$
+$$f(x+\Delta x) \approx f(x) + J(x)^T\Delta x$$
 
-$$\Delta x^* = arg\min_{\Delta x} \frac{1}{2} \lVert f(x)+J(x)\Delta x\rVert ^2$$
+$$\Delta x^* = arg\min_{\Delta x} \frac{1}{2} \lVert f(x)+J(x)^T\Delta x\rVert ^2$$
 
+对$\Delta x$求导，并令其为零
 
+$$J(x)f(x)+J(x)J^T(x)\Delta x = 0$$
 
 **Levenberg-Marquardt Method**
 
