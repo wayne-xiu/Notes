@@ -53,7 +53,90 @@ Binary search is recursive in nature but can also be implemented iteratively.
 
 Dynamic programming is similar to the divide-and-conquer with one important difference: The subproblems in divide-and-conquer are distinct and disjoint, whereas in the case of dynamic programming, the subproblems may overlap with one another. Also, dynamic programming problems can be solved in a bottom-up fashion instead of just a top-down approach
 
-dynamic programming problems are usually optimization problems with several optimal solutions. "programming" means a *tabular* solution.
+dynamic programming problems are usually optimization problems with several optimal solutions. "programming" means a *tabular* solution. Since dynamic programming problems involve subproblems that are overlapping or common, the answer to these subproblems can be stored in a table and reused when needed (memoization).
+
+Top Down and Bottom Up approaches
+
+Top Down
+
+```java
+class Demonstration {
+    
+    static int[] computed;
+    
+    public static void main( String args[] ) {
+        long start = System.currentTimeMillis();
+
+        int n = 50;
+        computed = new int[n + 1];
+        for (int i = 1; i < n + 1; i++)
+            computed[i] = -1;
+
+        System.out.println(StringSumCount(n));
+        long end = System.currentTimeMillis();
+        System.out.println("Time taken = " + (end - start));
+    }
+
+    static int StringSumCount(int n) {
+
+        if (n == 0) {
+            return 1;
+        }
+
+        if (n < 1) {
+            return 0;
+        }
+        
+        // If solution is already calculated
+        if (computed[n] != -1)
+            return computed[n];
+
+        int sum = 0;
+
+        // Number of ways to represent with 1
+        sum += StringSumCount(n - 1);
+
+        // Number of ways to represent with 2
+        sum += StringSumCount(n - 2);
+
+        // Number of ways to represent with31
+        sum += StringSumCount(n - 3);
+
+        computed[n] = sum;
+        return sum;
+    }  
+}
+```
+
+Bottom up
+
+```java
+class Demonstration {
+    public static void main( String args[] ) {
+        long start = System.currentTimeMillis();
+        int n = 50;
+        System.out.println(StringSumCount(n));
+        long end = System.currentTimeMillis();
+        System.out.println("Time taken = " + (end - start));        
+    }
+
+    static int StringSumCount(int n) {
+
+        int[] computed = new int[n + 1];
+        computed[0] = 0;
+        computed[1] = 1;
+        computed[2] = 2;
+        computed[3] = 4;
+
+        for (int i = 4; i < n + 1; i++) {
+            computed[i] = computed[i - 1] + computed[i - 2] + computed[i - 3];
+        }
+
+        return computed[n];
+    }  
+  
+}
+```
 
 
 
