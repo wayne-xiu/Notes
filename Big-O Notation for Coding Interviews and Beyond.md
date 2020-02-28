@@ -49,6 +49,14 @@ Big $O$ notation denotes an upper bound (worst case) but is silent about the low
 
 Merge sort is a typical recursive algorithm.
 
+Binary search is recursive in nature but can also be implemented iteratively. 
+
+Dynamic programming is similar to the divide-and-conquer with one important difference: The subproblems in divide-and-conquer are distinct and disjoint, whereas in the case of dynamic programming, the subproblems may overlap with one another. Also, dynamic programming problems can be solved in a bottom-up fashion instead of just a top-down approach
+
+dynamic programming problems are usually optimization problems with several optimal solutions. "programming" means a *tabular* solution.
+
+
+
 ## Data Structures
 
 ## Amortized Analysis
