@@ -8,6 +8,8 @@ Integer array sorting with Bubble sort, Merge sort and Dual Pivot Quicksort (Jav
 
 Generally speaking, time and space have an inversely proportionally relationship with each other; if space increases then execution time decreases, and if execution time increases then space decreases.
 
+## Formal Analysis Tools
+
 **Big $\Theta$**
 
 $f(n)$ belongs to the set $\Theta(g(n))$
@@ -41,13 +43,11 @@ $f(n)$ belongs to the set $\Theta(g(n))$
 - small o and small $\omega$ are *necessarily not tight*
 - We can see that the small case notations are, in a sense, *relaxed* compared to their upper case notations.
 
-
-
-
-
-## Formal Analysis Tools
+Big $O$ notation denotes an upper bound (worst case) but is silent about the lower bound.
 
 ## Recursive
+
+Merge sort is a typical recursive algorithm.
 
 ## Data Structures
 
