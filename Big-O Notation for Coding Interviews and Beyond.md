@@ -224,6 +224,78 @@ In professional settings, it is almost always preferable to write readable and m
 
 *Contiguous memory allocation* is the key to an array's constant time retrieval/insert of an element given the index.
 
+### Linked Lists
+
+trade more time for less space
+
+doesn't require contiguous allocation of memory. If we lose the head, we lost the linked list.
+
+### Hash Table
+
+A hash table or hash map is essentially a *key, value* pair. The has table use a *hash function* to compute the mapping.
+
+use Array as a hash table (index as key).
+
+The hash function - *if assumed to take constant time to compute the hash* isn't affected by the size of the table. Note, this assumption is crucial for the hash table to maintain constant time operations.
+
+A **collision** is said to take place when two or more keys hash to the same slot. There are different ways to handle collisions, and each way will affect the complexity of different operations.
+
+To mitigate the collision scenario, we can use a self-balancing binary search tree. Use hash tables provided by the standard libraries.
+
+### Doubly Linked List
+
+Usually, a doubly linked list is combined with a hash table to create a more advanced data structures called a least recently used cache or LRU cache.
+
+### Stacks and Queues
+
+Stack and Queue can be implemented using an array or a linked list
+
+Stack (push, pop)
+
+- using linked list: new items are always appended and removed at the head. *push* and *pop* operations take constant time
+- using array: keep an integer pointer *top* to keep track of the top of the stack and increment it whenever a new push occurs. Poping elements is also a constant time operation.
+
+Queue (enqueue, dequeue)
+
+- using linked list: elements are always dequeued from the head and enqueued at the tail with two pointers. Both enqueue and dequeue operations take constant time
+- using array: using front and end pointers to keep track of the head and tail. Both operations take constant time
+
+Using linked list, the stack and queue can grow without bounds
+
+### Tree Structures
+
+**Tree Traversals**
+
+The following recursive algorithms for tree traversals all take $O(n)$ time since we are required to visit each node
+
+- pre-order traversal
+- in-order traversal
+- post-order traversal
+- depth first search. Note the above three algorithms are types of depth first traversals
+- breadth first traversal/search
+
+The depth first traversal relies on the use of a stack. It is either implicit in case of recursion or explicit if an iterative version is written out.
+
+**Height of Trees**
+
+the longest path from the root to the leaf would be the height of the tree (between $log_2n$ and $n$)
+
+**Trees becoming Linked Lists**
+
+In case of a binary search tree, if it consists of all the nodes with the same values or inserts are made in an ascending order of values, then the binary search tree would turn into a linked list. The $O(lgn)$ promise for search is broken and search is now linear or $O(n)$ operation.
+
+**Graph Traversals**
+
+For graph traversals, the complexity would be $O(n)$ where n is the total number of nodes. Visiting each node once is the lease number of nodes you can visit to cover the entire graph. For a graph with cycles, you'll need to remember the visited nodes so as not to enter into an infinite cycle.
+
+**Binary Trees**
+
+A binary tree is a tree which has at most two children. Don't confuse a binary tree with a binary search tree. Searching in a binary tree will take $O(n)$, but in a binary search tree it'll take $O(lgn)$. However, an unbalanced binary search tree can still result in linear search.
+
+We can store the binary tree in an array or create a class to represent each node of the tree
+
+Using an array to store a binary tree makes access to any node of the  tree a constant time operation. However, if you choose to represent it  using the TreeNode approach then accessing the leaf nodes would take  time proportional to the height of the tree.
+
 ## Amortized Analysis
 
 ## Probabilistic Analysis
