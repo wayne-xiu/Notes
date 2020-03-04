@@ -160,14 +160,77 @@ Function pointers
 void addOne(int& x){
   x += 1;
 }
-void (*inc1)(int&)= addOne;
+void (*inc1)(int&)= addOne;  // function pointer
 auto inc2 = addOne;
 
 ```
 
+Pointer to struct/class member
 
+reference: alias. A reference is never NULL and must always be initialized by having an existing variable assigned to it.
+
+References behave like constant pointers
 
 ## Automatic Type Deduction
+
+"auto" introduced since C++11
+
+```c++
+  // define a pointer to a function
+  int (*add)(int,int)= myAdd;               // explicit
+  auto add1= myAdd;                         // auto
+  
+  // iterate through a vector
+  std::vector<int> vec;
+  for (std::vector<int>::iterator it= vec.begin(); it != vec.end(); ++it){} 
+  for (auto it1= vec.begin(); it1 != vec.end(); ++it1) {}
+```
+
+
+
+auto determines its type from an initializer. That simply means that; without an initializer, there is no type and therefore, no variable. The compiler ensures that each type is initialized, which is a nice side effect of auto (avoid undefined behavior).
+
+> default initialization (the initialization performed when a variable is constructed with no initializer):
+>
+> “objects with automatic storage duration (and their sub-objects) are initialized to indeterminate values”
+>
+> Local variables that are not user-defined will not be default initialized.
+
+Refactorization with auto
+
+```c++
+#include <typeinfo>  // for using typeid
+#include <iostream>
+
+int main(){
+  auto a = 5;
+  auto b = 10;
+  auto sum =  a * b * 3;
+  auto res = sum + 10; 
+  std::cout << "typeid(res).name(): " << typeid(res).name() << std::endl;
+  
+  auto a2 = 5;
+  auto b2 = 10.5;
+  auto sum2 = a2 * b2 * 3;
+  auto res2 = sum2 * 10;  
+  std::cout << "typeid(res2).name(): " << typeid(res2).name() << std::endl;
+  
+  auto a3 = 5;
+  auto b3 = 10;
+  auto sum3 = a3 * b3 * 3.1f;
+  auto res3 = sum3 * 10;  
+  std::cout << "typeid(res3).name(): " << typeid(res3).name() << std::endl;
+  
+  return 0;
+}
+
+// output:
+// typeid(res).name(): i
+// typeid(res2).name(): d
+// typeid(res3).name(): f
+```
+
+auto combines the dynamic behavior of an interpreter with the static behavior of a compiler
 
 ## Casts
 
