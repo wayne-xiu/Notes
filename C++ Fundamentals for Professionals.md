@@ -173,6 +173,8 @@ References behave like constant pointers
 
 ## Automatic Type Deduction
 
+### auto
+
 "auto" introduced since C++11
 
 ```c++
@@ -231,6 +233,75 @@ int main(){
 ```
 
 auto combines the dynamic behavior of an interpreter with the static behavior of a compiler
+
+Advanced types
+
+```c++
+#include <chrono>
+#include <future>
+#include <map>
+#include <string>
+#include <tuple>
+
+int main(){
+  // define a function pointer
+  int (*myAdd1)(int, int) = [](int a, int b){return a + b;};
+  // use type inference of the C++11 compiler
+  auto myAdd2 = [](int a, int b){return a + b;};
+    
+  auto myInts = {1, 2, 3};  // initializer_list<int>
+  auto myIntBegin = myInts.begin();  // initializer_list<int>::iterator
+
+  std::map<int, std::string> myMap = {{1, std::string("one")}, {2, std::string("two")}};
+  auto myMapBegin = myMap.begin();  // map<int, string>::iterator
+
+  auto func = [](const std::string& a){ return a;};  // (string)(*)(string)?
+    							  // std::function<string(const string&)>
+
+  auto futureLambda= std::async([](const std::string& s ) {return std::string("Hello ") + s;}, std::string("lambda function."));  // std::future<string>
+
+  auto begin = std::chrono::system_clock::now();  // chrono::time_point<chrono::system_clock>
+
+  auto pa = std::make_pair(1, std::string("second"));  // pair<int, string>
+
+  auto tup = std::make_tuple(std::string("first"), 4, 1.1, true, 'a');  // tuple<string, int, double, bool, char>
+    
+    return 0;
+}
+```
+
+### decltype
+
+decltype is used to determine the type of an expression or entity
+
+```c++
+	int i = 1998; // Rvalue
+	decltype(i) i2 = 2011; // Same as int i2 = 2011
+	decltype((i)) iRef = i2; // (i) is an lvalue, reference returned
+
+	cout << typeid(i2).name() << endl;
+	cout << typeid(iRef).name() << endl;  // vs2017 showed int, should be int&
+```
+
+Rules:
+
+- if the expression is an *lvalue*, decltype will return **a reference to the data type to the expression**
+- if the expression is an rvalue, decltype will return **the data type of the value**
+
+decltype is not used as often as auto. It is useful with templates that can deduce the type of a function (or function pointer).
+
+### Automatic Return type
+
+C++14
+
+```c++
+template <typename T1, typename T2>
+auto add(T1 fir, T2 sec){
+    return fir + sec;
+}
+```
+
+
 
 ## Casts
 
