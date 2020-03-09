@@ -296,7 +296,7 @@ C++14
 
 ```c++
 template <typename T1, typename T2>
-auto add(T1 fir, T2 sec){
+auto add(T1 fir, T2 sec) /*-> decltype(fir+sec)*/{
     return fir + sec;
 }
 ```
@@ -305,7 +305,85 @@ auto add(T1 fir, T2 sec){
 
 ## Casts
 
+### Explicit Cast
+
+- dynamic_cast
+- static_cast
+- const_cast
+- reinterpret_cast
+
+We should avoid using C-casts ((type) value_to_be_casted)
+
+*explicit is better than implicit*
+
+### Dynamic Cast
+
+- dynamic_cast converts a pointer or reference of a class to a pointer or reference in the same inheritance hierarchy. 
+- It can only be used with polymorphic classes. We can cast up, down and across the inheritance hierarchy. dynamic_cast is mostly used when converting from a derived class to a base class (upcast)
+- Type information at run time is used to determine if the cast is valid. 
+- If the cast is not possible, we will get a nullptr in case of pointer and an std::bad_cast-exception in case of a reference
+
+> Do keep in mind that dynamic_cast only deals with pointers and references
+
+### Static Cast
+
+- static_cast is the simplest casting operator and is used for simple conversions. 
+- It can only perform well-defined conversions by the compiler.
+- It allows bidirectional conversion between related data types such as: pointer types in class hierarchies
+- static_cast cannot be used with polymorphic types
+- unlike dynamic_cast, a static_cast is performed during compile time
+
+### Const Cast
+
+- const_cast allows us to remove or add the const or volatile property from a variable
+- rarely used
+
+### Reinterpret Cast
+
+- reinterpret_cast allows us to convert a pointer of a particular type to a pointer of any other type regardless of whether the types are related or not
+- It also allows conversion between a pointer and an integral
+- reinterpret_cast guarantees that if a pointer is cast into another type, casting it back would return the original value
+- not recommended
+
+### Type Information
+
+```c++
+#include <typeinfo>
+
+Circle c(5.0);
+const std::type_info& t = typeid(Circle);
+const std::type_info& v = typeid(c);
+
+// type_info object could be compared directly
+if (typeid(c) == typeid (b)) {
+    //
+}
+std::cout << t.name() << std::endl;
+```
+
+
+
 ## Unified Initialization
+
+unified initialization with {}
+
+**Direct Initialization**
+
+```c++
+std::string str{"hello"};
+int i{2011};
+```
+
+**Copy Initialization**
+
+```c++
+std::string str = {"hello"};
+int i = {2011};
+```
+
+The difference is that *direct initialization directly calls the constructor of the type*, whereas, in copy initialization, the value is created and implicitly converted into the type.
+
+
 
 ## const, constexpr, and volatile
 
