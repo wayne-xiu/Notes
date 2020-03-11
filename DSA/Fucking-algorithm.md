@@ -378,6 +378,33 @@ bool backtrack(vector<string>& board, int row) {
 
 二分查找真正的坑在于到底要给 `mid` 加一还是减一，while 里到底用 `<=` 还是 `<`。
 
+最常用的二分查找场景：寻找一个数、寻找左侧边界、寻找右侧边界
+
+**分析二分查找的一个技巧是：不要出现 else，而是把所有情况用 else if 写清楚，这样可以清楚地展现所有细节**。
+
+#### 寻找一个数（基本）
+
+```c++
+int binarySearch(vector<int>& nums, int target) {
+    int left = 0;
+    int right = nums.size() - 1;
+    while (left <= right) {
+        int mid = left + (right-left)/2;
+        if (nums[mid] == target)
+            return mid;
+        else if (nums[mid] < target)
+            left = mid + 1;
+        else if (nums[mid] > target)
+            right = mid - 1;
+    }
+    return -1;
+}
+```
+
+明确了「搜索区间」这个概念; 左闭右开，还是左闭右闭
+
+#### 寻找左侧边界的二分搜索
+
 
 
 ## 1. 动态规划
