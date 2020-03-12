@@ -405,6 +405,26 @@ int binarySearch(vector<int>& nums, int target) {
 
 #### 寻找左侧边界的二分搜索
 
+```c++
+int left_bound(vector<int>& nums, int target) {  // how many smaller than target; not finding value
+    if (nums.size() == 0)
+        return -1;
+    int left = 0;
+    int right = nums.size();  // note
+    
+    while (left < right) {  // note
+        int mid = left + (right - left)/2;
+        if (nums[mid] == target)
+            right = mid;
+        else if (nums[mid] < target)
+            left = mid+1;
+        else if (nums[mid] > target)
+            right = mid;  // note
+    }
+    return left;
+}
+```
+
 
 
 ## 1. 动态规划
