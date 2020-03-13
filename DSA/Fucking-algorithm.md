@@ -421,8 +421,176 @@ int left_bound(vector<int>& nums, int target) {  // how many smaller than target
         else if (nums[mid] > target)
             right = mid;  // note
     }
+    return left;  // return nums[left] == target ? left : -1;
+}
+```
+
+对于搜索左右侧边界的二分查找，这种写法比较普遍
+
+**返回** **`left`** **, ** **`right`**都是一样的，因为 while 终止的条件是 `left == right`
+
+寻找右侧边界的二分搜索
+
+```c++
+int right_bound(vector<int>& nums, int target) {
+    if (nums.size() == 0)
+        return -1;
+    int left = 0;
+    int right = nums.size();
+    
+    while (left < right) {
+        int mid = left + (right -left)/2;
+        if (nums[mid] == target)
+            left = mid+1;  // note
+        else if (nums[mid] < target)
+            left = mid+1;
+        else if (nums[mid] > target)
+            right = mid;
+    }
+    return right - 1;
+}
+```
+
+again, finaly left == right
+
+#### 逻辑统一
+
+```c++
+int binary_search(vector<int>& nums, int target) {
+    int left = 0, right = nums.size() - 1; 
+    while(left <= right) {
+        int mid = left + (right - left) / 2;
+        if (nums[mid] < target) {
+            left = mid + 1;
+        } else if (nums[mid] > target) {
+            right = mid - 1; 
+        } else if(nums[mid] == target) {
+            // 直接返回
+            return mid;
+        }
+    }
+    // 直接返回
+    return -1;
+}
+
+int left_bound(vector<int>& nums, int target) {
+    int left = 0, right = nums.size() - 1;
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        if (nums[mid] < target) {
+            left = mid + 1;
+        } else if (nums[mid] > target) {
+            right = mid - 1;
+        } else if (nums[mid] == target) {
+            // 别返回，锁定左侧边界
+            right = mid - 1;
+        }
+    }
+    // 最后要检查 left 越界的情况
+    if (left >= nums.size() || nums[left] != target)
+        return -1;
     return left;
 }
+
+
+int right_bound(vector<int>& nums, int target) {
+    int left = 0, right = nums.size() - 1;
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        if (nums[mid] < target) {
+            left = mid + 1;
+        } else if (nums[mid] > target) {
+            right = mid - 1;
+        } else if (nums[mid] == target) {
+            // 别返回，锁定右侧边界
+            left = mid + 1;
+        }
+    }
+    // 最后要检查 right 越界的情况
+    if (right < 0 || nums[right] != target)
+        return -1;
+    return right;
+}
+```
+
+**总结**
+
+1. 分析二分查找代码时，不要出现 else，全部展开成 else if 方便理解
+2. 如果将「搜索区间」全都统一成两端都闭，好记，只要稍改 `nums[mid] == target` 条件处的代码和返回的逻辑即可
+
+### 双指针技巧总结
+
+分为两类，一类是「快慢指针」，一类是「左右指针」。前者解决主要解决链表中的问题，比如典型的判定链表中是否包含环；后者主要解决数组（或者字符串）中的问题，比如二分查找。
+
+#### 快慢指针的常见算法
+
+判断是否含有环
+
+```c++
+bool hasCycle(listNode* head) {
+    listNode* fast, *slow;
+    fast = slow = head;
+    while (fast != nullptr && fast->next != nullptr) {
+        fast = fast->next->next;
+        slow = slow->next;
+        
+        if (fast == slow)
+            return true;
+    }
+    return false;
+}
+```
+
+已知有环，返回这个环的起始位置
+
+```c++
+listNode* detectCycle(listNode* head) {
+    listNode* fast, *slow;
+    fast = slow = head;
+    while (fast != nullptr && fast->next != nullptr) {
+        fast = fast->next->next;
+        slow = slow->next;
+        if (fast == slow)
+            break;
+    }
+    // any pointer goes back to head
+    slow = head;
+    while (slow != fast) {
+        fast = fast->next;
+        slow = slow->next;
+    }
+    return slow;  // meet again at the starting point of the cycle
+}
+```
+
+寻找链表的中点
+
+```c++
+while (fast != nullptr && fast->next != nullptr) {
+    fast = fast->next->next;
+    slow = slow->next;
+}
+return slow;
+```
+
+当链表的长度是奇数时，slow 恰巧停在中点位置；如果长度是偶数，slow 最终的位置是中间偏右
+
+寻找链表中点的一个重要作用是对链表进行归并排序。对于链表，合并两个有序链表是很简单的，难点就在于二分。
+
+
+
+寻找列表的倒数第K个元素
+
+```c++
+listNode* slow, *fast;
+slow = fast = head;
+while (k-- > 0)
+    fast = fast->next;
+whiel (fast != nullptr) {
+    slow = slow->next;
+    fast = fast->next;
+}
+return slow;
 ```
 
 
