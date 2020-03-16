@@ -687,6 +687,101 @@ string minWindow(string s, string t) {
 
 这个算法的时间复杂度是 O(M + N)，M 和 N 分别是字符串 S 和 T 的长度
 
+#### 找到字符串中所有字母异位词
+
+Given a string s and a non-empty string p, find all the sub-strings in s that are p 的字母异位词（字母相同，但排列顺序不同的字符串）
+
+s: "cbaebabacd", p: "abc"
+
+output: [0, 6]
+
+```c++
+vector<int> findAnagrams(string s, string t) {
+    vector<int> res;
+    int left = 0, right = 0;
+    unordered_map<char, int> needs;
+    unordered_map<char, int> window;
+    for (char c: t) needs[c]++;
+    int match = 0;
+
+    while (right < s.size()) {
+        char c1 = s[right];
+        if (needs.count(c1)) {
+            window[c1]++;
+            if (window[c1] == needs[c1])
+                match++;
+        }
+        right++;
+
+        while (match == needs.size()) {
+            if (right - left == t.size())
+                res.push_back(left);
+            char c2 = s[left];
+            if (needs.count(c2)) {
+                window[c2]--;
+                if (window[c2] < needs[c2])
+                    match--;
+            }
+            left++;
+        }
+    }
+    return res;
+}
+```
+
+#### 无重复字符串的最长子串
+
+Given a string, find the longest sub-string without repeated characters
+
+input: "abcabcbb"
+
+output: 3
+
+**遇到子串问题，首先想到的就是滑动窗口技巧。**
+
+```c++
+int lengthOfLongestSubstring(string s) {
+    int left = 0, right = 0;
+    unordered_map<char, int> window;
+    int res = 0;
+
+    while (right < s.size()) {
+        char c1 = s[right];
+        window[c1]++;
+        right++;
+        while(window[c1] > 1) {
+            char c2 = s[left];
+            window[c2]--;
+            left++;
+        }
+        res = max(res, right-left);
+    }
+    return res;
+}
+```
+
+总结
+
+```c++
+int left = 0, right = 0;
+
+while (right < s.size()) {
+    window.add(s[right]);
+    right++;
+
+    while (valid) {
+        window.remove(s[left]);
+        left++;
+    }
+}
+```
+
+使用哈希表充当计数器
+
+### Linux的进程、线程、文件描述符是什么
+
+
+
 ## 1. 动态规划
 
 ## 2. 数据结构
