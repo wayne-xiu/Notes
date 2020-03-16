@@ -593,7 +593,99 @@ whiel (fast != nullptr) {
 return slow;
 ```
 
+#### 左右指针的常用算法
 
+二分查找
+
+两数之和
+
+```c++
+vector<int> twoSum(vector<int>& nums, int target) {
+    int left = 0, right = nums.size() - 1;
+    while (left < right) {
+        int sum = nums[left] + nums[right];
+        if (sum == target)
+            return {left+1, right+1};
+        else if (sum < target)
+            left++;
+        else if (sum > target)
+            right--;
+    }
+    return {-1, -1};
+}
+```
+
+反转数组
+
+```c++
+void reverse(vector<int>& nums) {
+    int left = 0;
+    int right = nums.size() - 1;
+    while (left < right) {
+        // std::swap(nums[left], nums[right]);
+        int temp = nums[left];
+        nums[left] = nums[right];
+        nums[right] = temp;
+        left++;
+        right--;
+    }
+}
+```
+
+### 滑动窗口算法
+
+#### 最小覆盖子串
+
+Given string S, T; In S find: the minimum string that contains all letters in T. If it doesn't exist, return empty string ""; If it exists, the answer is unique
+
+e.g. Input: S = "ADOBECODEBANC", T = "ABC"
+
+output: "BANC"
+
+思路：左右指针构建窗口，移动右指针寻找，移动左指针优化
+
+```c++
+string minWindow(string s, string t) {
+    // record the starting position and length of the minimum sub-string
+    int start = 0, minLen = INT_MAX;
+    int left = 0, right = 0;
+
+    unordered_map<char, int> window;
+    unordered_map<char, int> needs;
+    for (char c: t)
+        needs[c]++;
+
+    int match = 0;
+
+    while (right < s.size()) {
+        char c1 = s[right];
+        if (needs.count(c1)) {
+            window[c1]++;
+            if (window[c1] == needs[c1])
+                match++;
+        }
+        right++;
+
+        while (match == needs.size()) {
+            if (right - left < minLen) {
+                // update the minimal sub-string position and length
+                start = left;
+                minLen = right-left;
+            }
+            char c2 = s[left];
+            if (needs.count(c2)) {
+                window[c2]--;
+                if (window[c2] < needs[c2])
+                    match--;
+            }
+            left++;
+        }
+    }
+    return minLen == INT_MAX ? "" : s.substr(start, minLen);
+}
+```
+
+这个算法的时间复杂度是 O(M + N)，M 和 N 分别是字符串 S 和 T 的长度
 
 ## 1. 动态规划
 
