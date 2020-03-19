@@ -827,6 +827,167 @@ TODO
 
 ### 二叉堆详解实现优先级队列
 
+二叉堆（Binary Heap）性质比二叉搜索树BST还简单。主要操作就两个，sink(下沉)和swim(上浮)，用以维护二叉堆的性质。主要应用有两个，首先是一种排序方法「堆排序」，其次是一种很有用的数据机构「优先级队列」Priority Queue。
+
+#### 二叉堆概览
+
+二叉堆其实就是一种特殊的二叉树（完全二叉树），只不过存储在数组里。一般的链表二叉树，我们操作节点的指针，而在数组里，我们把数组索引作为指针。
+
+```c++
+// parent node index
+int parent(int root) {
+    return root/2;
+}
+// left child node index
+int left(int root) {
+    return root*2;
+}
+// right child node index
+int right(int root) {
+    return root*2+1;
+}
+```
+
+![binaryHeapDiagram](../Media/binaryHeapDiagram.png)
+
+notice: index 0 is not used
+
+把 arr[1] 作为整棵树的根的话，每个节点的父节点和左右孩子的索引都可以通过简单的运算得到
+
+二叉堆还分为最大堆和最小堆。**最大堆的性质是：每个节点都大于等于它的两个子节点。**类似的，最小堆的性质是：每个节点都小于等于它的子节点。两种堆核心思路都是一样的
+
+#### 优先级队列概览
+
+对于优先级队列数据结构，当你插入或者删除元素时，元素会自动排序，这底层的原理就是二叉堆操作。
+
+优先级队列有两个主要 API，分别是 `insert` 插入一个元素和 `delMax` 删除最大元素（如果底层用最小堆，那么就是 `delMin`）
+
+```java
+public class MaxPQ
+    <Key extends Comparable<Key>> {
+    // 存储元素的数组
+    private Key[] pq;
+    // 当前 Priority Queue 中的元素个数
+    private int N = 0;
+
+    public MaxPQ(int cap) {
+        // 索引 0 不用，所以多分配一个空间
+        pq = (Key[]) new Comparable[cap + 1];
+    }
+
+    /* 返回当前队列中最大元素 */
+    public Key max() {
+        return pq[1];
+    }
+
+    /* 插入元素 e */
+    public void insert(Key e) {...}
+
+    /* 删除并返回当前队列中最大元素 */
+    public Key delMax() {...}
+
+    /* 上浮第 k 个元素，以维护最大堆性质 */
+    private void swim(int k) {...}
+
+    /* 下沉第 k 个元素，以维护最大堆性质 */
+    private void sink(int k) {...}
+
+    /* 交换数组的两个元素 */
+    private void exch(int i, int j) {
+        Key temp = pq[i];
+        pq[i] = pq[j];
+        pq[j] = temp;
+    }
+
+    /* pq[i] 是否比 pq[j] 小？ */
+    private boolean less(int i, int j) {
+        return pq[i].compareTo(pq[j]) < 0;
+    }
+
+    /* 还有 left, right, parent 三个方法 */
+}
+```
+
+这里用到 Java 的泛型，空出来的四个方法是二叉堆和优先级队列的奥妙所在
+
+#### 实现swim和sink
+
+错位的节点 A 可能要上浮（或下沉）很多次，才能到达正确的位置。操作是互逆等价的，但是最终我们的操作只会在堆底和堆顶进行，显然堆底的「错位」元素需要上浮，堆顶的「错位」元素需要下沉。
+
+```java
+private void swim(int k) {
+    // 如果浮到堆顶，就不能再上浮了
+    while (k > 1 && less(parent(k), k)) {
+        // 如果第 k 个元素比上层大
+        // 将 k 换上去
+        exch(parent(k), k);
+        k = parent(k);
+    }
+}
+```
+
+下沉比上浮略微复杂一点，因为上浮某个节点 A，只需要 A 和其父节点比较大小即可；但是下沉某个节点 A，需要 A 和其**两个子节点**比较大小
+
+```java
+private void sink(int k) {
+    // 如果沉到堆底，就沉不下去了
+    while (left(k) <= N) {
+        // 先假设左边节点较大
+        int older = left(k);
+        // 如果右边节点存在，比一下大小
+        if (right(k) <= N && less(older, right(k)))
+            older = right(k);
+        // 结点 k 比俩孩子都大，就不必下沉了
+        if (less(older, k)) break;
+        // 否则，不符合最大堆的结构，下沉 k 结点
+        exch(k, older);
+        k = older;
+    }
+}
+```
+
+#### 实现delMax和insert
+
+**`insert`** **方法先把要插入的元素添加到堆底的最后，然后让其上浮到正确位置。**
+
+```java
+public void insert(Key e) {
+    N++;
+    // 先把新元素加到最后
+    pq[N] = e;
+    // 然后让它上浮到正确的位置
+    swim(N);
+}
+```
+
+**`delMax`** **方法先把堆顶元素 A 和堆底最后的元素 B 对调，然后删除 A，最后让 B 下沉到正确位置。**
+
+```java
+public Key delMax() {
+    // 最大堆的堆顶就是最大元素
+    Key max = pq[1];
+    // 把这个最大元素换到最后，删除之
+    exch(1, N);
+    pq[N] = null;
+    N--;
+    // 让 pq[1] 下沉到正确位置
+    sink(1);
+    return max;
+}
+```
+
+插入和删除元素的时间复杂度为 $O(logN)$ - 堆高
+
+#### 总结
+
+二叉堆就是一种完全二叉树，所以适合存储在数组中
+
+二叉堆的操作很简单，主要就是上浮和下沉，来维护堆的性质（堆有序），核心代码也就十行。
+
+优先级队列是基于二叉堆实现的，主要操作是插入和删除。插入是先插到最后，然后上浮到正确位置；删除是调换位置后再删除，然后下沉到正确位置。核心代码也就十行。
+
+### LRU算法详解
+
 
 
 ## 3. 算法思维
