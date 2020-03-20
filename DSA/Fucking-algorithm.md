@@ -988,6 +988,137 @@ public Key delMax() {
 
 ### LRU算法详解
 
+#### 什么是LRU算法
+
+一种缓存淘汰策略, Least Recently Used
+
+举例，智能手机软件后台运行
+
+其他算法：LFU 按频率
+
+#### LRU算法描述
+
+LRU算法实际上是让你设计数据结构：首先要接收一个capacity参数作为缓存的最大容量，然后实现两个API，一个是put(key, val)存入键值对，另一个是get(key)方法获取key对应的val，如果key不存在则返回-1
+
+get 和 put 方法必须都是 $O(1)$ 的时间复杂度
+
+```java
+/* 缓存容量为 2 */
+LRUCache cache = new LRUCache(2);
+// 你可以把 cache 理解成一个队列
+// 假设左边是队头，右边是队尾
+// 最近使用的排在队头，久未使用的排在队尾
+// 圆括号表示键值对 (key, val)
+
+cache.put(1, 1);
+// cache = [(1, 1)]
+cache.put(2, 2);
+// cache = [(2, 2), (1, 1)]
+cache.get(1);       // 返回 1
+// cache = [(1, 1), (2, 2)]
+// 解释：因为最近访问了键 1，所以提前至队头
+// 返回键 1 对应的值 1
+cache.put(3, 3);
+// cache = [(3, 3), (1, 1)]
+// 解释：缓存容量已满，需要删除内容空出位置
+// 优先删除久未使用的数据，也就是队尾的数据
+// 然后把新的数据插入队头
+cache.get(2);       // 返回 -1 (未找到)
+// cache = [(3, 3), (1, 1)]
+// 解释：cache 中不存在键为 2 的数据
+cache.put(1, 4);    
+// cache = [7(1, 4), (3, 3)]
+// 解释：键 1 已存在，把原始值 1 覆盖为 4
+// 不要忘了也要将键值对提前到队头
+```
+
+#### LRU算法设计
+
+cache 这个数据结构必要的条件：查找快，插入快(head)，删除快(tail)，有顺序之分
+
+哈希表查找快，但是数据无固定顺序；链表有顺序之分，插入删除快，但是查找慢。结合一下：哈希链表
+
+![hashLinkedList](../Media/hashLinkedList.png)
+
+借助哈希表赋予了链表快速查找的特性
+
+代码实现
+
+```java
+class Node {
+    public int key, val;
+    public Node next, prev;
+    public Node(int k, int v) {
+        this.key = k;
+        this.val = v;
+    }
+}
+
+class DoubleList {
+    // insert at head, O(1)
+    public void addFirst(Node x);
+    
+    // delete node x (guaranteed existence)
+    // 由于是双链表且给的是目标 Node 节点，时间 O(1)
+    public void remove(Node x);
+    
+    // delete the last node, and return this node, O(1)
+    public Node removeLast();
+    
+    // return the list length， O(1)
+    public int size();
+}
+```
+
+```java
+class LRUCache {
+    // key -> Node(key, val)
+    private HashMap<Integer, Node> map;
+    // Node(k1, v1) <-> Node(k2, v2)...
+    private DoubleList cache;
+    // max capacity
+    private int cap;
+    
+    public LRUCache(int capacity) {
+        this.cap = capacity;
+        map = new HashMap<>();
+        cache = new DoubleList();
+    }
+    
+    public int get(int key) {
+        if (!map.containsKey(key))
+            return -1;
+        int val = map.get(key).val;
+        // use put method to move this data forward
+        put(key, val);
+        return val;
+    }
+    
+    public void put(int key, int val) {
+        Node x = new Node(key, val);
+        
+        if (map.containsKey(key)) {
+            // delete the old node and insert in head
+            cache.remove(map.get(key));
+            cache.addFirst(x);
+        } else {
+            if (cap == cache.size()) {
+                // delete the last node
+                Node last = cache.removeLast();
+                map.remove(last.key);
+            }
+            // insert at head
+            cache.addFirst(x);
+            map.put(key, x);
+        }
+    }
+}
+```
+
+很容易犯错的一点是：处理链表节点的同时不要忘了更新哈希表中对节点的映射
+
+### 二叉搜索树操作集锦
+
 
 
 ## 3. 算法思维
