@@ -1119,7 +1119,37 @@ class LRUCache {
 
 ### 二叉搜索树操作集锦
 
+二叉树算法的设计的总路线：明确一个节点要做的事情，然后剩下的事抛给框架。
 
+```java
+// 二叉树所有的节点中的值加一
+void plusOne(TreeNode root) {
+    if (root == null)
+        return;
+    root.val += 1;
+    
+    plusOne(root.left);
+    plusOne(root.right);
+}
+```
+
+```java
+boolean isSameTree(TreeNode root1, TreeNode root2) {
+    if (root1 == null && root2 == null)
+        return true;
+    if (root1 == null || root2 == null)
+        return false;
+    if (root1.val != root2.val)
+        return false;
+    
+    return isSameTree(root1.left, root2.left)
+        && isSameTree(root1.right, root2.right);
+}
+```
+
+Binary Search Tree (BST): 常见的二叉树；BST任意节点的值要大于左子树所有节点的值，且要小于等于右边子树所有节点的值。
+
+基础操作：
 
 ## 3. 算法思维
 
