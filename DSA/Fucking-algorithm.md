@@ -1149,7 +1149,47 @@ boolean isSameTree(TreeNode root1, TreeNode root2) {
 
 Binary Search Tree (BST): 常见的二叉树；BST任意节点的值要大于左子树所有节点的值，且要小于等于右边子树所有节点的值。
 
-基础操作：
+基础操作：合法性判断、增、删、查
+
+注意不只是判断左右子节点，而是左右子树
+
+```java
+boolean isValidBST(TreeNode root) {
+    return isValidBST(root, null, null);
+}
+
+boolean isValidBST(TreeNode root, TreeNode min, TreeNode max) {
+    if (root == null)
+        return true;
+    if (min != null && root.val <= min.val)
+        return false;
+    if (max != null && root.val >= max.val)
+        return false;
+    return isValidBST(root.left, min, root)
+        && isValidBST(root.right, root, max);
+}
+```
+
+查找是否存在
+
+```java
+boolean isInBST(TreeNode root, int target) {
+    if (root = null)
+        return false;
+    if (root.val == target)
+        return true;
+    if (root.val < target)
+        return isInBST(root.right, target);
+    if (root.val > target)
+        return isInBST(root.left, target);
+}
+```
+
+插入
+
+对数据结构的操作无非遍历 + 访问，遍历就是“找”，访问就是“改”。一旦涉及“改”，函数就要返回 TreeNode 类型，并且对递归调用的返回值进行接收。
+
+
 
 ## 3. 算法思维
 
