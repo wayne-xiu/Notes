@@ -1265,6 +1265,65 @@ Full BT: 一棵二叉树的所有节点要么没有孩子节点，要么有两�
 
 这个算法的时间复杂度应该是 $O(logN*logN)$
 
+#### 思路分析
+
+普通二叉树 $O(N)$
+
+```java
+public int countNodes(TreeNode root) {
+    if (root == null)
+        return 0;
+    return 1 + countNodes(root.left) + countNodes(root.right);
+}
+```
+
+满二叉树 perfect。节点总数和树高呈指数关系
+
+```java
+public int countNodes(TreeNode root) {
+    int h = 0;
+    while (root != null) {
+        root = root.left;
+        h++;
+    }
+    return (int)Math.pow(2, h) - 1;
+}
+```
+
+完全二叉树
+
+```java
+public int countNodes(TreeNode root) {
+    TreeNode l = root, r = root;
+    // recode heights of left and right tree
+    int hl = 0, hr = 0;
+    while (l != null) {
+        l = l.left;
+        hl++;
+    }
+    while (r != null) {
+        r = r.right;
+        hr++;
+    }
+    if (hl == hr)  // perfect BT
+        return (int)Math.pow(2, hl) - 1;
+    // normal BT
+    return 1 + countNodes(root.left) + countNodes(root.right);
+}
+```
+
+#### 复杂度分析
+
+**关键点在于，这两个递归只有一个会真的递归下去，另一个一定会触发** **`hl == hr`** **而立即返回，不会递归下去**。
+
+原因如下：
+
+**一棵完全二叉树的两棵子树，至少有一棵是满二叉树**
+
+综上，算法的递归深度就是树的高度 $O(logN)$，每次递归所花费的时间就是 while 循环，需要 O(logN)，所以总体的时间复杂度是 $O(logN*logN)$。
+
+### 特殊数据结构：单调栈
+
 
 
 ## 3. 算法思维
