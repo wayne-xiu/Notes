@@ -1189,6 +1189,82 @@ boolean isInBST(TreeNode root, int target) {
 
 对数据结构的操作无非遍历 + 访问，遍历就是“找”，访问就是“改”。一旦涉及“改”，函数就要返回 TreeNode 类型，并且对递归调用的返回值进行接收。
 
+```java
+TreeNode insertIntoBST(TreeNode root, int val) {
+    if (root == null)
+        return new TreeNode(val);
+    // if (root.val == val)
+    if (root.val < val)
+        root.right = insertIntoBST(root.right, val);
+    if (root.val > val)
+        root.left = insertIntoBST(root.left, val);
+    return root;
+}
+```
+
+删除
+
+```java
+TreeNode deleteNode(TreeNode root, int key) {
+    if (root == null)
+        return null;
+    if (root.val == key) {
+        if (root.left == null)
+            return root.right;
+        if (root.right == null)
+            return root.left;
+        TreeNode minNode = getMin(root.right);
+        root.val = minNode.val;
+        root.right = deleteNode(root.right, minNode.val);
+    } else if (root.val > key) {
+        root.left = deleteNode(root.left, key);
+    } else if (root.val < key) {
+        root.right = deleteNode(root.right, key);
+    }
+    return root;
+}
+
+TreeNode getMin(TreeNode node) {
+    // the left most is the minimum
+    while (node.left != null)
+        node = node.left;
+    return node;
+}
+```
+
+#### 总结
+
+二叉树算法设计的总路线：
+
+- 把当前节点要做的事做好，其他的交给递归框架，不用当前节点操心。
+- 如果当前节点会对下面的子节点有整体影响，可以通过辅助函数增长参数列表，借助参数传递信息。
+- 在二叉树框架之上，扩展出一套 BST 遍历框架
+
+```java
+void BST(TreeNode root, int target) {
+    if (root.val == target)
+        // do something
+    if (root.val < target)
+        BST(root.right, target);
+    if (root.val > target)
+        BST(root.left, target);
+}
+```
+
+### 如何计算完全二叉树的节点数
+
+完全二叉树 complete:每一层都是紧凑靠左排列的
+
+![completeBT](../Media/completeBT.png)
+
+满二叉树 perfect：特殊的完全二叉树，每层都是满的，像一个稳定的三角形
+
+![perfectBT](../Media/perfectBT.png)
+
+Full BT: 一棵二叉树的所有节点要么没有孩子节点，要么有两个孩子节点
+
+这个算法的时间复杂度应该是 $O(logN*logN)$
+
 
 
 ## 3. 算法思维
