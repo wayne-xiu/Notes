@@ -1330,6 +1330,51 @@ public int countNodes(TreeNode root) {
 
 单调栈用途不太广泛，只处理一种典型的问题，叫做Next Greater Element:给你一个数组，返回一个等长的数组，对应索引存储着下一个更大元素，如果没有更大的元素，就存-1.
 
+举例，输入数组 [2, 1, 2, 4, 3]; 输出 [4, 2, 4, -1, -1]。暴力解法复杂度$O(n^2)$
+
+```c++
+vector<int> nextGreaterElement(vector<int>& nums) {
+    vector<int> ans(nums.size());
+    stack<int> s;
+    for (int i = nums.size()-1; i >=0; i--) {
+        while(!s.empty() && s.top() <= nums[i]) {
+            s.pop();  // the smaller value is kicked off
+        }
+        ans[i] = s.empty() ? -1 : s.top();
+        s.push(nums[i]);
+    }
+    return ans;
+}
+```
+
+这就是单调队列解决问题的模板。for 循环要从后往前扫描元素(对于栈，倒着入栈，其实是正着出栈)
+
+复杂度$O(n)$
+
+例子：等待更暖天气。T=[73, 74, 75, 71, 69, 72, 76, 73]; output: [1, 1, 4, 2, 1, 1, 0, 0]
+
+```c++
+vector<int> dailyTemperatures(vector<int>& T) {
+    vector<int> ans(T.size());
+    stack<int> s;  // place for index
+    for (int i = T.size()-1; i >= 0; --i) {
+        while(!s.empty() && T[s.top()] <= T[i])
+            s.pop();
+        ans[i] = s.empty() ? 0: (s.top() - i);
+        s.push(i);
+    }
+    return ans;
+}
+```
+
+
+
+**循环数组**
+
+计算机的内存都是线性的，没有真正意义上的环形数组。
+
+
+
 
 
 ## 3. 算法思维
