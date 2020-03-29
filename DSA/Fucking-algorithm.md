@@ -827,7 +827,7 @@ TODO
 
 ### 二叉堆详解实现优先级队列
 
-二叉堆（Binary Heap）性质比二叉搜索树BST还简单。主要操作就两个，sink(下沉)和swim(上浮)，用以维护二叉堆的性质。主要应用有两个，首先是一种排序方法「堆排序」，其次是一种很有用的数据机构「优先级队列」Priority Queue。
+二叉堆（Binary Heap）性质比二叉搜索树BST还简单。主要操作就两个，sink(下沉)和swim(上浮)，用以维护二叉堆的性质。主要应用有两个，首先是一种排序方法「堆排序」，其次是一种很有用的数据结构「优先级队列」Priority Queue。
 
 #### 二叉堆概览
 
@@ -1403,6 +1403,109 @@ vector<int> nextGreaterElementCircle(vector<int>& nums) {
 难点在于如何在$O(1)$时间算出每个窗口中的最大值，使得整个算法在线性时间完成。
 
 单调队列的核心思路和单调栈类似。单调队列的push方法仍然在队尾添加元素，但是要把前面比新元素小的元素都删掉。
+
+```c++
+class MonotonicQueue {
+public:
+    void push(int n) {
+        while (!data.empty() && data.back() < n) {
+            data.pop_back();
+        }
+        data.push_back(n);
+    }
+    int max() {
+        return data.front();
+    }
+    void pop(int n) {
+        if (!data.empty() && data.front() == n)
+            data.pop_front();
+    }
+private:
+    deque<int> data;
+};
+
+vector<int> maxSlidingWindow(vector<int>& nums, int k) {
+    MonotonicQueue window;
+    vector<int> res;
+    for (int i = 0; i < nums.size(); ++i) {
+        if (i < k-1)
+            window.push(nums[i]);
+        else {
+            window.push(nums[i]);
+            res.push_back(window.max());
+            window.pop(nums[i-k+1]);  // the last element in the window
+        }
+    }
+    return res;
+}
+```
+
+nums 中的每个元素最多被 push_back 和 pop_back 一次，没有任何多余操作，所以整体的复杂度还是 O(N)。
+
+空间复杂度就很简单了，就是窗口的大小 O(k)。
+
+
+
+单调队列和优先级队列实际上差别很大。单调队列在添加元素的时候靠删除元素保持队列的单调性，相当于抽取出某个函数中单调递增（或递减）的部分；而优先级队列（二叉堆）相当于自动排序，差别大了去了。
+
+
+
+### 设计Twitter
+
+Twitter 是单向关注，微信好友相当于双向关注。除非，被屏蔽...
+
+实现API
+
+```java
+class Twitter {
+    /** user 发表一条 tweet 动态 */
+    public void postTweet(int userId, int tweetId) {}
+
+    /** 返回该 user 关注的人（包括他自己）最近的动态 id，
+    最多 10 条，而且这些动态必须按从新到旧的时间线顺序排列。*/
+    public List<Integer> getNewsFeed(int userId) {}
+
+    /** follower 关注 followee，如果 Id 不存在则新建 */
+    public void follow(int followerId, int followeeId) {}
+
+    /** follower 取关 followee，如果 Id 不存在则什么都不做 */
+    public void unfollow(int followerId, int followeeId) {}
+}
+```
+
+把每个用户各自的推文存储在链表里，每个链表节点存储文章 id 和一个时间戳 time（记录发帖时间以便比较），而且这个链表是按 time 有序的，那么如果某个用户关注了 k 个用户，我们就可以用合并 k 个有序链表的算法合并出有序的推文列表，正确地 `getNewsFeed` 了！
+
+#### 面向对象设计
+
+```java
+class Twitter {
+    private static int timestamp = 0;
+    private static class Tweet {}
+    private static class User {}
+    
+    // API
+    public void postTweet(int userID, int tweetID) {}
+    public List<Integer> getNewsFeed(int userID) {}
+    public void follow(int follwerID, int followedID) {}
+    public void unfollow(int followerID, int followedID) {}
+}
+```
+
+Tweet和User设计为内部类
+
+```java
+class Tweet {
+    private int id;
+    private int time;
+    private Tweet next;
+    
+    public Tweet(int id, int time) {
+        this.id = id;
+        this.time = time;
+        this.next = null;
+    }
+}
+```
 
 
 
