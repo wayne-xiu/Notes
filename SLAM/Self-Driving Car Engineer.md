@@ -202,11 +202,129 @@ So our strategy in finding straight lines in image space is to look for intersec
 
  ![lineInPolarHough](../Media/lineInPolarHough.png)
 
+```python
+lines = cv2.HoughLinesP(masked_edges, rho, theta, threshold,
+                       np.array([]), min_line_length, max_line_gap)
+```
 
+- masked_edges: input image
+- lines: array containing endpoints $(x1, y1, x2, y2)$ of all line segments detected by the transform operation
+- rho, theta: distance and angular resolution of our grid in Hough space; rho unit pixel, theta unit radian; rho with a minimum value of 1, a reasonable starting for theta is 1 degree (pi/180 radians)
+- threshold: the minimum number of votes (intersections in a given grid cell) a candidate line needs to have to make it into the output
+- np.array([]): empty placeholder
+- min_line_length: minimum length of a line (in pixels) that will be accepted in the output
+- max_line_gap: maximum distance (in pixels) between segments that will be allowed to be connected into a single line
+
+```python
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+import numpy as np
+import cv2
+
+image = mpimg.imread("../../Media/exitRamp.jpg")
+plt.imshow(image)
+
+# grayscale image
+gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+plt.imshow(gray, cmap="gray")
+
+# define a kernel size and apply Gaussian smoothing
+kernel_size = 5  # odd number implying the averaging window
+blur_gray = cv2.GaussianBlur(gray, (kernel_size, kernel_size), 0)
+
+# Canny edge detection
+low_threshold = 50
+high_threshold = 150
+masked_edges = cv2.Canny(blur_gray, low_threshold, high_threshold)
+
+# create a masked edges image using cv2.fillPoly
+mask = np.zeros_like(masked_edges)
+ignore_mask_color = 255
+# define a four sided polygon to mask
+imshape = image.shape
+vertices = np.array([[(0,imshape[0]),(450, 300), (500, 300), (imshape[1],imshape[0])]], dtype=np.int32)
+cv2.fillPoly(mask, vertices, ignore_mask_color)
+masked_edges = cv2.bitwise_and(masked_edges, mask)
+
+# Define the Hough transform parameters
+rho = 1
+theta = 0.5*np.pi/180.0
+threshold = 5
+min_line_length = 10
+max_line_gap = 1
+line_image = np.copy(image)*0  # creating a blank to draw lines on
+
+lines = cv2.HoughLinesP(masked_edges, rho, theta, threshold,
+np.array([]), min_line_length, max_line_gap)
+
+for line in lines:
+    for x1, y1, x2, y2 in line:
+        cv2.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 10)
+
+# Create a "color" binary imag eto combine with line image
+color_edges = np.dstack((masked_edges, masked_edges, masked_edges))
+
+# Draw the lines on the edge image
+combo = cv2.addWeighted(color_edges, 0.8, line_image, 1, 0)
+
+plt.imshow(combo)
+plt.show()
+```
+
+![exitRampEdgeDetectedHough](../Media/exitRampEdgeDetectedHough.png)
+
+#### Parameter Tuning
+
+Parameter tuning is one of the biggest challenges in CV - what works well for one image may not work at all with different lighting and/or backgrounds.
+
+develop a parameter tuning tool overtime
 
 ### Project: Finding Lane Lines
 
+finding lane lines in a video stream; video is a just a series of images
+
+The README.md file for each repository (in GitHub) can include the following information:
+
+- a list of files contained in the repository with a brief description of each file
+- any instructions someone might need for running the code
+- an overview of the project
+
+The tools we have:
+
+- color selection
+- region of interest selection
+- grayscaling
+- Gaussian smoothing
+- Canny Edge Detection
+- Hough Transform line detection
+
+Some OpenCV functions that might be useful for this project are:
+
+- cv2.inRange() for color selection
+- cv2.fillPoly() for regions selection
+- cv2.line() to draw lines on an image given endpoints
+- cv2.addWeighted() to add/overlay two images
+- cv2.cvtColor() to grayscale or change color
+- cv2.imwrite() to output images to file
+- cv2.bitwise_and() to apply a mask to an image
+
+
+
 ### Camera Calibration
+
+80% of challenge is from *perception*
+
+![sensorComp](../Media/sensorComp.png)
+
+#### Distortion Correction
+
+Image distortion occurs when a camera looks at 3D objects in the real world and transforms them into a 2D image.
+
+#### Pinhole Camera model
+
+Real cameras use curved lenses (not pinhole) to form an image, and light rays often bend a little too much or too little at the edges of these lenses. This creates an effect that distorts the edges of images.
+
+- **radial distortion**: 
 
 ### Gradients and Color Spaces
 
