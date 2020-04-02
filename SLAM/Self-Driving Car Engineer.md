@@ -324,7 +324,182 @@ Image distortion occurs when a camera looks at 3D objects in the real world and 
 
 Real cameras use curved lenses (not pinhole) to form an image, and light rays often bend a little too much or too little at the edges of these lenses. This creates an effect that distorts the edges of images.
 
-- **radial distortion**: 
+- **radial distortion**: lines or objects at the edges of the images appear more or less curved than actual
+- **tangential distortion**: when a camera's lens is not aligned perfected parallel to the imaging plane (seems farther away or closer than actual)
+
+distortion values: $[k1, k2, p1, p2, k3]$, for lens with not much distortion, $k3$ sometime can be negligible (close to zero), that why it appears at the end of the array in OpenCV
+
+![cameraDistortion](../Media/cameraDistortion.png)
+
+The distortion correction formulas
+
+Radial
+
+$\begin{align} x_{distorted} = x_{ideal}(1+k_1r^2+k_2r^4+k_3r^6) \\ y_{distorted} = y_{ideal}(1+k_1r^2+k_2r^4+k_3r^6)\end{align}$
+
+Tangential
+
+$\begin{align} x_{corrected} = x+[2p_1xy + p_2(r^2+2x^2)] \\ y_{corrected} = y + [p_1(r^2+2y^2)+2p_2xy]\end{align}$
+
+#### Camera Calibration
+
+we can use a chess board for the calibration;
+
+"corners" are points where two black and two white squares intersect,, thus inside only not outside corners
+
+```python
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+
+# prepare object points
+nx = 8
+ny = 6
+
+# make a list of calibration images
+fname = "calibrationTestDistorted.png"
+img = cv2.imread("../../Media/" + fname)
+
+# convert to grayscale
+# note: if read with cv2.imread, use cv2.COLOR_BGR2GRAY
+#       if read with mpimg.imread, use cv2.COLOR_RGB2GRAY
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+# find the chessboard corners
+ret, corners = cv2.findChessboardCorners(gray, (nx, ny), None)
+print(type(corners), corners.shape)
+
+# if found, draw corners
+if ret == True:
+    cv2.drawChessboardCorners(img, (nx, ny), corners, ret)
+    plt.imshow(img)
+    plt.show()
+```
+
+
+
+![calibrationTestDistorted_corners](../Media/calibrationTestDistorted_corners.png)
+
+color images have 3 dimensions (height, width, and depth/channels) while grayscale image only has 2 dimensions.
+
+
+
+Camera calibration and correction for distortion with saved image points and object points extracted
+
+```python
+import pickle
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+
+# Read in the saved objpoints and imgpoints
+dist_pickle = pickle.load(open("wide_dist_pickle.p", "rb"))
+objpoints = dist_pickle["objpoints"]
+imgpoints = dist_pickle["imgpoints"]
+
+# Read in an image
+img = cv2.imread("test_image.png")
+
+# takes an image, object points, and image points
+# performs the camera calibration, image distortion correction and 
+# returns the undistorted image
+def cal_undistort(img, objpoints, imgpoints):
+    # print(img.shape)
+    img_size = img.shape[1:]
+    # img_size = (img.shape[1], img.shape[0])
+    # img_size = img.shape[::-1]
+    ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, img_size, None, None)
+    undist = cv2.undistort(img, mtx, dist, None, mtx)
+    # cv2.imwrite("test_image_undist.png", undist)
+    return undist
+
+undistorted = cal_undistort(img, objpoints, imgpoints)
+
+f, (ax1, ax2) = plt.subplots(1, 2, figsize=(24, 9))
+f.tight_layout()
+ax1.imshow(img)
+ax1.set_title('Original Image', fontsize=50)
+ax2.imshow(undistorted)
+ax2.set_title('Undistorted Image', fontsize=50)
+plt.subplots_adjust(left=0., right=1, top=0.9, bottom=0.)
+plt.show()
+```
+
+![calibrationTestCalibrated](../Media/calibrationTestCalibrated.png)
+
+Camera calibration and correction for distortion by extracting object points and image points from raw images
+
+```python
+import numpy as np
+import cv2
+import glob
+import matplotlib.pyplot as plt
+
+# prepare object points, like (0, 0, 0), (1, 0, 0,), (2, 0, 0) ..., (5, 7, 0)
+objp = np.zeros((6*8, 3), np.float32)
+objp[:, :2] = np.mgrid[0:8, 0:6].T.reshape(-1, 2)
+
+# arrays to store object points and image points form all the images
+objpoints = []  # 3d points in real world space
+imgpoints = []  # 2d points in image plane
+
+# make a list of calirbation images
+images = glob.glob("../../Media/calibration_wide/GO*.jpg")
+
+# step through the list and search for chessbaord corners
+for idx, fname in enumerate(images):
+    img = cv2.imread(fname)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    # find the chessboard corners
+    ret, corners = cv2.findChessboardCorners(gray, (8, 6), None)
+
+    # if found, add object points, image points
+    if ret == True:
+        objpoints.append(objp)
+        imgpoints.append(corners)
+
+        # draw and display the corners
+        cv2.drawChessboardCorners(img, (8, 6), corners, ret)
+        # write_name = "corners_found" + str(idx) +".jpg"
+        # cv2.imwrite(write_name, img)
+        cv2.imshow("img", img)
+        cv2.waitKey(200)
+
+cv2.destroyAllWindows()
+
+# use the above objpoints and imgpoints for camera calibration and verify
+# with one image distortion
+import pickle
+
+img = cv2.imread("../../Media/calibration_wide/test_image.jpg")
+img_size = (img.shape[1], img.shape[0])
+
+ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, img_size, None, None)
+
+dst = cv2.undistort(img, mtx, dist, None, mtx)
+cv2.imwrite("../../Media/calibration_wide/test_image_undist.jpg", dst)
+
+# save the camera calibration result for later use (no need to worry about rvecs, tvecs)
+dist_pickle = {}
+dist_pickle["mtx"] = mtx
+dist_pickle["dist"] = dist
+pickle.dump(dist_pickle, open("../../Media/calibration_wide/wide_dist_pickle.p","wb"))
+# Visualize undistortion
+f, (ax1, ax2) = plt.subplots(1, 2, figsize=(24, 9))
+ax1.imshow(img)
+ax1.set_title('Original Image', fontsize=30)
+ax2.imshow(dst)
+ax2.set_title('Undistorted Image', fontsize=30)
+plt.subplots_adjust(left=0., right=1, top=0.9, bottom=0.)
+plt.show()
+```
+
+![calibrationTestCalibrated_2](../Media/calibrationTestCalibrated_2.png)
+
+
 
 ### Gradients and Color Spaces
 
