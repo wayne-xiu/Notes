@@ -499,6 +499,24 @@ plt.show()
 
 ![calibrationTestCalibrated_2](../Media/calibrationTestCalibrated_2.png)
 
+#### Lane Curvature
+
+To obtain the correct steering angle to turn, we need calculate the curvature of the lane line. One way is to fit a 2nd degree polynomial to that line $f(y) = Ay^2 + By + C$. Performing a perspective transform to get a bird's-eye view of the lane.
+
+#### Perspective Transform
+
+A perspective transform maps the points in a given image to different, desired image points with a new perspective. A bird's eye view transform allows us view a lane from above. It will also allow us to match the car's location directly with a map since map displays roads from a top-down view.
+
+![perspectiveTransformExample](../Media/perspectiveTransformExample.png)
+
+#### Transform a Stop Sign
+
+Use 4 points to define a linear transformation between the original image and the warped iamge
+
+We can choose four source points manually when applying a perspective transform manually. However, it is often not the best option. Many perspective transform algorithms will programmatically detect four source points in an image based on edge or corner detection and analyzing attributes like color and surrounding pixels.
+
+![calibrationDistortionCorrectPerspectTransform](../Media/calibrationDistortionCorrectPerspectTransform.png)
+
 
 
 ### Gradients and Color Spaces
