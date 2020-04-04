@@ -517,6 +517,20 @@ We can choose four source points manually when applying a perspective transform 
 
 ![calibrationDistortionCorrectPerspectTransform](../Media/calibrationDistortionCorrectPerspectTransform.png)
 
+#### Undistort and Transform
+
+Basic procedures
+
+- undistort the image using camera calibration result
+- convert to grayscale
+- find the chessboard corners and draw corners
+- define 4 source points (the outer 4 corners detected in the chessboard pattern) in pixels
+- define 4 destination points (the same order as source points)
+- get the perspective transform matrix
+- use perspective transform matrix to warp the image
+
+> Hint: the destination points are the x and y pixel values of where we want those four corners to be mapped to in the output image
+
 
 
 ### Gradients and Color Spaces
