@@ -43,7 +43,7 @@ int main(){
 
 user-defined literals for type safety (with corresponding literal operator)
 
-![Cpp14Literals](Media/Cpp14Literals.png)
+![Cpp14Literals](../Media/Cpp14Literals.png)
 
 In C++14, string literals are supported. C++ used to only support C-string literals, meaning that we had to always use a C-string literal to initialize a C++ string. Time literals are very convenient; time literals are of type std::chrono::duration
 
@@ -365,7 +365,7 @@ std::cout << t.name() << std::endl;
 
 ## Unified Initialization
 
-unified initialization with {}
+### unified initialization with {}
 
 **Direct Initialization**
 
@@ -383,9 +383,27 @@ int i = {2011};
 
 The difference is that *direct initialization directly calls the constructor of the type*, whereas, in copy initialization, the value is created and implicitly converted into the type.
 
+It is possible to utilize {} for narrowing prevention.
 
+A function could return an initializer list directly for object construction.
+
+sequence constructor has a higher priority than classical constructor.
+
+> In C++14, auto with {} always gives an initializer_list; with C++17, the rules are more complicated
 
 ## const, constexpr, and volatile
+
+type const* / const type* : the value being pointed to is const; pointer can points to other variable
+
+type* const: constant pointer, which can't point to another variable; but the value is changeable
+
+trick: read from right to left
+
+### constexpr
+
+expression is evaluated at compile time. not just for variables, but functions and user-defined types.
+
+pure functions: always return the same result when given the same arguments; never has side effects; never change the state of the program.
 
 ## Move Semantic and Perfect Forwarding
 
