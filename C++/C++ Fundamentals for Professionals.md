@@ -405,6 +405,38 @@ expression is evaluated at compile time. not just for variables, but functions a
 
 pure functions: always return the same result when given the same arguments; never has side effects; never change the state of the program.
 
+```c++
+constexpr int square(int x) {return x*x; }
+static_assert(square(10) == 100, "you calculated it wrong");
+
+// array initialization
+int arrayClassic[100];
+int arrayWithConstExpression[square(10)];
+```
+
+Making the expression a constexpr variable will allow the code compilation to pass the assertions.
+
+constexpr could be used with auto
+
+
+
+How can we check that an instance will be created at compile-time?
+
+
+
+### Volatile
+
+The volatile variable is one whose value may change due to an external event.
+
+volatile keyword exists in C# and Java as well, but it has nothing in common with volatile in C++. In C++
+
+*volatile vs. std::atomic*
+
+- volatile is for special objects, on which optimized read or write operations are not allowed
+- std::atomic defines atomic variables, which are meant for thread-safe reading and writing. The volatile keyword in Java and C# is equivalent to std::atomic in C++. In other words, volatile has not multithreading semantics in C++.
+
+`volatile` is typically used in embedded programming to denote objects that can change independently of the regular program flow. These are, for example, objects that represent an external device  (memory-mapped I/O). Because these objects can change independent of the regular program flow, their values will be written directly in the main memory. Hence, there is no optimized storing in caches - TODO.
+
 ## Move Semantic and Perfect Forwarding
 
 ## Memory Management
