@@ -650,6 +650,118 @@ plt.show()
 
 ![applySobel](../Media/applySobel.png)
 
+#### Magnitude of the Gradient
+
+We took the gradient in $x$ or $y$ and set thresholds to identify pixels within a certain gradient range. Now, we want to apply a threshold to the overall magnitude of the gradient, in both x and y.
+
+It's also worth considering to modify the kernel size for the Sobel operator to change the region of interest size. Taking the gradient over larger regions can smooth over noisy intensity fluctuations on small scales.
+
+```python
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+import pickle
+
+image_name = "signs_vehicles_xygrad.png"
+image = mpimg.imread("../../Media/" + image_name)
+
+# Define a function that applies Sobel x and y, 
+# then computes the magnitude of the gradient
+# and applies a threshold
+def mag_thresh(img, sobel_kernel=3, mag_thresh=(0, 255)):
+    # Apply the following steps to img
+    # 1) Convert to grayscale
+    # 2) Take the gradient in x and y separately
+    # 3) Calculate the magnitude 
+    # 4) Scale to 8-bit (0 - 255) and convert to type = np.uint8
+    # 5) Create a binary mask where mag thresholds are met
+    # 6) Return this mask as your binary_output image
+    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    sobel_x = cv2.Sobel(gray, cv2.CV_64F, 1, 0, sobel_kernel)
+    sobel_y = cv2.Sobel(gray, cv2.CV_64F, 0, 1, sobel_kernel)
+    sobel_abs = np.sqrt(np.absolute(sobel_x)*np.absolute(sobel_x) + np.absolute(sobel_y)*np.absolute(sobel_y))
+    scaled_sobel = np.uint8(255*sobel_abs/np.max(sobel_abs))
+
+    binary_output = np.zeros_like(scaled_sobel)
+    thresh_min = mag_thresh[0]
+    thresh_max = mag_thresh[1]
+    binary_output[(scaled_sobel >= thresh_min) & (scaled_sobel <= thresh_max)] = 1
+    return binary_output
+
+# Run the function
+mag_binary = mag_thresh(image, sobel_kernel=3, mag_thresh=(30, 100))
+# Plot the result
+f, (ax1, ax2) = plt.subplots(1, 2, figsize=(24, 9))
+f.tight_layout()
+ax1.imshow(image)
+ax1.set_title('Original Image', fontsize=50)
+ax2.imshow(mag_binary, cmap='gray')
+ax2.set_title('Thresholded Magnitude', fontsize=50)
+plt.subplots_adjust(left=0., right=1, top=0.9, bottom=0.)
+plt.show()
+```
+
+![applySobelMag](../Media/applySobelMag.png)
+
+#### Direction of the Gradient
+
+Gradient magnitude is at the heart of Canny edge detection, and is why Canny works well for picking up all edges.
+
+In the case of lane lines, we are interested only in edges of a particular orientation. The direction of the gradient is imply the inverse tangent of the $y$ gradient divided by the $x$ gradient - TODO
+
+$atan(sobel_y/sobel_x)$
+
+Each pixel of the resulting image contains a value for the angle of the gradient away from horizontal in units of radians, with range of $[-\pi/2, \pi/2]$. An orientation of 0 implies a vertical line and orientation of $\pm \pi/2$ imply horizontal lines.
+
+```python
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+import pickle
+
+# Read in an image
+image_name = "signs_vehicles_xygrad.png"
+image = mpimg.imread("../../Media/" + image_name)
+
+# Define a function that applies Sobel x and y, 
+# then computes the direction of the gradient
+# and applies a threshold.
+def dir_threshold(img, sobel_kernel=3, thresh=(0, np.pi/2)):
+    # Apply the following steps to img
+    # 1) Convert to grayscale
+    # 2) Take the gradient in x and y separately
+    # 3) Take the absolute value of the x and y gradients
+    # 4) Use np.arctan2(abs_sobely, abs_sobelx) to calculate the direction of the gradient 
+    # 5) Create a binary mask where direction thresholds are met
+    # 6) Return this mask as your binary_output image
+    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize = sobel_kernel)
+    sobely = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize = sobel_kernel)
+    graddir = np.arctan2(np.absolute(sobely), np.absolute(sobelx))
+    binary_output = np.zeros_like(graddir)
+    binary_output[(graddir >= thresh[0]) & (graddir <= thresh[1])] = 1
+
+    return binary_output
+    
+# Run the function
+dir_binary = dir_threshold(image, sobel_kernel=15, thresh=(0.7, 1.3))
+# Plot the result
+f, (ax1, ax2) = plt.subplots(1, 2, figsize=(24, 9))
+f.tight_layout()
+ax1.imshow(image)
+ax1.set_title('Original Image', fontsize=50)
+ax2.imshow(dir_binary, cmap='gray')
+ax2.set_title('Thresholded Grad. Dir.', fontsize=50)
+plt.subplots_adjust(left=0., right=1, top=0.9, bottom=0.)
+plt.show()
+```
+
+![gradientDirection](../Media/gradientDirection.png)
+
+#### Combining Thresholds
+
 
 
 ### Advanced Computer Vision
