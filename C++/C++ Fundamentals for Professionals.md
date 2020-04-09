@@ -437,7 +437,40 @@ volatile keyword exists in C# and Java as well, but it has nothing in common wit
 
 `volatile` is typically used in embedded programming to denote objects that can change independently of the regular program flow. These are, for example, objects that represent an external device  (memory-mapped I/O). Because these objects can change independent of the regular program flow, their values will be written directly in the main memory. Hence, there is no optimized storing in caches - TODO.
 
+volatile and data race
+
+One of the biggest challenge of thread-management begins when the threads share non-const data.
+
+- Data Race/Race Condition: a data race is a state, in which at least two threads access a shared data at the same time, and at least one of the threads is a writer. the program behavior is undefined.
+- Critical Section: a critical section is a section of the code, which not more than one thread should access at any point in time.
+
+The first solution is a mutex (mutual exclusion). It ensures that only one thread can access a critical section
+
 ## Move Semantic and Perfect Forwarding
+
+### Rvalues and Lvalues
+
+Rvalues are:
+
+- temporary objects
+- objects without a name
+- objects from which we cannot get an address
+- always on the right side of an assignment operation
+
+*Lvalues can only be bound to lvalue references. However, rvalues can be bound to rvalue references or const lvalue references*. The binding of rvalues to rvalue references has higher priority.
+
+Rvalue references: applications
+
+**Move Semantics**
+
+- cheap moving rather than expensive copying
+- no memory allocation and deallocation
+- non-copyable but moveable objects can be transferred by value
+
+**Perfect forwarding**
+
+- forward an object without changing its rvalue/lvalue nature. This helps in function templates
+- 
 
 ## Memory Management
 
