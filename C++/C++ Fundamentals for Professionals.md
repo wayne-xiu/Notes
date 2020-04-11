@@ -470,7 +470,37 @@ Rvalue references: applications
 **Perfect forwarding**
 
 - forward an object without changing its rvalue/lvalue nature. This helps in function templates
-- 
+
+```c++
+struct MyData{};
+
+std::string function( const MyData & ) {
+    return "lvalue reference";
+}
+
+std::string function( MyData && ) {
+    return "rvalue reference";
+}
+
+int main(){
+  MyData myData;
+    // function(myData): lvalue reference
+  std::cout << "function(myData): " << function(myData) << std::endl;
+    // function(MyData()): rvalue reference
+  std::cout << "function(MyData()): " << function(MyData()) << std::endl;
+    // function(std::move(myData)): rvalue reference
+  std::cout << "function(std::move(myData)): " << function(std::move(myData)) << std::endl;
+
+    return 0;
+}
+```
+
+- myData is lvalue reference since it has name and address
+- MyData() is temporary object, which has no name and address, so it's rvalue reference
+
+### Copy vs. Move Semantics
+
+
 
 ## Memory Management
 
