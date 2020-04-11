@@ -524,9 +524,33 @@ Move semantic can be significantly faster than the copy semantic since we are on
 
 ### Perfect Forwarding
 
+Def: If a function template forwards its arguments without changing their lvalue or rvalue characteristics, we call it *perfect forwarding*
+
+The (Arg&& a) **universal reference** can bind lvalues or values.
+
+To achieve perfect forwarding, we have to combine a universal reference with std::forward, std::foward<Arg>(a). When the argument a is an ravlue, std::forward moves its argument. When the argument a is an lvalue, it copies the argument. Therefore, an rvalue remains an rvalue.
+
+```c++
+template<typename T>
+void wrapper(T&& a) {
+    func(std::forward<T>(a));
+}
+```
+
+Variadic Templates are templates that can get an arbitrary number of arguments.
+
+```c++
+template<typename T, typename ... Args>
+T create(Args&& ... args) {
+    return T(std::forward<Args>(args)...);
+}
+```
+
 
 
 ## Memory Management
+
+
 
 ## Functions
 
