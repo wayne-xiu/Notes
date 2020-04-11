@@ -500,6 +500,30 @@ int main(){
 
 ### Copy vs. Move Semantics
 
+Copying is expensive and moving is cheap. But, the resource of the move operation is in a "valid but unspecified state" afterward.
+
+> Although it is called "move". When we move an object, we transfer ownership. *By moving, we give the object to someone else*
+
+- A class supports copy semantics if the class has a copy constructor and a copy assignment operator
+- A class supports move semantics if the class has a move constructor and a move assignment operator
+
+Containers of the STL can have non-copyable elements. The copy semantics is the fallback for the move semantics (meaning if we invoke std::move with a non-moveable type, copy semantic is used because an rvalue can be bound to an rvalue reference and a const lvalue reference). The function std::move moves its resource, and is a static_cast to a rvalue reference under the hood.
+
+move constructor, move assignment operator has non-constant rvalue reference as arguments, while the traditional copy constructor and copy assignment operator get their assignment as constant lvalue reference
+
+> The move semantic has priority over the copy semantic
+
+Big six:
+
+- default constructor
+- destructor
+- move and copy constructor
+- move and copy assignment operator
+
+Move semantic can be significantly faster than the copy semantic since we are only redirecting the pointer to another vector. More precisely, the cost of move semantics are independent of the size of the data structure.
+
+### Perfect Forwarding
+
 
 
 ## Memory Management
