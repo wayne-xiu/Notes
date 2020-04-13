@@ -550,7 +550,33 @@ T create(Args&& ... args) {
 
 ## Memory Management
 
+### Memory allocation and release
 
+We can directly create objects in static memory, in a reserved data, or even in a memory pool.
+
+Dynamic memory, or the heap, has to be explicitly requested or released by the programmer. The compiler manages its memory automatically on the stack. Smart pointers manage memory automatically
+
+new causes memory allocation and object initialization. The class of the allocated object must have a default constructor.
+
+> The STL containers and C++ String automatically manage their memory
+
+If the deleted object belongs to a type hierarchy, the destructor of the object and the destructors of all base classes will be automatically called. If the destructor of the base class is *virtual*, we can destroy the object with a pointer or reference to the base class.
+
+be careful with undefined behavior after deletion.
+
+
+
+**RAII**
+
+acquire resource in constructor and release in destructor.
+
+Even the throwing of an exception does not alter the reliability of RAII. The destructor will still be called at the end of the try block.
+
+### Overloading new and delete
+
+for programs running for long periods of time, it is a challenge to allocate and deallocate memory from a memory management perspective.
+
+TODO
 
 ## Functions
 
