@@ -580,6 +580,108 @@ TODO
 
 ## Functions
 
+The *signature* of a function is its name and parameters (no return types). Function arguments are passed by value by default.
+
+The parameters that have default arguments must be placed at the end (not really convenient in practice, should adopt something like in Python with named argument)
+
+### Function Overloading
+
+The compiler ignores *references* when overloading functions.
+
+```c++
+int min(int x, int y);
+// is the same as
+int min(int& x, int& y);
+```
+
+Furthermore, the *const* and *volatile* quantifiers are also ignored.
+
+### Lambda Functions
+
+a function without a name.
+
+A lambda can be written in-place and can be treated as data.
+
+**Function vs. function object**
+
+lambdas are just function objects automatically created by the compiler.
+
+A function object is an instance of a class for which the call operator, operator(), is overloaded. A function object is an object that behaves like a function. The main difference between a function and a function object is that *a function object is an object and can, therefore, have a state*
+
+```c++
+int addFunc(int a, int b) {
+    return a+b;
+}
+
+int main() {
+    struct AddObj {
+        int operator()(int a, int b) const {  // function object
+            return a+b;
+        }
+    }
+    
+    AddObj addObj;
+    addObj(3, 4) == addFunc(3, 4);
+    // lambda
+    auto addObjLambda = [](int a, int b) {return a+b;}
+    addObjLambda(3, 4) == addFunc(3, 4);
+}
+```
+
+ If the lambda expression captures its environment and therefore has a state, the corresponding struct, `AddObj`, gets a constructor for initializing its members. If the lambda  expression captures its argument by reference, so does the constructor.  The same holds for capturing by value.
+
+
+
+Lambda function can bind their invocation context. This is perhaps the best feature of C++ lambdas.
+
+![lambdaBindings](../Media/lambdaBindings.png)
+
+
+
+**Generic lambda functions** that deduce their argument types. A generic lambda is a function template.
+
+```c++
+#include <iostream>
+#include <vector>
+#include <numeric>
+using namespace std::string_literals;
+
+int main() {
+  auto add11=[ ](int i, int i2){ return i + i2; }; 
+  auto add14= [ ](auto i, auto i2){ return i + i2; };
+  std::vector<int> myVec{1, 2, 3, 4, 5};
+  auto res11= std::accumulate(myVec.begin(), myVec.end(), 0, add11); 
+  auto res14= std::accumulate(myVec.begin(), myVec.end(), 0, add14);
+  
+  std::cout << res11 << std::endl;
+  std::cout << res14 << std::endl;
+
+  std::vector<std::string> myVecStr{"Hello"s, " World"s};
+  auto st= std::accumulate(myVecStr.begin(), myVecStr.end(), ""s, add14);
+  std::cout << st << std::endl; // Hello World
+}
+```
+
+
+
+Capturing local variables
+
+```c++
+#include <functional>
+
+std::function<int(int)> makeLambda(int a){    
+    return [a](int b){ return a + b; };
+}
+
+int main(){
+    auto add5 = makeLambda(5);      
+    auto add10 = makeLambda(10);      
+    add5(10) == add10(5);               
+}
+```
+
+
+
 ## Classes and Objects
 
 ## Inheritance
