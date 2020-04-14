@@ -682,6 +682,37 @@ int main(){
 
 
 
+example: using Lambdas for sorting
+
+```c++
+bool lessLength(const string& f, const string& s) {
+    return f.length() < s.length();
+}
+// functor
+class GreaterLength {
+  public:
+    bool operator() (const string& f, const string& s) const {
+        return f.length() > s.length();
+    }
+};
+
+int main() {
+    vector<string> myStrVec = {"12345", "123456", "1234", "1", "12", "123", "12345"};
+    // 1. sort with function
+    std::sort(myStrVec.begin(), myStrVec.end(), lessLength);
+    // 2. sort with function object
+   	std::sort(myStrVec.begin(), myStrVec.end(), GreaterLength());
+    // 3. sort with Lambda function
+    std::sort(myStrVec.begin(), myStrVec.end(), [](const string& f, const string& s) {return f.length() < s.length(); });
+    // print
+    std::copy(myStrVec.begin(), myStrVec.end(), std::ostream_iterator<std::string>(std::cout,  " "));
+    
+    return 0;
+}
+```
+
+
+
 ## Classes and Objects
 
 ## Inheritance
