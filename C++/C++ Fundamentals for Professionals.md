@@ -715,6 +715,42 @@ int main() {
 
 ## Classes and Objects
 
+### Class Types
+
+classes are data types encapsulating *attributes* and *methods*
+
+Objects are concrete examples of a class that exist at run time.
+
+Static attributes are attributes shared by all instances of a class. Only one stance of the static attribute is present for all objects.
+
+### Constructors
+
+Constructors are special methods for the instantiation of an object in the class. Constructors has the exact name as the class and no return type.
+
+The explicit constructor is used to avoid implicit class to a class's constructor
+
+```c++
+Account(double b): balance{b}{}
+Account acc = 100.0;  // OK
+// explicit constructor
+explicit Account(double b): balance(b) {}
+// Account account = 100.0;  // Error
+```
+
+### Initializers for Instances
+
+**Member initializer lists**
+
+An initializer list is used to initialize the members in the constructor of a class. The list is added before the body of the constructor.
+
+- non-static attributes that are declared const or as a reference must be initialized in the initializer list
+- the sequence of initialization corresponds to the sequence in which the attributes were declared (makes no much sense)
+- static attributes cannot be initialized in the initializer of the constructor
+
+### Constructor Delegation
+
+
+
 ## Inheritance
 
 ## Templates
