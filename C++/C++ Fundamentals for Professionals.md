@@ -749,6 +749,42 @@ An initializer list is used to initialize the members in the constructor of a cl
 
 ### Constructor Delegation
 
+constructor delegation occurs when a constructor calls another constructor of the same class in its initializer list.
+
+The default constructor can actually calls the parameterized constructor not just vice versa.
+
+> Note: constructor delegation must be done in the initializer list not in the body. If not, we will end up with two objects.
+>
+> Recursively invoking constructors will result in undefined behavior
+
+### Destructors
+
+free up memory, releasing locks
+
+Locks and smart pointers use this characteristic. If a class has a raw pointer (T*) or reference (T&), consider whether it might be owned.
+
+std::unique_ptr is by design as efficient as a raw pointer can be. There is no overhead in memory or time.
+
+**A base class destructor should be either public and virtual or protected and nonvirtual**. If the destructor of the base class is protected, we cannot destroy derived objects using a base class pointer, therefore, the destructor must not be virtual.
+
+If the destructor of a class, `Base`, is private, we cannot use the type. If the destructor of a class, `Base`, is protected, we can only derive `Derived` from Base and use Derived.
+
+```c++
+struct Base{
+    protected:
+    ~Base() = default;
+};
+ 
+struct Derived: Base{};
+ 
+int main(){
+    Base b;   // Error: Base::~Base is protected within this context
+    Derived d;
+}
+```
+
+### Methods
+
 
 
 ## Inheritance
