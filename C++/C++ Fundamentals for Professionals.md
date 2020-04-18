@@ -785,6 +785,100 @@ int main(){
 
 ### Methods
 
+Every class attribute has an implicit *this* pointer.
+
+static methods can be used with or without an instance of the class.
+
+> Note: Static methods do not have this pointer. They can only access static attributes and methods.
+
+Constant objects can only call *const* or *constexpr* methods. An instance does not have to be const to use constant methods. Constant methods can only change an instance variable if the instance variable is declared *mutable*
+
+constexpr methods are implicitly const. Such methods can only class other constexpr functions, methods, and global variables.
+
+*const vs constexpr*
+
+- const methods are used to increase safety. They restrict modification access to the attributes of the class.
+- constexpr methods are used to increase performance and optimize the program (evaluated at compile time)
+
+### Request and Suppress Methods
+
+default can only be assigned to special methods that do not have any default arguments.
+
+![specialMethodsCpp](../Media/specialMethodsCpp.png)
+
+By using *delete* in combination with *default*, we can define whether or not a class's objects:
+
+- can be copied
+- can only be created on the stack
+- can only be created on the heap
+
+```c++
+class SomeType{
+  public:
+  // state the compiler generated default constructor
+  SomeType() = default;
+  // constructor for int
+  SomeType(int value){
+    std::cout << "SomeType(int) " << std::endl;
+  };
+  // explicit Copy Constructor
+  explicit SomeType(const SomeType&) = default;
+  // virtual destructor, in case of inheritance
+  virtual ~SomeType() = default;
+
+};
+```
+
+
+
+delete is also applicable to functions (interesting)
+
+```c++
+#include <iostream>
+
+class NonCopyableClass{
+  public:
+  // state the compiler generated default constructor
+  NonCopyableClass()= default;
+  // disallow copying
+  NonCopyableClass& operator = (const NonCopyableClass&) = delete;
+  NonCopyableClass (const NonCopyableClass&) = delete;
+  // disallow copying
+  NonCopyableClass& operator = (NonCopyableClass&&) = default;
+  NonCopyableClass (NonCopyableClass&&) = default;
+};
+
+class TypeOnStack {
+  public:
+    void * operator new(std::size_t)= delete;
+};
+
+class TypeOnHeap{
+  public:
+    ~TypeOnHeap()= delete;
+};
+
+void onlyDouble(double){}
+template <typename T>
+void onlyDouble(T)=delete;
+
+int main(){
+
+  NonCopyableClass nonCopyableClass;
+  TypeOnStack typeOnStack;
+  TypeOnHeap * typeOnHeap = new TypeOnHeap;
+  onlyDouble(3.14);
+    
+  // force the compiler errors
+  NonCopyableClass nonCopyableClass2(nonCopyableClass); // cannot copy
+  TypeOnStack * typeOnHeap2 = new TypeOnStack; // cannot create on heap
+  TypeOnHeap typeOnStack2; // cannot create on stack
+  onlyDouble(2011); // int argument not accepted
+}
+```
+
+### Operator Overloading
+
 
 
 ## Inheritance
