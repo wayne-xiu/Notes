@@ -879,7 +879,86 @@ int main(){
 
 ### Operator Overloading
 
+Derived class inherit all the operators of their base classes except the assignment operator. Each class needs to overload the = operator.
 
+```c++
+// overload +=  
+Account& operator += (double b){
+    balance += b;
+    return * this;
+  }
+// friend fucntion for accessing private member and overload for same types
+ friend Account& operator += (Account& a, Account& b) {
+   a.balance += b.balance;
+   return a;
+ }
+// overload <<
+ friend std::ostream& operator << (std::ostream& os, const Account& a) {
+   os << a.balance;
+   return os;
+ }
+
+// usage
+  Account acc1(100.0);
+
+  acc1 += 50.0;
+  acc1 += acc1;
+  acc1.operator += (50.0);  // explicit operator call
+```
+
+If the assignment operator is not overloaded, the compiler creates one implicitly.
+
+move assignment operator can be more efficient than copy assignment.
+
+### Explicit Conversion Operators
+
+### Call Operator
+
+By overloading the function call operator (), we can call objects like ordinary function objects that may or may not have arguments. These special objects are known as functors.
+
+*The best feature of function objects is that they can have a state*. Since they are objects, data is stored inside them, but they can also be used as functions to return data.
+
+Functors are very similar to lambda functions. Lambdas actually create anonymous functors. Functors are used frequently in STL algorithms as arguments.
+
+```c++
+class SumMe {
+  public:
+    SunMe(): sum(0){};
+    void operator()(int x) {
+        sum += x;
+    }
+    int getSum() const {return sum;}
+  private:
+    int sum;
+};
+
+// usage
+std::vector<int> intVec = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+SumMe sumMe = std::for_each(intVec.begin(), intVec.end(), SumMe());
+std::cout << "sumMe.getSum(): " << sumMe.getSum() << std::endl;
+
+// use Lambda
+int sum{0};
+std::for_each(intVec.begin(), intVec.end(), [&sum](int x) { sum += x; });
+```
+
+> Lambda functions can also have a state
+
+### Access Rights for Members
+
+The public and protected members are the interfaces of the class, the private members are the implementations of the class.
+
+### Friend
+
+The friend declaration appears in a class body and grants a function or  another class access to private and protected members of the class where the friend declaration appears.
+
+A class can declare friendship to a function, a method or a class
+
+- Access specifier have no effect on the meaning of friend declarations (private, or public)
+- Friendship cannot be inherited, not transitive
+- **A friend has full control of the internals of a class**
+
+Structs should be used instead of classes if the data type is a simple data holder.
 
 ## Inheritance
 
