@@ -962,6 +962,31 @@ Structs should be used instead of classes if the data type is a simple data hold
 
 ## Inheritance
 
+### Abstract Base Classes
+
+When one class inherits from another class, it gets all its attributes and members from the parent class and can add new ones.
+
+> Polymorphism: when the characteristics of an object behave differently at run time.
+
+Abstract base classes are classes that have at least one pure virtual method. They are typically used as interfaces for class hierarchies.
+
+- abstract base class cannot be instantiated
+- derived class has to implement the pure virtual method in order to get instantiated
+- must implement a pure virtual destructor
+
+The derived class and the base class have an is-a relationship. Public inheritance is called an is-a relationship because the derived class has the same interface as the base class. The derived class is a specialization of the base class
+
+```c++
+// public->public, protected->protected
+class BankAccount: public Account {...}
+// public->protected, protected->protected
+class BankAccount: protected Account {...}
+// public->private, protected->private
+class BankAccount: private Account {...}
+```
+
+
+
 ## Templates
 
 ## Utilities
