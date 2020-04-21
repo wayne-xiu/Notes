@@ -985,6 +985,61 @@ class BankAccount: protected Account {...}
 class BankAccount: private Account {...}
 ```
 
+A class hierarchy is constructed to represent a set of hierarchically organized concepts (only). Typically, base classes act as interfaces. There are two major uses for hierarchies,
+
+- implementation inheritance
+- interface inheritance
+
+C++ core guidelines
+
+- Use class hierarchies to represent concepts with inherent hierarchical structure (only)
+
+make sure the idea represented in the base class exactly matches all derived types and there is not a better way to express it than using the tight coupling of inheritance
+
+- If a base class is used as an interface, make is a pure abstract class
+
+A class is more stable (less brittle) if it does not contain data. Interfaces should normally be composed entirely of public pure virtual functions and a default/virtual destructor.
+
+```c++
+class My_interface {
+public:
+    // ...only pure virtual functions here ...
+    virtual ~My_interface() {}   // or =default
+};
+```
+
+- use abstract classes as interfaces when complete separation of interface and implementation is needed - such as on an ABI boundary
+
+### Constructor Inheriting
+
+Constructor calls start with base class and end with the most derived class.
+
+> Only the default constructor is inherited, the copy and move constructor will not be inherited
+
+### Base Class Initializers
+
+specify the data that are given to the base class for initialization
+
+```c++
+struct Account{
+  Account(double amount){};
+};
+
+struct BankAccount: Account{
+BankAccount(double r): Account(r), cur("EUR"){}  // specialization
+private:
+  std::string cur;
+};
+```
+
+### Destructor Calls
+
+The sequence of destructor calls starts with with the most derived class and ends with the base class.
+
+> constructor calls and destructor calls follow the exact opposite behavior
+
+### Virtual Methods
+
 
 
 ## Templates
