@@ -1040,13 +1040,69 @@ The sequence of destructor calls starts with with the most derived class and end
 
 ### Virtual Methods
 
+- Virtua methods are used to adjust the behavior of an object while keeping its interface stable
+- to be overridden
 
+The dynamic type of the object determines which version of a virtual method will be called. To apply virtuality, a pointer or a reference is needed.
+
+```c++
+Account* aPtr = &banAccount;
+
+Account& aRef = bankAccount;
+```
+
+Polymorphic
+
+- The method is selected at run-time
+- dynamic or late binding
+
+Rules
+
+- Virtual methods do not have to be overridden
+- Methods declared as virtual stay virtual in the hierarchy
+
+When destructing an object via a pointer or a reference to a base class, the destructors must be virtual.
+
+### Override and Final
+
+To override a method, the signature of the overridden method of the base class has to match exactly.
+
+*final* supports two use cases
+
+- declare a method that cannot be overridden
+- define a class that cannot be derived from
+
+Methods and classes declared as final are an optimization opportunity for the compiler
+
+```c++
+// both variants are equivalent
+void func() final;
+virtual void fun() final override;  // ?
+```
+
+The template method design pattern. The typical implementation of the template method pattern is to use NVI, which stands for non-virtual interface, meaning the interface should not be virtual. NVI requires non-virtual interface, which is not possible in Java or Python
+
+### Multiple Inheritance
+
+Diamond-problem
+
+Ambiguous calls to members can be resolved by using the scope operator
+
+virtual multiple inheritance
 
 ## Templates
 
+TODO
+
 ## Utilities
 
+TODO
+
 ## Smart Pointers
+
+3 different smart pointers, defined in the header <memory>
+
+
 
 ## Containers in General
 
