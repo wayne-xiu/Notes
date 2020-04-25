@@ -1102,6 +1102,57 @@ TODO
 
 3 different smart pointers, defined in the header <memory>
 
+explicit memory management in C++
+
+- unique_ptr: exclusive ownership, can't be copied
+- shared_ptr: shared ownership, with reference counter
+- weak_ptr: temporary ownership
+
+smart pointers manage their resources according to the RAII idiom.
+
+> RAII: **R**esource **A**cquisition **I**s **I**nitialization,  also known as RAII, is a popular technique in C++. Resource  acquisition and release are bound to the lifetime of an object. This  means that the memory for the smart pointer is allocated in the  constructor and deallocated in the destructor. We can use this technique in C++ because the destructor is called when the object goes out of  scope.
+
+### Unique Pointers
+
+unique_ptr should be our first choice since it functions without memory or performance overhead
+
+- can be instantiated with and without a resource.
+- manages the life cycle of a single object or an array of objects.
+- transparently offers the interface of the underlying resource.
+- can be parametrized with its own deleter function.
+- can be moved (move semantics).
+- can be created with the helper function `std::make_unique`
+
+```c++
+auto uniquePtr = std::make_unique<int>(2020);
+// make_unique is preferred over
+auto uniquePtr2 = std::unique_ptr<int>(new int(2020));
+```
+
+> always use make_unique, which guarantees no memory leak
+
+.get() methods obtains the address of the smart pointer
+
+unique_ptr has a specialization for arrays
+
+```c++
+    std::unique_ptr<MyStruct[]> myUniqueArray{new MyStruct[5]};  // on the heap
+	MyStruct myStruct;  // on the stack
+    myStruct= myUniqueArray[0];
+```
+
+### Shared Pointers
+
+keeping a reference count to maintain the count of its copies; two handles: one for the resource, one for the reference counter
+
+The C++ runtime guarantees that the call of the reference counter is an atomic operation; Due to this management, shared_ptr consumes more time and memory than a raw pointer or unqiue_ptr
+
+Use std::make_shared rather than directly creating an std::shared_ptr because std::make_shared is much faster and it guarantees no memory leaks
+
+CRTP
+
+derive from std::enable_shared_from_this
+
 
 
 ## Containers in General
