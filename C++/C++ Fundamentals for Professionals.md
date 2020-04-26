@@ -1153,6 +1153,14 @@ CRTP
 
 derive from std::enable_shared_from_this
 
+The classic issue of smart pointers using a reference count is to have cyclic references.
+
+### Weak Pointers
+
+std::weak_ptr supports no transparent access to the resources; it only borrows the resource from an std::shared_ptr; and it breaks the cycle of std::shared_ptr
+
+std::weak_ptr does not change the reference counter of the shared variable. .use_count remains unchanged
+
 
 
 ## Containers in General
