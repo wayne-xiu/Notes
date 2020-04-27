@@ -1161,9 +1161,92 @@ std::weak_ptr supports no transparent access to the resources; it only borrows t
 
 std::weak_ptr does not change the reference counter of the shared variable. .use_count remains unchanged
 
+### Cyclic References
+
+cyclic references of std::shared_ptr if they refer to each other. The reference counter will never become 0.
+
+### Performance Comparison
+
+shared_ptr is now; make_unique is faster than raw unique pointer;
+
+```c++
+std::unique_ptr<int> tmp(new int(100));
+// vs.
+std::unique_ptr<int> tmp(std::make_unique<int>(100));
+```
+
+### Passing Smart Pointers
+
+The Six Rules for passing shared_ptr and unique_ptr
+
+1. **[R.32](https://www.educative.io/courses/cpp-fundamentals-for-professionals/(http://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rr-uniqueptrparam))**: Take a `unique_ptr` parameter to express that a function assumes ownership of a widget.
+2. **[R.33](http://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rr-reseat)**: Take a `unique_ptr&` parameter to express that a function reseats the widget. (resets?)
+3. **[R.34](http://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rr-sharedptrparam-owner)**: Take a `shared_ptr` parameter to express that a function is part owner.
+4. **[R.35](http://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rr-sharedptrparam)**: Take a `shared_ptr&` parameter to express that a function might reseat the shared pointer.
+5. **[R.36](http://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rr-sharedptrparam-const)**: Take a const `shared_ptr&` parameter to express that it might retain a reference count to the object.
+6. **[R.37](http://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rr-smartptrget)**: Do not pass a pointer or reference obtained from an aliased smart pointer.
+
+```c++
+struct Widget{
+    Widget(int){}
+};
+void sink(std::unique_ptr<Widget> uniqPtr){
+    // void thinko(const unique_ptr<widget>&); // usually not what you want
+    // do something with uniqPtr
+}
+
+int main(){
+    auto uniqPtr = std::make_unique<Widget>(1998); 
+    sink(std::move(uniqPtr));      // (1)
+    sink(uniqPtr);                 // (2) ERROR
+}
+```
+
+If the function only wants to use the Widget, it should take its parameter by pointer or by reference.
+
+```c++
+void useWidget(Widget* wid);
+void useWidget(Widget& wid);
+```
+
+```c++
+// R33
+void reseat(std::unique_ptr<Widget>& uniqPtr){
+    uniqPtr.reset(new Widget(2003));   // (0)
+    // do something with uniqPtr
+}
+
+auto uniqPtr = std::make_unique<Widget>(1998);
+reseat(std::move(uniqPtr));  // Error
+reseat(uniqPtr);
+```
+
+Will not only construct a new Widget(2003), but also destruct the old Widget(1998)
+
+```c++
+// R34, 35, 36 
+void share(std::shared_ptr<Widget> shaWid);  // will increase reference counter
+void reseat(std::shard_ptr<Widget>& shadWid);  // will not change the reference counter; and we can reseat the resource
+void mayShare(const std::shared_ptr<Widget>& shaWid);  // only borrows the resource; should prefer Widget* or Widget& over this
+```
+
 
 
 ## Containers in General
+
+Each container has an allocator which works in the background, and hence the size of a container can be adjusted at runtime.
+
+Sequential Contaiers
+
+- std::array
+- vector
+- deque
+- list
+- forward_list
+
+### Create and Delete
+
+
 
 ## Sequential Containers
 
