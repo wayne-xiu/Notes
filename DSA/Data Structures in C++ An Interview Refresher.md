@@ -132,6 +132,8 @@ delete[] arr;
 
 ## Introduction to Linked Lists
 
+Linked-list is a data structure formed by nodes that are linked together like a chain. Each node holds data, along with a pointer to the next node in the list.
+
 ### Singly Linked List (SLL)
 
 ```c++
