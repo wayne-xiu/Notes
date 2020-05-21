@@ -281,7 +281,11 @@ For any operations on the list, we need to traverse it from the head. The main d
 
 The main difference between array and linked list is memory allocation.
 
-Insertion at head, tail and any n-th index
+Insertion:
+
+- at head
+- at tail
+- at the N-th index
 
 Search
 
