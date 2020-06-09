@@ -219,3 +219,134 @@ win32 {
 }
 ```
 
+## 4. How to write data in a CSV file in C++
+
+```c++
+class CSVWriter {
+public:
+    CSVWriter(std::string filename, std::string delm = ","):
+        fileName(filename), delimeter(delm), linesCount(0) {}
+
+    template<typename T>
+    void addDatainRow(T first, T last);
+private:
+    std::string fileName;
+    std::string delimeter;
+    int linesCount;
+};
+
+template<typename T>
+void CSVWriter::addDatainRow(T first, T last) {
+    std::fstream file;
+    // Open the file in truncate mode if first line else in Append Mode
+    file.open(fileName, std::ios::out | (linesCount ? std::ios::app : std::ios::trunc));
+
+    // Iterate over the range and add element
+    for (; first != last;) {
+        file << *first;
+        if (++first != last)
+            file << delimeter;
+    }
+    file << "\n";
+    linesCount++;
+    file.close();
+}
+
+int main() {
+    CSVWriter writer("example.csv");
+    // the below code: could not deduce template parameter 'T' for iterator  - TODO
+    //std::vector<std::string> datalist_1 = {"20", "hi", "90"};
+    //writer.addDatainRow(datalist_1.begin(), dataList.end());
+    std::set<int> datalist_2 = {3, 4, 5};
+    writer.addDatainRow(datalist_2.begin(), datalist_2.end());
+    std::string str = "abc";
+    writer.addDatainRow(str.begin(), str.end());
+    int arr[] = {3, 4, 1};
+    writer.addDatainRow(arr, arr+sizeof(arr)/sizeof(int));
+
+    return 0;
+}
+```
+
+## 5. Overloading Postfix/Prefix(++,--) Increment and Decrements operators
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class ComplexNumber {
+public:
+    ComplexNumber(): real(0), imaginary(0){}
+    ComplexNumber(int r, int i): real(r), imaginary(i) {}
+    friend std::ostream& operator<< (std::ostream& os, const ComplexNumber& obj);
+
+    // Prefix - Postfix - Prefix - Postfix
+    ComplexNumber operator++();
+    ComplexNumber operator++(int);
+    ComplexNumber operator--();
+    ComplexNumber operator--(int);
+private:
+    int real;
+    int imaginary;
+};
+
+// this is not a member function
+ostream& operator<< (ostream& os, const ComplexNumber& obj) {
+    int img = obj.imaginary < 0 ? -obj.imaginary : obj.imaginary;
+    os << obj.real << (obj.imaginary < 0 ? " - " : " + ") << "i" << img << std::endl;
+
+    return os;
+}
+
+ComplexNumber ComplexNumber::operator++() {
+    ++real;
+    ++imaginary;
+    return *this;
+}
+
+ComplexNumber ComplexNumber::operator++(int) {
+    ComplexNumber tempObj(this->real, this->imaginary);
+    ++real;
+    ++imaginary;
+    return tempObj;
+}
+ComplexNumber ComplexNumber::operator--() {
+    --real;
+    --imaginary;
+    return *this;
+}
+
+ComplexNumber ComplexNumber::operator--(int) {
+    ComplexNumber tempObj(this->real, this->imaginary);
+    --real;
+    --imaginary;
+    return tempObj;
+}
+
+int main() {
+
+    ComplexNumber c1(2, 3);
+    std::cout << "c1 = " << c1 << std::endl;
+
+    std::cout << "Testing Postfix Increment"<<std::endl;
+    ComplexNumber c2 = c1++; // Postfix Increment
+    std::cout << "c2 = "<< 	c2;
+    std::cout << "c1 = "<< c1;
+    std::cout << "Testing Prefix Increment"<<std::endl;
+    ComplexNumber c3 = ++c1; // Prefix Increment
+    std::cout << "c3 = "<< 	c3;
+    std::cout << "c1 = "<< c1;
+    std::cout << "Testing Postfix Decrement"<<std::endl;
+    ComplexNumber c4 = c1--; // Postfix Decrement
+    std::cout << "c4 = "<< 	c3;
+    std::cout << "c1 = "<< c1;
+    std::cout << "Testing Prefix Decrement"<<std::endl;
+    ComplexNumber c5 = --c1; // Prefix Decrement
+    std::cout << "c5 = "<< 	c3;
+    std::cout << "c1 = "<< c1;
+
+    return 0;
+}
+```
+
