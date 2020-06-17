@@ -350,3 +350,20 @@ int main() {
 }
 ```
 
+## 6. Unary Operator Overloading using both member & friend function
+
+Operator overloading can be done in 2 ways
+
+- By creating operator function as member function of class
+- By creating operator function as global friend function
+
+```c++
+ComplexNumber ComplexNumber::operator-() {
+    return ComplexNumber(-(this->real), -(this->imaginary));
+}
+friend ComplexNumber operator- (const ComplexNumber& obj);
+ComplexNumber operator-(const ComplexNumber& obj) {
+    return ComplexNumber(-obj.real, -obj.imaginary);
+}
+```
+
