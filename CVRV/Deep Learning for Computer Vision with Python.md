@@ -1,0 +1,199 @@
+# Deep Learning for Computer Vision with Python
+
+[toc]
+
+companion website:
+
+How to configure development environment and use the pre-configured Ubuntu VirtualBox virtual machine and Amazon Machine Image (AMI).
+
+Tools:
+- Python
+- Keras + mxnet libraries
+
+image classification, object detection, training network on large-scale datasets
+
+## 1. Introduction
+
+Due to my machine learning background, it didn't take long to grasp the actual *theoretical foundations* of deep learning. Transforming theory to implementation is a very different process.
+
+practitioner in deep learning for computer vision and visual recognition.
+
+- Starter bundle:
+	+ Machine Learning
+	+ Neural Networks
+	+ Convolutional Neural Networks
+	+ How to work with your own custom datasets
+- Practitioner bundle:
+	+ best practices and rules of thumb
+- ImageNetBundle
+	+ how to train large-scale neural networks on the *massive* ImageNet dataset
+	+ real-world case studies (age-gender prediction, vehicle make + model identification, facial expression recognition)
+
+Keras, as a minimal, modular network library that can use either Theano or TensorFlow as a backend
+
+mxnet (ImageNet Bundle only), a lightweight, portable, and flexible deep learning library. The maxnet package provides bindings to Python and specializes in *distributed, multi-machine learning* - the ability to parallelize training across GPUs/devices/nodes is critical when training deep neural network architectures on massive datasets (such as ImageNet).
+
+**What about TensorFlow?**
+
+TensorFlow and Theano are libraries for defining *abstract, general-purpose computation graphs*. While they are used for deep learning, they are *not* deep learning frameworks and are in fact used for a great many other applications than deep learning.
+
+Keras, on the other hand, *is* a deep learning framework that provides a well-designed API to facilitate building deep neural networks with ease. Under the hood, Keras uses either the TensorFlow or Theano computational backend (still the case with TF2?), allowing it to take advantage of these powerful computation engines. Think of TensorFlow and Theano as portable engines for your car.
+
+Keras - TensorFlow is like scikit-learn - NumPy (use a powerful underlying library rather than reinventing the wheel). Enjoy the powerful computation engine and easier API for building deep learning networks. Keras will be added to the core TensorFlow library at Google.
+
+Deep learning is only *one facet* of computer vision, we need other techniques as well (OpenCV)
+
+Using *existing deep learning libraries* to build our own custom Python-based toolset, enabling us to train our own deep learning networks.
+
+Software perspective: Keras, mxnet with Python bindings.
+
+Hardware view: general purpose GPUs
+
+We are living in a special time in machine learning, neural network and deep learning history
+
+## 2. What is Deep Learning
+
+*"Deep learning methods are representation-learning methods with multiple levels of representation, obtained by composing simple but nonlinear modules that each transform the representation at one level (starting with the raw input) into a representation at a higher, slightly more abstract level. [...] The key aspect of deep learning is that these layers are not designed by human engineers: they are learned from data using a general-purpose learning procedure"* - Deep Learning, Nature 2015.
+
+Deep learning < Machine learning < Artificial Intelligence
+
+The central goal of AI is to provide a set of algorithms and techniques that can be used to solve problems that humans perform *intuitively* and *near automatically*, but are otherwise very challenging for computers. (e.g. interpreting and understanding images)
+
+specifically interested in **pattern recognition** and **learning from data**
+
+Artificial Neural Network (ANNs) are a class of machine learning algorithms that learn from data and specialize in pattern recognition, inspired by the structure and function of the brain. ANN and deep learning basically interchangeable.
+
+- what make a neural network "deep"
+- the concept of "hierarchical learning"
+
+ANNs are inspired by brain but not a realistic model of it. *weight*, *manual tuning*
+
+the simple Perceptron network (weighted input, sum, a step function to predict). Stochastic Gradient Descent (SGD) is still used to train *very deep* neural networks today.
+
+linear vs nonlinear
+
+backpropagation algorithm enabled *multi-layer feedforward* neural networks to be trained.
+
+Neural networks are *universal approximators* capable of approximating any continuous function (but placing no guarantee on whether or not the network can actually *learn* the parameters required to represent a function?). The backpropagation algorithm is the cornerstone of modern day neural networks allowing us to efficiently train neural networks and "teach" them to learn from their mistakes. 1) computation power 2)large, labeled training data. We can now train networks with *many more hidden layers* that are capable of hierarchical learning where simple concepts are learned in the lowered layers and *more abstract patterns* in the higher layers of the network.
+
+The quintessential example of applied deep learning to feature learning is the *Convolutional Neural Network* (LeCun 1988) applied to handwritten character recognition which *automatically* learns discriminating patterns (called "filters") from images by sequentially stacking layers on top of each other. Filters in lower levels of the network represent edges and corners, while higher level layers use the edges and corners to learn more abstract concepts useful for discriminating between image classes. CNNs are now considered the most powerful image classifier.
+
+Machine Learning algorithms camps:
+- supervised
+- unsupervised
+- semi-supervised
+
+In supervised, given both a set of *inputs* and *target outputs*. algorithm tries to learn patterns (has a teacher) that can be used to automatically map input data points to their correct target output.
+
+In unsupervised, algorithm tires to automatically discover discriminating features *without* any hints as to what the inputs are. In this scenario, tires to group similar questions and answers together without guidance. More challenging than supervised
+
+In ML for image classification, the goal of a ML algorithm is to take sets of images and identify patterns that can be used to discriminate various image classes/objects from one another. In past, we used *hand-engineered features* to quantify the contents of an image - we rarely used raw pixel intensities as inputs to our ML models, as is now common with DL. For dataset images, we performed *feature extraction*, quantifying it according to some algorithm (called *feature extractor* or *image descriptor*), and returning a vector that aimed to quantify the contents of an image. (color, texture, shape image descriptors)
+
+hand-engineered features attempted to encode
+- texture: Local Binary Patterns, Haralick texture
+- shape: Hu Moments, Zernike Moments
+- color: color moments, color histograms, color correlograms
+
+Other methods such as
+- keypoint detectors (FAST, Harris, DoG)
+- local invariant descriptors (SIFT, SURF, BRIEF, ORB etc.) describe *salient* (i.e. the most 'interesting') regions of an image
+
+HOG proved to be very good at detecting objects in images when the viewpoint angle of our image did not vary dramatically from what our classifier was trained on. An example using HOG + Linear SVM detector method for detecting stop signs.
+
+Given an input image of pixels, we apply hand-defined algorithm to the pixels, and in return receive a feature vector quantifying the image contents - the image pixels themselves did not serve a purpose other than being inputs to our feature extraction process. *The feature vectors that resulted from feature extraction were what we were truly interested in as they served as inputs to our machine learning models*.
+
+In deep learning, specifically CNN, instead of hand-defining a set of rules and algorithms to extract features from an image, **these features are instead automatically learned from the training process**.
+
+Using deep learning, we try to understand the problem in terms of a hierarchy of concepts. Concepts in the lower level layers of the network encode some basic representation of the problem, whereas higher level layers use these basic layers to form more abstract concepts. 
+
+Given an image, we supply the pixel intensity values as **inputs** to the CNN. A series of **hidden layers** are used to extract features form input image. These hidden layers build upon each other in a hierarchal fashion. At first, only *edge-like regions* are detected in the lower level layers of the network (corners, contours). Combing corners and contours can lead to abstract "object parts" in the next layer. Finally, output layer is used to classify the image and obtain the output class label - the output layer is directly or indirectly influenced by every other node in the network.
+
+Hierarchical learning: each layer uses the output of previous layers as "building blocks" to construct increasingly more abstract concepts. These layers are learned automatically.
+
+fig. classic image classification vs. DL
+
+One of the primary benefits of deep learning and CNN is that it allows us to skip the feature extraction step and instead focus on process of training our network to learn these filters. However, training a network to obtain reasonable accuracy on a given image dataset isn't always an easy task.
+
+There is no consensus among experts **"How many layers does a neural network need to be considered *deep*?"**
+
+Adrian: any network with greater than two hidden layers can be considered "deep".
+
+Geoff Hinton, what was wrong with backpropagation in 1986?
+- Our labeled dataset were thousands of times too small
+- Our computers were millions of times too slow
+- We initialized the network weights in a stupid way
+- We used the wrong type of nonlinearity activation function (Q: what is activation function?)
+
+Now we have:
+- Faster computers
+- Highly optimized hardware (i.e. GPUs)
+- Large, labeled datasets in the order of millions of images
+- A better understanding of weight initialization functions and what does/does not work
+- Superior activation functions and an understanding regarding why previous nonlinearity functions stagnated research
+
+As the *depth* of the network increases, so does the *classification accuracy*. (Q: why?) This is different from traditional machine learning algorithms (logistic regression, SVMs, decision trees etc) where we reach a plateau in performance even as available training data increases.
+
+CNN, RNN, Long Short-Term Memory (LSTM)
+
+
+## 3. Image Fundamentals
+
+aspect ratio of an image and its relation with preparing the image dataset for training a neural network.
+
+aspect ratio (dictionary):
+- The ratio of the sides of the bounding box of an object, where the orientation of the box is chosen to maximize this ratio. Since this measure is scale invariant, it is a useful metric for object recognition
+- In a camera, the ratio of the horizontal to vertical pixel sizes
+- In an image, the ratio of the image width to height - an image of 640x480 has an aspect ratio of 4:3
+
+
+NumPy, OpenCV, scikit-image
+
+### Pixels: the building blocks of images
+
+There is no finer granularity than the pixel. Normally, a pixel is considered the 'color' or the 'intensity' of light that appears in a given place in the image.
+
+Most pixels are represented in two ways:
+- Grayscale/single channel
+- Color
+
+
+
+
+## 4. Image Classification Basics
+
+## 5. Datasets for Image Classification
+
+## 6. Configuring Your Development Environment
+
+## 7. Your First Image Classifier
+
+## 8. Parameterized Learning
+
+## 9. Optimization Methods and Regularization
+
+## 10. Neural Network Fundamentals
+
+## 11. Convolutional Neural Networks
+
+## 12. Training Your First CNN
+
+## 13. Saving and Loading Your Models
+
+## 14. LeNet: Recognizing Handwritten Digits
+
+## 15. MiniVGGNet: Going Deeper with CNNs
+
+## 16. Learning Rate Schedulers
+
+## 17. Spotting Underfitting and Overfitting
+
+## 18. Checkpointing Models
+
+## 19. Visualizing Network Architectures
+
+## 20. Out-of-the-box CNNs for Classification
+
+## 21. Case Study: Breaking Captchas with a CNN
+
+## 22. Case Study: Smile Detection
+
