@@ -377,3 +377,82 @@ add_executable(main src/tools_main.cpp)
 target_link_libraries(main tools)
 ```
 
+Directory tree before cmake (creates bin, build, lib folders for demo comparison)
+
+![CMakeTreeBefore](../Media/CMakeTreeBefore.png)
+
+Directory tree after cmake
+
+![CMakeTreeAfter](../Media/CMakeTreeAfter.png)
+
+Useful commands in CMake
+
+- Just a scripting language
+- Has features of a scripting language, i.e. functions, control structures, variables etc.
+- All variables are strings
+- Set variables with `set(VAR VALUE)`
+- Get value of a variable with `${VAR}`
+- Show a message: `message(STATUS "message")`
+- Also possible: `WARNING`, `FATAL_ERROR`
+
+Use CMake in our own builds
+
+- Build process is standard and simple
+
+- No need to remember sequence of commands
+
+- ALl generated build files are in one place
+
+- CMake detect changes to the files
+
+- Do this after changing files:
+
+  - ```bash
+    cd project/build
+    make -j4
+    ```
+
+Set compilation options in CMake
+
+```cmake
+set (CMAKE_CXX_STANDARD 14)
+# set build type if not set
+if (NOT CMAKE_BUILD_TYPE)
+	set(CMAKE_BUILD_TYPE Release)
+endif()
+
+# set additional flags
+set(CMAKE_CXX_FLAGS "-Wall -Wextra") # show all warnings
+set(CMAKE_CXX_FLAGS_DEBUG "-g -00")  # keep debug information in binary
+set(CMAKE_CXX_FLAGS_RELEASE "-03")   # 0: no optimization, 3 full optimizaiton
+```
+
+Remove build folder for performing a clean build
+
+```bash
+cd project/build
+make clean  # remove generated binaries
+rm -r *  # make sure in the build folder
+```
+
+Use pre-compiled library
+
+- sometimes we get a compiled library to use in the build, e.g. use libtools.so
+
+```cmake
+find_library(TOOLS
+			 Names tools
+			 PATHS ${LIBRARY_OUTPUT_PATH})
+# use it for linking
+target_link_libraries(<some_binary> ${TOOLS})
+```
+
+
+
+## Google Test, Namespaces, Classes
+
+### Google Tests
+
+### Namespaces
+
+### Classes
