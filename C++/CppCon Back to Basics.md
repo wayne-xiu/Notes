@@ -138,3 +138,5 @@ TEST(UtilityTest, InitTestCase) {
 ## C++ Code Smells - Jason Turner
 
 ## Refactoring C++ Code
+
+## Cross-Platform Pitfalls and How to Avoid them
