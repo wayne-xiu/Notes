@@ -129,7 +129,7 @@ TEST(UtilityTest, InitTestCase) {
 
 ## Modern C++ Interfaces - 2017
 
-## OOP is Dean, Long Live Data-oriented Design - 2018
+## OOP is Dead, Long Live Data-oriented Design - 2018
 
 ## Data-Oriented Design for Object-Oriented Programmers - 2020
 
@@ -140,3 +140,6 @@ TEST(UtilityTest, InitTestCase) {
 ## Refactoring C++ Code
 
 ## Cross-Platform Pitfalls and How to Avoid them
+
+## Pointers and Memory - 2020
+
