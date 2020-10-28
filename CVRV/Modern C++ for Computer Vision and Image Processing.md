@@ -447,11 +447,19 @@ find_library(TOOLS
 target_link_libraries(<some_binary> ${TOOLS})
 ```
 
+Whenever we use `add_subdirectory`, there must be a `CMakeLists.txt` in it; this will make the CMake design modular
 
+nobody should ever see the build folder in the (github) repo
 
 ## Google Test, Namespaces, Classes
 
 ### Google Tests
+
+- catch bugs early with less pain
+- For every function write at least two tests
+  - one for normal cases
+  - one for extreme cases
+- *Make writing tests a habit*
 
 ### Namespaces
 
