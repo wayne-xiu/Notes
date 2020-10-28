@@ -369,6 +369,7 @@ include_directories(include)
 
 # create library "libtools"
 add_library(tools src/tools.cpp)
+# add_library(tools SHARED src/tools.cpp)  # dynamic library
 
 # add executable main
 add_executable(main src/tools_main.cpp)
@@ -451,6 +452,8 @@ Whenever we use `add_subdirectory`, there must be a `CMakeLists.txt` in it; this
 
 nobody should ever see the build folder in the (github) repo
 
+static vs shared (dynamic library): .a; .so
+
 ## Google Test, Namespaces, Classes
 
 ### Google Tests
@@ -459,7 +462,43 @@ nobody should ever see the build folder in the (github) repo
 - For every function write at least two tests
   - one for normal cases
   - one for extreme cases
-- *Make writing tests a habit*
+- *Make writing tests a habit*: Keep Calm and Write Unit Tests
+
+Add GTests with CMake
+
+- Install GTest source files (build them later)
+- Add folder `tests` to your CMake project
+
+```cmake
+# Must be in the top-most CMakeLists.txt file
+enable_testing()
+# Outsource tests to another folder
+add_subdirectory(tests)
+```
+
+Configure tests
+
+```cmake
+# Add gtest source folder. Provides gtest, gtest_main
+add_subdirectory(/usr/src/gtest
+				${PROJECT_BINARY_DIR}/gtest)
+include(CTest)  # Include testing cmake package
+# Set binary name for convenience
+set(TEST_BINARY ${PROJECT_NAME}_test)
+# This is an executable that runs the tests
+add_executable(${TEST_BINARY} test_tools.cpp)
+# Link the executable to needed libraries
+target_link_libraries(${TEST_BINARY}
+	tools  			 # library we are testing
+	gtest gtest_main  # GTest libraries
+)
+# Add gtest to be abel to run ctest
+add_test(
+	NAME ${TEST_BINARY}
+	COMMAND ${EXECUTABLE_OUTPUT_PATH}/${TEST_BINARY})
+```
+
+
 
 ### Namespaces
 
