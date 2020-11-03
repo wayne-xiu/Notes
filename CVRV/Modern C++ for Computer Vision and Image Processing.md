@@ -685,8 +685,230 @@ a more proper tree structure for CMake project with tests folder
 
 ![CMakeTree](../Media/CMakeTree.png)
 
+Polymorphism
+
+- Allows morphing derived classes into their base class type:
+
+```c++
+Base* base = new Derived(...);
+```
+
+- allows encapsulating the implementation inside a class only asking it to conform to a common interface
+- Often used for:
+  - working with all children of some Base class in unified manner
+  - enforcing an interface in multiple classes to force them to implement some functionality
+  - In *strategy* pattern, where some complex functionality is outsourced into separate classes and is passed to the object in a modular fashion
+
+Creating a class hierarchy
+
+- distinguish between 'is a' and 'has a' to test if the classes should be in one hierarchy
+- prefer shallow hierarchies
+- `GOOGLE-STYLE` prefer composition, i.e. including an object of another class as a member of your class
+
+Using Interfaces
+
+- use interfaces when you must enforce other classes to implement some functionality
+- allow thinking about classes in terms of *abstract functionality*
+- *Hide implementation* from the caller
+- Allow to easily extend functionality by simply adding a new class
+
+Using strategy pattern
+
+- if a class relies on complex external functionality use strategy pattern
+- allows to add/switch functionality of the class without changing its implementation
+- all strategies must conform to one strategy interface
+
+```c++
+using std::cout; using std::endl;
+
+class Strategy
+{
+public:
+    virtual void Print() const = 0;
+};
+
+class StrategyA : public Strategy
+{
+public:
+	void Print() const override
+	{
+        cout << "A" << endl;
+	}
+};
+
+class StrategyB : public Strategy
+{
+public:
+	void Print() const override
+	{
+        cout << "B" << endl;
+	}
+};
+
+class MyStruct
+{
+public:
+    MyStruct(const Strategy& s) : strategy_{ s } {}
+    void Print() const { strategy_.Print(); }
+private:
+	const Strategy& strategy_;
+};
+
+int main() {
+
+    MyStruct(StrategyA()).Print();  // shouldn't give reference to temp object, but it works here
+    MyStruct(StrategyB()).Print();
+
+	return 0;
+}
+```
+
+Do not overuse it
+
+- only use patterns when you need to
+- if no another implementation needed, don't make it virtual
+
 ### I/O
+
+Reading and writing to files
+
+- using streams from STL
+
+```c++
+using Mode = std::ios_base::openmode;
+
+std::ifstream fin(string& file_name, Mode mode);
+std::ofstream fout(string& file_name, Mode mode);
+```
+
+Regular columns
+
+- use it when the file contains organized data; every line has to have all columns
+
+Reading files one line at a time
+
+- bind every line to a string
+- parse the string
+
+```c++
+string line, file_name;
+ifstream input("test_bel.txt", ios_base::in);
+while (getline(input, line)) {
+    cout << "Read: " << line << endl;
+    string::size_type loc = line.find("filename", 0);
+    if (loc != string::npos) {
+        file_name = line.substr(line.find("=", 0) + 1, string::npos);
+    }
+}
+cout << "Filename found: " << file_name << endl;
+```
+
+write to files
 
 ### Stringstreams
 
-### CMake find_package
+- combine int, double, string into a single string
+- break up strings into int, double, string etc.
+
+### CMake find_package and find_library
+
+- to use an external library
+- Need headers and binary library files
+- **Headers**
+
+```cmake
+find_path(SOME_PKG_INCLUDE_DIR include/some_file.h
+		<path1> <path2> ...)
+include_directories(${SOME_PKG_INCLUDE_DIR})
+```
+
+- **Libraries**
+
+```cmake
+find_library(SOME_LIB
+			NAMES <some_lib>
+			PATHS <path1> <path2> ...)
+target_link_libraries(target ${SOME_LIB})
+```
+
+find_package
+
+- 'find_package' calls multiple 'find_path' and 'find_library' functions
+- To use 'find_package(<pkg>)' CMake must have a file 'Find<pkg>.cmake' in CMAKE_MODULE_PATH folders
+- 'Find<pkg>.cmake' defines which libraries and headers belong to package <pkg>
+- Pre-defined for most popular libraries, e.g. OpenCV, libpng, etc.
+
+CMakeLists.txt
+
+```cmake
+cmake_minimum_required(VERSION 2.8)
+project(first_project)
+
+# CMake will search here for Find <pkg >. cmake files
+SET(CMAKE_MODULE_PATH
+	${PROJECT_SOURCE_DIR}/cmake_modules)
+
+# Search for Findsome_pkg.cmake file and load it
+find_package(some_pkg)
+
+# Add the include folders from some_pkg
+include_directories(${some_pkg_INCLUDE_DIRS})
+
+# Add the executable "main"
+add_executable(main small_main.cpp)
+# Tell the linker to bind these binary objects
+target_link_libraries(main ${some_pkg_LIBRARIES})
+```
+
+cmake_modules/Findsome_pkg.cmake
+
+```cmake
+# Find the headers that we will need
+find_path(some_pkg_INCLUDE_DIRS include/some_lib.h
+	<FOLDER_WHERE_TO_SEARCH >)
+message(STATUS "headers: ${some_pkg_INCLUDE_DIRS}")
+
+# Find the corresponding libraries
+find_library(some_pkg_LIBRARIES
+			NAMES some_lib_name
+			PATHS <FOLDER_WHERE_TO_SEARCH >)
+message(STATUS "libs: ${some_pkg_LIBRARIES}")
+```
+
+
+
+## Static, Numbers, Arrays, Non-owning pointers, Classes
+
+### Static variables and methods
+
+Static member variables of a class
+
+- exist exactly once per class, not per object
+- The value is equal across all instances
+- Must be defined in \*.cpp files
+
+Static member functions of a class
+
+- Do not have an object of a class
+- can access private members but need an object
+- Syntax for calling
+
+```c++
+ClassName::MethodName(<params>)
+```
+
+free function and static member function
+
+### Representation of numbers in memory
+
+![CppNumberRepresentation](../Media/CppNumberRepresentation.png)
+
+1 Byte = 8 bit
+
+1 KB = 1024 Byte
+
+### Raw C arrays
+
+### Non-owning pointers in C++
+
+### Classes in memory
