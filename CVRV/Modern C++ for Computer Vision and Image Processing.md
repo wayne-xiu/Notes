@@ -907,6 +907,12 @@ free function and static member function
 
 1 KB = 1024 Byte
 
+```c++
+sizeof(char)  == 1;  // always true
+```
+
+floating point number representation in memory
+
 ### Raw C arrays
 
 ### Non-owning pointers in C++
