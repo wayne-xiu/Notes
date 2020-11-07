@@ -913,8 +913,250 @@ sizeof(char)  == 1;  // always true
 
 floating point number representation in memory
 
+<img src="../Media/floatInMemory.png" alt="floatInMemory" style="zoom:75%;" />
+
 ### Raw C arrays
+
+- Base for std::array, std::vector, std::string
+- The length of the array is fixed
+- Elements of an array lie in continuous memory
+- Do not explicitly store their size
+- it's not a class (from C)
+
+Working memory or RAM
+
+- working memory has linear addressing
+- every byte has an address usually presented in hexadecimal form
+- Any address can be access at random (thus RAM)
+- Pointer is a type to store memory addresses
+
+**Pointers**
+
+- The pointers have a type
+- Uninitialized pointers point to random address
+- Always initialize pointers to an address or a `nullptr`
 
 ### Non-owning pointers in C++
 
+- Memory pointed to by a raw pointer is not removed when pointer goes out of scope
+- Owning memory means being responsible for its cleanup
+- *Raw pointers should never own memory*
+- use smart pointers
+
+pointer to pointer; ready from right to left
+
+Pointer dereferencing 
+
+- Dereferencing of nullptr: Segmentation Fault
+- Dereferencing of uninitialized pointer: Undefined behavior
+
+the size of pointer is usually 8 bytes
+
+
+
+Arrays in memory and pointers
+
+- Name of an array is an alias to a pointer
+
+```c++
+double ar[3];
+double* ar_ptr = ar;
+double* ar_ptr = &ar[0];
+```
+
 ### Classes in memory
+
+- How the part of an object are stored in memory is not strongly defined
+- usually sequentially (padding can be added)
+- The compiler can optimize memory
+
+
+
+## Pointers, const with pointers, Stack and Heap, Memory leaks
+
+### Using pointers
+
+for classes
+
+```c++
+obj_ptr->Func() <-> (*obj_ptr).Func();
+```
+
+### Pointers are Polymorphic
+
+- Pointers are like references, but have additional useful properties:
+  - can be reassigned
+  - can point to "nothing" (nullptr)
+  - can be stored in a vector or an array
+- Use pointers for polymorphism
+
+```c++
+Derived derived;
+Base* ptr = &derived;
+```
+
+- Example: implementing strategy store a pointer to the strategy interface and initialize it with nullptr and check it is set before calling its methods
+
+```c++
+#include <iostream>
+#include <vector>
+using std::cout;
+struct AbstractShape {
+	virtual void Print () const = 0;
+};
+struct Square : public AbstractShape {
+	void Print () const override { cout << "Square\n"; }
+};
+struct Triangle : public AbstractShape {
+	void Print () const override { cout << "Triangle\n"; }
+};
+
+int main() {
+	std::vector <AbstractShape*> shapes;
+	Square square;
+	Triangle triangle;
+	shapes.push_back (&square);
+	shapes.push_back (&triangle);
+	for (const auto* shape : shapes) { shape ->Print (); }
+	return 0;
+}
+```
+
+
+
+### Pointer "this"
+
+- Every object of a class or a struct holds a pointer to itself
+- Allows the object to:
+  - return a reference to themselves: return \*this
+  - explicitly show that a member belongs to the current object: this->x()
+
+### Using const with pointers
+
+- read from right to left to see which const refers to what
+  - pointer points to a const variable
+  - const pointer
+
+### Stack and Heap
+
+working memory is divided into two parts: Stack and Heap
+
+Stack
+
+- available for short term storage (scope)
+- small/limited (8 MB Linux typisch)
+- Memory allocation is fast
+- LIFO structure
+- Items added to top of the stack with push
+- Items removed from the top with pop
+
+Heap
+
+- Dynamic memory
+- available for long time (program running)
+- raw modifications possible with new and delete (usually encapsulated within a class)
+- allocation is slower than stack allocations
+
+
+
+prefer using smart pointers
+
+### Memory leaks and dangling pointers
+
+#### Memory leak
+
+- can happen when working with heap memory if we are not careful (not to stack)
+- Memory leak: memory allocated on Heap access to which has been lost
+  - double free or corruption
+
+```c++
+#include <iostream >
+#include <cmath >
+#include <algorithm >
+using std::cout; using std::endl;
+int main() {
+	double *data = nullptr;
+	size_t size = pow (1024 , 3) / 8; // Produce 1GB
+	for (int i = 0; i < 5; ++i) {
+		// Allocate memory for the data.
+		data = new double[size];
+		std::fill(data , data + size , 1.23);
+		// Do some important work with the data here.
+		cout << "Iteration: " << i << " done!" << endl;
+	}
+	// This will only free the last allocation!
+	delete [] data;
+	int unused; std::cin >> unused; // Wait for user.
+	return 0;
+}
+```
+
+#### Dangling pointer
+
+- pointer to a freed memory
+- think of it as the opposite of a memory leak
+- dereferencing a dangling pointer causes undefined behavior
+- even worse when it still works (undefined)
+
+Memory leak: if nobody has freed the memory
+
+Dangling pointer: if somebody has freed the memory in a function
+
+#### RAII
+
+- New object -> allocate memory
+- Remove object -> free memory
+- Objects own their data
+- Still cannot copy an object of MyClass!!!
+
+```c++
+class MyClass {
+  public:
+    MyClass { data_ = new SomeOtherClass;}
+    ~MyClass() {
+        delete data_;
+        data_ = nullptr;
+    }
+   private:
+    SomeOtherClass* data_;
+};
+```
+
+(default) copy constructor will be shallow copy
+
+
+
+Shallow vs Deep copy
+
+- Shallow copy: just copy pointers, not data
+- Deep copy: copy data, create new pointers
+- Default copy constructor and assignment operator implement shallow copying
+- RAII + shallow copy -> dangling pointer
+- RAII  + Rule of all or Nothing -> correct
+- Use smart pointers instead!
+
+
+
+## Smart pointers, Associative containers, Enumeration
+
+### Smart Pointers
+
+- smart pointers wrap a raw pointer into a class and manage its lifetime (RAII)
+- smart pointers are all about ownership
+- always use smart pointers when the pointer should own heap memory
+- Only use them with heap memory!
+- Still use raw pointers for non-owning pointers and simple address storing
+- #include<memory> to use smart pointers
+
+Smart pointers manage memory!
+
+
+
+### Associative containers
+
+### Type casting
+
+### Enumeration classes
+
+### Read/write binary files
+
