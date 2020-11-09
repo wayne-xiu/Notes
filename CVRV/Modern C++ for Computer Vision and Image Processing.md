@@ -1163,9 +1163,132 @@ Additional functions of smart pointers:
 - ptr.get() returns a raw pointer that the smart pointer manages
 - ptr.reset(raw_ptr) stops using currently managed pointer, freeing its memory if needed, sets ptr to raw_ptr
 
+Unique pointer (std::unique_ptr)
+
+- Constructor of a unique pointer takes ownership of a provided raw pointer
+- No runtime overhead over a raw pointer
+- Syntax
+
+```c++
+#include <memory>
+auto p = std::unique_ptr<Type>(new Type);
+// using construcotr type
+auto p = std::unique_ptr<Type>(new Type(<params>));
+
+// since C++14 - recommended way
+auto p = std::make_unique<Type>(<params>);
+```
+
+What makes it "unique"
+
+- Unique pointer has no copy constructor
+- cannot be copied, can be moved
+- guarantees that memory is always owned by a single unique pointer
+
+Shared pointer (std::shared_ptr)
+
+- Constructed just like a unique_ptr
+- can be copied
+- stores a usage counter and a raw pointer
+  - increases usage counter when copied
+  - decreases usage counter when destructed
+- Frees memory when counter reaches 0
+- can be initialized from a unique_ptr
+
+```c++
+#include <memory>
+auto p = std::shared_ptr<Type>(new Type);
+auto p = std::make_shared<Type>();  // preferred
+// using constructor Type(<params>)
+auto p = std::shared_ptr<Type>(new Type(<params>));
+auto p = std::make_shared<Type>(<params>);  // preferred
+```
+
+```c++
+class A
+{
+public:
+    A(int a) { std::cout << "I'm alive \n"; }
+    ~A() { std::cout << "I'm dead...\n"; }
+};
+int main() {
+    
+    using namespace std;
+
+    auto a_ptr = std::make_shared<A>(10);
+    cout << a_ptr.use_count() << endl;
+    {
+        auto b_ptr = a_ptr;
+        cout << a_ptr.use_count() << endl;  // b_ptr.use_count() works as well
+    }
+    cout << "back to main scope\n";
+    cout << a_ptr.use_count() << endl;
+
+	return 0;
+}
+/* output:
+I'm alive
+1
+2 // note there is new construction for b_ptr
+back to main scope
+1
+I'm dead... */
+```
+
+note: the pointer lives in the stack; the object being pointed to by the pointer is in the heap
+
+
+
+When to use what?
+
+- Use smart pointer when the pointer must manage memory
+- by default use unique_ptr (shared_ptr is over-used)
+- If multiple objects must share ownership over something, use a shared_ptr
+- using smart pointers allows to avoid having destructor in your own classes
+- Think of any free standing new or delete as of a memory leak or a dangling pointer
+  - don't use delete
+  - allocate memory with make_unique, make_shared
+  - only use new in smart pointer constructor if cannot use the function above
+
+don't use smart pointer on static-managed variable
+
+```c++
+int a = 0;
+auto a_ptr = std::unique_ptr<int>(&a);  // this will be double deleted - Error!
+```
+
+```c++
+// This is a good example of using smart pointers.
+#include <iostream >
+#include <vector >
+#include <memory >
+using std::cout; using std:: unique_ptr;
+
+struct AbstractShape { // Structs to save space.
+	virtual void Print () const = 0;
+};
+struct Square : public AbstractShape {
+	void Print () const override { cout << "Square\n"; }
+};
+struct Triangle : public AbstractShape {
+	void Print () const override { cout << "Triangle\n"; }
+};
+int main() {
+	std::vector <unique_ptr <AbstractShape >> shapes;
+	shapes.emplace_back(new Square);
+	auto triangle = unique_ptr <Triangle >(new Triangle);
+	shapes.emplace_back(std::move(triangle));
+	for (const auto& shape : shapes) { shape ->Print (); }
+    
+	return 0;
+}
+```
+
 
 
 ### Associative containers
+
+
 
 ### Type casting
 
