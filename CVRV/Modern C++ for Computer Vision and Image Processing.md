@@ -1147,8 +1147,21 @@ Shallow vs Deep copy
 - Only use them with heap memory!
 - Still use raw pointers for non-owning pointers and simple address storing
 - #include<memory> to use smart pointers
+- focus on std::unique_ptr, std::shared_ptr
 
 Smart pointers manage memory!
+
+smart pointers apart from memory allocation behave exactly as raw pointers:
+
+- can be set to `nullptr`
+- use \*ptr to dereference ptr
+- use ptr-> to access methods
+- smart pointers are polymorphic
+
+Additional functions of smart pointers:
+
+- ptr.get() returns a raw pointer that the smart pointer manages
+- ptr.reset(raw_ptr) stops using currently managed pointer, freeing its memory if needed, sets ptr to raw_ptr
 
 
 
