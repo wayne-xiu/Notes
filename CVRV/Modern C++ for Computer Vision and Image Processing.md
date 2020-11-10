@@ -1288,11 +1288,271 @@ int main() {
 
 ### Associative containers
 
+std::map
 
+- stores items under *unique* keys
+- Implemented usually as a Red-Black tree
+- Key can be any type with operator < defined; the map is sorted by key
+
+```c++
+std::map<KeyT, ValueT> m = {{key, vale}, {key, value}, {key, value}};
+```
+
+- add item to map: m.emplace(key, value)
+- modify or add item: m[key] = value;
+- Get (const) ref to an item: m.at(key)
+- check if key present: m.count(key) > 0
+- check size: m.size()
+
+std::unordered_map
+
+- hash_map in Java
+- serves same purpose as std::map
+- implemented as a hash table (close to constant time access)
+- key type has to be hashable
+- type used with int, string as a key
+- exactly same interface as std::map
+
+Iterating over maps
+
+```c++
+for (const auto& kv: m) {  // get a pair
+    const auto& key = kv.first;
+    const auto& value = kv.second;
+}
+```
+
+- map has keys sorted
+- unordered_map has keys in random order
 
 ### Type casting
 
+- Type conversion is called type casting
+- There are 3 ways of type casting (more explicit than Java)
+  - static_cast
+  - reinterpret_cast
+  - dynamic_cast
+
+static_cast
+
+- static_cast<NewType>(variable)
+- convert type of a variable at compile time
+- Rarely need to be used explicitly (generally compiler will do it)
+- can happen implicitly for some types (e.g. float to int)
+- pointer to an object of a Derived class can be *upcast* to a pointer of a Base class
+- Enum value can be casted to int or float
+
+reinterpret_cast
+
+- reinterpret_cast<NewType>(variable)
+- Reinterpret the bytes of a variable as another type
+- we must know what we are doing
+- mostly used when writing binary data
+
+dynamic_cast
+
+- dynamic_cast<Base*>(derived_ptr)
+- used to convert a pointer to a variable of Derived type to a pointer of a Base type
+- conversion happens at runtime
+- If derived_ptr cannot be converted to Base* returns a nullptr
+- `GOOGLE-STYLE` avoid using dynamic casting
+
+try to avoid casting as much as possible
+
 ### Enumeration classes
+
+- stores an enumeration of options
+- usually derived from int type
+- mostly used to pick path in switch
+
+```c++
+enum class EnumType {
+    OPTION_1,
+    OPTION_2,
+    OPTION_3
+};
+```
+
+- `GOOGLE-STYLE` Name enum type as other types, CamelCase
+- `GOOGLE-STYLE` Name values as constants kSomeConstant or in ALL_CAPS
+- By default enum values start from 0
+- we can specify custom values if needed
 
 ### Read/write binary files
 
+Writing to binary files
+
+- write a sequence of bytes
+
+- must document the structure well, otherwise no one can read it
+
+- writing/reading to fast
+
+- No precision loss for floating point types
+
+- substantially smaller than ascii-files
+
+- Syntax
+
+  ```c++
+  file.write(reinterpret_cast<char*>(&a), sizeof(a));
+  ```
+
+```c++
+int main() {
+    
+    using std::string;
+    using std::ifstream; using std::ofstream;
+    using std::vector;
+	
+    string file_name = "image.dat";
+    ofstream fout(file_name, std::ios_base::out | std::ios_base::binary);
+    if (!fout) { return EXIT_FAILURE; }
+
+    int r = 2; int c = 3;
+    vector<float> vec(r * c, 42);
+    fout.write(reinterpret_cast<char*>(&r), sizeof(r));
+    fout.write(reinterpret_cast<char*>(&c), sizeof(c));
+    fout.write(reinterpret_cast<char*>(&vec.front()), vec.size()*sizeof(vec.front()));
+
+    return 0;
+}
+```
+
+Reading from binary files
+
+- read a sequence of bytes
+
+- Binary files are not human-readable
+
+- we must know the structure of the contents
+
+- Syntax
+
+  ```c++
+  file.read(reinterpret_cast<char*>(&a), sizeof(a));
+  ```
+
+
+
+## Templates, Iterators, Exceptions, Program input parameters, OpenCV
+
+### Generic Programming
+
+separate algorithms from the data types. Compiler generates code from compile time
+
+#### Template functions
+
+```c++
+template<typename T, typename S>
+T awesome_function(const T& var_t, const S& var_s) {
+    T result = var_t;
+    return result;
+}
+```
+
+- T and S can be any type that is
+  - copy constructable
+  - assignable
+  - is defined (for custom classes)
+
+Explicit type
+
+If the data type cannot be determined by the compiler, we must define it ourselves
+
+```c++
+template<typename T>
+T DummyFunction() {
+    T result;
+    return result;
+}
+int main(int argc, char* argv[]) {
+    DummyFunction<int>();
+    DummyFunction<double>();
+    return 0;
+}
+```
+
+#### Template classes
+
+- similar syntax to template functions
+- use template type anywhere in class
+
+```c++
+template<typename T>
+class MyClass {
+  public:
+    MyClass(const T& smth): smth_(smth) {}
+  private:
+    T smth_;
+}
+
+int main(int argc, char* argv[]) {
+    MyClass<int> my_obj(10);  // these are different "type" of classes
+    MyClass<double> my_double_obj(10.0);
+    return 0;
+}
+```
+
+Template specialization
+
+- we can specialize for a type
+- works for functions and classes alike
+
+```c++
+template<typename T>
+T DummyFunction() {
+    T result;
+    return result;
+}
+// specialized for int type
+template<>
+int DummyFunction() {
+    cout << "in specialzied verion: " << endl;
+    return 42;
+}
+
+int main() {
+    DummyFunction<int>();
+    DummyFunction<double>();
+    
+    return 0;
+}
+```
+
+Template meta programming
+
+- Templates are used for Meta programming
+- The compiler will generate concrete instances of generic classes based on the classes we want to use
+- If we crate MyClass<int> and MyClass<float> the compiler will generate two different classes with appropriate types instead of template parameter
+
+advanced topic; STL
+
+Template classes headers/source
+
+- Concrete template classes are generated instantiated at compile time
+- Linker does not know about implementation
+- There are three options for template classes
+  - declare and define in header files (header only library); this way no need for a linker - classic way of doing this
+  - Declare in NAME.h, implement in NAME.hpp file and #include<NAME.hpp> in the end of <NAME.h>
+  - Declare in \*.h file, implement in \*.cpp file, in the end of the \*.cpp file add explicit instantization for types you expect to use
+- Read more about: TODO
+  - https://www.codeproject.com/Articles/48575/How-to-Define-a-Template-Class-in-a-h-File-and-Imp
+
+### Iterators
+
+### Error handing
+
+### Program Input parameters
+
+### OpenCV
+
+#### cv::Mat
+
+#### cv::Mat I/O
+
+#### SIFT Extraction
+
+#### FLANN in OpenCV
+
+#### OpenCV with CMake
