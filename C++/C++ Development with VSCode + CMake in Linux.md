@@ -101,13 +101,50 @@ shutdown -h now
 
 ### 1.3 file editing
 
+- Vim
+  - Vim is the standard editor in Unix, Linux
+  - Vim can be used for software development, as well as file editing
+  - very powerful in terminal
+- gedit
+- nano
+
+
+
 ## Setup Development Environment
 
-### 2.1 compiler, debugger installation
+### 2.1 compiler, debugger, CMake installation
 
-### 2.2 CMake installation
+- Install GCC, GDB
+
+```sh
+sudo apt update
+# install compiler and debugger
+sudo apt install build-essential gdb
+```
+
+```sh
+# confirm installation 
+gcc --version
+g++ --version
+gdb --version
+```
+
+- Install CMake
+
+```sh
+sudo apt install cmake
+```
+
+```sh
+# confirm installation
+cmake --version
+```
+
+
 
 ## GCC Compiler
+
+
 
 ### 3.1 compiling process
 
