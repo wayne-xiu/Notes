@@ -1,4 +1,4 @@
-# Modern C++ for Computer Vision and Image Processing
+# Modern C++ for Computer Vision and Image Processing (2018 & 2020)
 
 [toc]
 
@@ -15,6 +15,10 @@ https://www.ipb.uni-bonn.de/teaching/cpp-2020/
 > Talk is cheap. Show me the code. - Linus Torvalds
 
 ### Linux Introduction
+
+GNU/Linux
+
+- Extremely popular: Android, ChromeOS, servers, supercomputers
 
 Linux directory tree
 
@@ -110,6 +114,14 @@ Install software
 
 ### C++ Hello World
 
+Design Philosophy of C++
+
+- Multi-paradigm
+- Express ideas and intent directly in code
+- Safety
+- Efficiency
+- Abstraction
+
 Modern C++
 
 Good code style is important
@@ -125,6 +137,30 @@ Compilers on Linux
 
 ```c++
 c++ -std=c++11 -o hello hello.cpp
+```
+
+### Tutorial: Setting up C++ dev box in Linux
+
+Must-have installed tools in Linux to be a real roboticist
+
+- git
+- build tools
+- cmake
+- cppcheck
+- clang-tools
+- Visual Studio Code
+  - C/C++
+  - CMake
+  - 
+
+```sh
+sudo apt update
+sudo apt install git build-essential cmake cppcheck
+```
+
+```sh
+# install VSCode
+sudo snap install code --classic
 ```
 
 
@@ -1262,7 +1298,7 @@ auto a_ptr = std::unique_ptr<int>(&a);  // this will be double deleted - Error!
 #include <iostream >
 #include <vector >
 #include <memory >
-using std::cout; using std:: unique_ptr;
+using std::cout; using std::unique_ptr;
 
 struct AbstractShape { // Structs to save space.
 	virtual void Print () const = 0;
@@ -1541,18 +1577,401 @@ Template classes headers/source
 
 ### Iterators
 
+STL use iterators to access data in containers
+
+- Iterators are similar to pointers
+- most STL use iterators
+- access current element with \*iter
+- accepts -> alike to pointers
+- move to next element: iter++
+- prefer range-for loops over iterators
+- compare with ==, !=, <
+- pre-defined iterators: obj.begin(), obj.end()
+- use auto for iterator declaration
+
 ### Error handing
+
+with exceptions
+
+- "throw" an exception
+- STL defines classes that represent exceptions. Base class: exception
+- to use: #include<stdexcept>
+- An exception can be "caught" at any point of the program (try - catch) and even "thrown" further
+- The constructor of an exception receives a string error message as a parameter
+- This string can be called through a member function what()
+
+```c++
+throw runtime_error(msg);  // Runtime error
+throw logic_error(msg);	   // Logic error
+```
+
+```c++
+try {
+    //...
+}
+catch (runtime_error& ex) {
+    cerr << "Runtime error: " << ex.what() << endl;
+} catch (logic_error& ex) {
+    cerr << "Logic error: " << ex.what() << endl;
+} catch (exception& ex) {
+    cerr << "Some exception: " << ex.what() << endl;
+} catch (...) {
+    cerr << "Error: unknown exception" << endl;
+}
+```
+
+Intuition
+
+- Only used for "exceptional behavior"
+- Often misused
+- `GOOGLE-STYLE`: Don't use exceptions; better let it crash under certain scenarios
 
 ### Program Input parameters
 
+- Originate from the declaration of main function
+
+- allow passing arguments to the binary
+
+  ```c++
+  int main(int argc, char const *argv[]);  // from C, would be std::string if in modern C++
+  ```
+
+- By default
+
+  - argc == 1
+  - argv == "<binary_path>"
+
+### Using for type aliasing
+
+- using to declare new types from existing and to create type alias
+
+  ```c++
+  using NewType = old___________________________________Type;
+  ```
+
+- in or outside of the function
+
+```C++
+#include <array>
+#include <memory>
+template <class T, int SIZE >
+struct Image {
+	// Can be used in classes.
+	using Ptr = std::unique_ptr<Image <T, SIZE >>;
+	std::array <T, SIZE > data;
+};
+
+// Can be combined with "template ".
+template <int SIZE >
+using Imagef = Image <float , SIZE >;
+int main() {
+	// Can be used in a function for type aliasing.
+	using Image3f = Imagef<3>;
+	auto image_ptr = Image3f::Ptr(new Image3f);
+	return 0;
+}
+```
+
+
+
 ### OpenCV
+
+- using version of OpenCV
+
+- ```c++
+  #include <opencv2/opencv.hpp>
+  ```
+
+  to use all functionality available in OpenCV
+
+- Namespace cv::
+
+- FreeBSD license; free for commercial use
+
+Data types
+
+- OpenCV uses own types
+- OpenCV trusts you to pick the correct type
+- Names of types follow pattern: CV_<bit_count><identifier><num_of_channels>
+- Example: RGB image is 'CV_8UC3': 8-bit unsigned char for intensity
+- Better to use DataType
+- Example: DataType<uint>::type = CV_8UC1
 
 #### cv::Mat
 
+- Every image is a cv::Mat, for "Matrix"
+
+  ```c++
+  Mat image(rows, cols, DatType, Value);  // classic
+  
+  Mat_<T> image(rows, cols, Value);
+  ```
+
+- Initialize with zeros:
+
+  ```c++
+  cv::Mat image = cv::Mat::zeros(10, 10, CV_8UC3);
+  using Matf = cv::Mat_<float>;
+  Matf image_float = Matf::zeros(10, 10);
+  ```
+
+- Get type identifier with image.type()
+
+- Get size with image.rows, image.cols
+
+- I/O
+
+  - read image with 'imread'
+  - write image with 'imwrite'
+  - show image with 'imshow'
+  - detects I/O method from extension (extension will be respected)
+
+cv::Mat is a shared pointer
+
+- It does not use std::shared_ptr but follows the same principle of reference counting
+
+  ```c++
+  #include <opencv2/opencv.hpp >
+  #include <iostream >
+  int main() {
+  	using Matf = cv::Mat_ <float>;
+  	Matf image = Matf::zeros (10, 10);
+  	Matf image_no_copy = image; // Does not copy!
+  	image_no_copy.at <float >(5, 5) = 42.42f;
+  	std::cout << image.at <float >(5, 5) << std::endl;  // will be modified
+  	Matf image_copy = image.clone (); // Copies image.
+  	image_copy.at <float >(1, 1) = 42.42f;
+  	std::cout << image.at <float >(1, 1) << std::endl;
+  }
+  ```
+
+  ```sh
+  c++ -std=c++11 -o copy copy.cpp 'pkg-config --libs --cflags opencv'
+  # recommends CMake project
+  ```
+
+  
+
 #### cv::Mat I/O
+
+imread
+
+- Read image from file
+
+- Mat imread(const string& file, int mode = 1)
+
+- Different modes:
+
+  - unchanged: CV_LOAD_IMAGE_UNCHANGED < 0
+  - 1 channel: CV_LOAD_IMAGE_GRAYSCALE == 0
+  - 3 channels: CV_LOAD_IMAGE_COLOR > 0
+
+  ```c++
+  #include <opencv2/opencv.hpp >
+  #include <iostream >
+  using namespace cv;
+  int main() {
+  	Mat i1 = imread("logo_opencv.png", CV_LOAD_IMAGE_GRAYSCALE);
+  	Mat_<uint8_t> i2 = imread("logo_opencv.png", CV_LOAD_IMAGE_GRAYSCALE);
+  	std::cout << (i1.type() == i2.type()) << std::endl;
+  	return 0;
+  }
+  ```
+
+
+
+imwrite
+
+- write the image to file
+
+- Format is guessed from extension
+
+  ```c++
+  bool imwrite(const string& file, const Mat& img);
+  ```
+
+```c++
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+int main() {
+	cv::Mat image = cv::imread("logo_opencv.png", CV_LOAD_IMAGE_COLOR);
+	cv::imwrite("copy.jpg", image);
+	return 0;
+}
+```
+
+Write float image to \*.exr files
+
+- when storing float point image OpenCV expects the values to be in [0, 1] range
+
+- when storing arbitrary values the values might be cut off
+
+- Save to \*.exr files to avoid this
+
+- these files will store and read values as it without losing precision
+
+  ```c++
+  #include <iostream >
+  #include <opencv2/opencv.hpp >
+  #include <string >
+  int main() {
+  	using Matf = cv::Mat_<float>;
+  	Matf image = Matf::zeros(10, 10);
+  	image.at <float >(5, 5) = 42.42f;
+  	std::string f = "test.exr";
+  	cv::imwrite(f, image);
+  	Matf copy = cv::imread(f, CV_LOAD_IMAGE_UNCHANGED);
+  	std::cout << copy.at <float >(5, 5) << std::endl;
+  	return 0;
+  }
+  ```
+
+  Hint: try what happens when using png images instead; avoid jpg at all cost
+
+imshow
+
+- display the image on screen
+
+- Needs a window to display the image
+
+  ```c++
+  void imshow(const string& window_name, const Mat& mat);
+  ```
+
+```c++
+#include <opencv2/opencv.hpp >
+int main() {
+	cv::Mat image = cv::imread("logo_opencv.png", CV_LOAD_IMAGE_COLOR);
+	std::string window_name = "Window name";
+	// Create a window.
+	cv::namedWindow(window_name , cv::WINDOW_AUTOSIZE);
+	cv::imshow(window_name , image); // Show image.
+	cv::waitKey (); // Don't close window instantly.
+	return 0;
+}
+```
+
+
+
+OpenCV vector type
+
+- OpenCV vector type: cv::Vec<Type, SIZE>
+- Many typedefs available Vec3f, Vec3b, etc
+- used for pixels in multidimensional images: mat.at<Vec3b>(row, col)
+
+```c++
+#include <opencv2/opencv.hpp >
+#include <iostream >
+using namespace cv;
+int main() {
+	Mat mat = Mat::zeros(10, 10, CV_8UC3);
+	std::cout << mat.at<Vec3b>(5, 5) << std::endl;
+	Mat_<Vec3f> matf3 = Mat_<Vec3f>::zeros(10, 10);
+	std::cout << matf3.at <Vec3f >(5, 5) << std::endl;
+}
+```
+
+
+
+Mixing up types is painful!
+
+- OpenCV trusts you to pick the type
+- This can cause errors
+- OpenCV interprets bytes stored in cv::Mat according to the type the user asks (similar to reinterpret_cast)
+- Make sure you are using correct types
+
+```c++
+#include <opencv2/opencv.hpp >
+int main() {
+	cv::Mat image = cv::Mat::zeros (800, 600, CV_8UC3);
+	std::string window_name = "Window name";
+	cv::namedWindow(window_name , cv::WINDOW_AUTOSIZE);
+	cv::imshow(window_name , image);
+	cv::waitKey();
+	for (int r = 0; r < image.rows; ++r) {
+		for (int c = 0; c < image.cols; ++c) {
+			// WARNING! WRONG TYPE USED!
+			image.at <float>(r, c) = 1.0f;
+		}
+	}
+	cv::imshow(window_name , image);
+	cv::waitKey ();
+	return 0;
+}
+```
+
+
 
 #### SIFT Extraction
 
+- SIFT Descriptors: Scale Invariant Feature Transform
+- Popular feature: illumination, rotation and translation invariant (to some degree)
+- SIFT extraction with OpenCV
+  - SiftFeatureDetector to detect the keypoints
+  - SiftDescriptorExtractor to compute descriptors in keypoints
+
+```c++
+// Detect key points.
+SiftFeatureDetector detector;
+vector<KeyPoint> keypoints;
+detector.detect(input, keypoints);
+// Show the keypoints on the image.
+Mat image_with_keypoints;
+drawKeypoints(input, keypoints, image_with_keypoints);
+// Extract the SIFT descriptors.
+SiftDescriptorExtractor extractor;
+extractor.compute(input, keypoints, descriptors);
+```
+
+
+
 #### FLANN in OpenCV
 
-#### OpenCV with CMake
+- FLANN: Fast Library for Approximate Nearest Neighbors
+- build K-d tree, search for neighbors there
+
+```c++
+// Create a kdtree for searching the data.
+cv::flann::KDTreeIndexParams index_params;
+cv::flann::Index kdtree(data, index_params);
+...
+// Search the nearest vector to some query
+int k = 1;
+Mat nearest_vector_idx (1, k, DataType<int>::type);
+Mat nearest_vector_dist (1, k, DataType<float>::type);
+kdtree.knnSearch(query, nearest_vector_idx, nearest_vector_dist, k);
+```
+
+
+
+#### OpenCV2 with CMake
+
+- Install OpenCV2 in the system
+
+  ```sh
+  sudo add-apt-repository ppa:xqms/opencv-nonfree
+  sudo apt update
+  sudo apt install libopencv-dev libopencv-nonfree-dev
+  ```
+
+- Find using find_package(OpenCV 2 REQUIRED)
+
+  ```sh
+  find_package(OpenCV 2 REQUIRED)
+  ```
+
+- Include \${OpenCV_INCLUDE_DIRS}
+
+- Link against \${OpenCV_LIBS}
+
+  ```c++
+  add_library(some_lib some_lib_file.cpp)
+  target_link_libraries(some_lib ${OpenCV_LIBS})
+  add_executable(some_program some_file.cpp)
+  target_link_libraries(some_program ${OpenCV_LIBS})
+  ```
+
+- Be careful of the differences of OpenCV3 and OpenCV2
+
+
+
