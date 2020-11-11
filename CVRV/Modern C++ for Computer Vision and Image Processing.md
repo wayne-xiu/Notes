@@ -141,7 +141,7 @@ c++ -std=c++11 -o hello hello.cpp
 
 ### Tutorial: Setting up C++ dev box in Linux
 
-Must-have installed tools in Linux to be a real roboticist
+Must-have installed tools in Linux to be a real roboticist [link](https://github.com/nachovizzo/must-have-tools/wiki#the-right-toolset)
 
 - git
 - build tools
@@ -161,6 +161,47 @@ sudo apt install git build-essential cmake cppcheck
 ```sh
 # install VSCode
 sudo snap install code --classic
+```
+
+```sh
+# download and update clang-tools
+# be careful with the initial remove-all; may need to commented out
+chmod +x install_llvm_toolchain.sh
+./install_llvm_toolchain.sh
+
+# check c++ version after update
+c++ --version
+```
+
+VSCode setting
+
+```
+{
+  /*-------------------- GLOBAL EDITOR CONFIGURATIONS -------------------------*/
+  "editor.minimap.enabled": false,
+  "editor.formatOnType": true,
+  "editor.formatOnPaste": true,
+  "editor.formatOnSave": true,
+  /*----------------------------- C++ STUFF ----------------------------------*/
+  "C_Cpp.autocomplete": "Disabled",
+  "C_Cpp.formatting": "Disabled",
+  "C_Cpp.errorSquiggles": "Disabled",
+  "C_Cpp.intelliSenseEngine": "Disabled",
+  //clangd
+  "clangd.arguments": [
+    "--background-index",
+    "--clang-tidy",
+    "--header-insertion=never",
+    "--suggest-missing-includes",
+    "--compile-commands-dir=./build/"
+  ],
+  //cppcheck
+  "c-cpp-flylint.clang.enable": false,
+  "c-cpp-flylint.flexelint.enable": false,
+  "c-cpp-flylint.cppcheck.enable": true,
+  "c-cpp-flylint.cppcheck.inconclusive": true,
+  "c-cpp-flylint.cppcheck.verbose": true
+}
 ```
 
 
