@@ -316,23 +316,151 @@ g++ main.cpp src/swap.cpp -Iinclude -o test
 
 link static library
 
+```sh
+# current tree structure (main.cpp, include/swap.h, src/swap.cpp)
+# enter src directory
+$ cd src
+# assembly, generate swap.o
+g++ swap.cpp -c -I../include
+# generate static library libSwap.a
+ar rs libSwap.a swap.o
+
+# back to parent directory
+$ cd ..
+# link, create executable static_main
+g++ main.cpp -Iinclude -Lsrc -lSwap -o static_main
+# test
+$ ./static_main
+```
+
+
+
+Link dynamic library
+
+```sh
+# current tree structure (main.cpp, include/swap.h, src/swap.cpp)
+# enter src directory
+$ cd src
+
+# generate dynamic library libSwap.so
+g++ swap.cpp -I../include -fPIC -shared -o libSwap.so
+## above command equivalent to below two
+# g++ swap.cpp -I../include -c -fPIC
+# g++ -shared -o libSwap.so swap.o
+
+# back to parent directory
+$ cd ..
+# link, create executable share_main
+# share_main size should be smaller than static_main
+g++ main.cpp -Iinclude -Lsrc -lSwap -o share_main
+# test
+$ LD_LIBRARY_PATH=src ./share_main  # load dynamic lib, which is not in the searchable path
+# unlike windows, cp libSwap.so to the same directory as share_main won't work
+```
+
 
 
 ## GDB Debugger
 
+- GDB is the most commonly used debugger in Linux system for C/C++ development
+- VSCode can invoke GDB debugger for debugging
+
 ### 4.1 common debugging arguments
+
+start debugging: `gdb[exefilename]`, to enter debugging, exefilename is the executable to be debugged
+
+```sh
+# command can be simplified with the short symbol in (), for example run (r)
+$(gdb) help(h)
+$(gdb) run(r)  # restart running executable (run-text, run-bin)
+$(gdb) start   # single step
+$(gdb) list(l) # view source code
+$(gdb) set	   # set variable value
+$(gdb) next(n)  # single step debugging (skip function)
+$(gdb) step(s)  # single step debugging (step in function)
+$(gdb) backtrace(bt)	# view the function call stack
+$(gdb) finish	# finish current function, goes to invoking point
+$(gdb) info(i)	# view function local variable value
+$(gdb) continue(c)	# continue execution
+$(gdb) print(p)	 # print value and address
+$(gdb) quit(q)	 # quit gbd
+
+$(gdb) break+num(b)		# set breaking point in num line
+$(gdb) info breakpoints	 # view all breakpoints
+$(gdb) delete breakpoints num(d)  # remove num-th breakpoint
+$(gdb) display	 # trace variable value
+$(gdb) undisplay
+$(gdb) watch	# display when the watched variable change
+$(gdb) i watch   # dispaly watch point
+$(gdb) enable breakpoints	# enable
+$(gdb) disable breakpoints
+$(gdb) x	# view memory
+$(gdb) run argv[1] argv[2]	# comman line argument when debugging
+```
+
+> - use -g flag when compiling in order to debug: g++ -g main.cpp -o main
+> - Enter: repeat the last command
 
 ### 4.2 terminal debugging
 
+```sh
+# compile w/wt -g
+g++ sum.cpp -o a_no_g
+g++ -g sum.cpp -p a_yes_g
+# compare size
+ls -l(ah)
+
+# debug
+gdb a_yes_g
+# gdb a_no_g  # (no debugging symbols found)
+# ctrl+l  # clear screen in gdb
+run
+break 13  # set breakpoint
+info breakpoints  # check
+b 14
+i b				 # check
+
+r
+print i
+continue	# F5
+display i   # add watch
+
+list		# view source code
+```
+
+
+
 ## IDE - VSCode
+
+```sh
+code .	# open VSCode in current directory
+```
 
 ### 5.1 interface
 
+- Window: CRLF  \r\n
+- Linux: LF 		  \n
+
 ### 5.2 install plugin
+
+- C/C++
+- CMake
+- CMake Tools
 
 ### 5.3 shortcuts
 
+- Ctrl+Shift+P
+- Ctrl+P
+- Ctrl + `: open terminal
+- Alt + Up/Down
+- F2: rename variables
+- F12: go to definition
+- Ctrl+F/Ctrl+H
+- F11: full
+
 ### 5.4 practice
+
+VSCode use folder as project
 
 ## CMake
 
