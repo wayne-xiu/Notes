@@ -870,3 +870,48 @@ There are three good ways and one bad way to allow others use your library
 ### Packaging
 
 ## Looking for Libraries (Packages)
+
+
+
+# Modern CMake: An Introduction
+
+[link](https://www.youtube.com/watch?v=bDdkJu-nVTo&t=3559s)
+
+header files can be found automatically (in add_executable), and are not usually listed
+
+add_library
+
+The Library Type:
+
+- `STATIC`: static library
+- `SHARED`: shared/dynamic library
+- `MODULE`: a module (plug-in) library
+- If the type is ommited, the `BUILD_SHARED_LIBS` variable will be used to decide between `STATIC` and `SHARED`
+
+```cmake
+target_link_libraries(App PUBLIC Cat)
+```
+
+- `PUBLIC`: the symbols in `Cat` and any of the symbols in libraries that `Cat` depends on, are visible to `App`
+- `target_link_libraries` must come after the target is created
+- Can be used for applications, libraries, or other custom targets
+
+Including files and directories
+
+- Use the `add_subdirectory` command to delve into directoiries
+
+- Use the `include` command to add additional CMake scripts
+
+  ```cmake
+  add_subdirectory(dir1)  # expects CMakeLists.txt exists in dir1
+  include(dir2/HelperScript.cmake)
+  ```
+
+- options for add_subdirectory
+
+  ```cmake
+  add_subdirectory(source_dir [binary_dir] [EXCLUDE_FROM_ALL])  # [binary] not recommended
+  ```
+
+Messages for debugging CMakeLists.txt (`STATUS`, `FATAL_ERROR`)
+

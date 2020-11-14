@@ -100,6 +100,125 @@ post-build event for DLL project. How to do this in CMake?
 
 ## Using Modern CMake Patterns to Enforce a Good Modular Design
 
+## Deep CMake for Library Authors - 2019
+
+Craig Scott - CMake maintainer; author of "Professional CMake: A Practical Guide"
+
+### Libraries (mostly shared)
+
+Key questions for library authors
+
+- API Control: what does the library provide?
+- Library Consumers: How might the library be used?
+- API Compatibility: How does the library evolve?
+- Package Maintainers: How might the library be packaged?
+
+API Control
+
+- be clear about what is included in the API (documentation, Headers, Symbol visibility)
+- don't expose things that are not part of the API
+
+How to control visibility
+
+Visual studio
+
+```c++
+// building
+class __declspec(dllexport) MyGenerator {
+  public:
+    int nextValue();
+};
+// using
+class __declspec(dllimport) MyGenerator {
+  public:
+    int nextValue();
+};
+```
+
+we don't want to have two header files
+
+```c++
+#include "mytgt_export.h"
+
+class MYTGT_EXPORT MyGenerator {
+  public:
+    int nextValue();
+}
+```
+
+```c++
+// mytgt_export.h
+#ifndef MYTGT_EXPORT
+#	ifdef MyTgt_EXPORTS  // building
+#		define MYTGT_EXPORT __declspec(dllexport)
+#	else				// using
+#		define MYTGT_EXPORt __declspec(dllimport)
+#	endif
+#endif
+```
+
+G++/Clang Visibility Control
+
+- Change default visibility to hidden
+
+  ```sh
+  -fvisibility=hidden
+  ```
+
+- Change visibility of inlined code (including templates)
+
+  ```sh
+  -fvisibility-inlines-hidden
+  ```
+
+```c++
+class __attribute__((visibility("default"))) MyGenerator {
+  public:
+    int nextValue();
+}
+```
+
+further
+
+```c++
+#include "mytgt_export.h"
+
+class MYTGT_EXPORT MyGenerator {
+  public:
+    int nextValue();
+}
+```
+
+```c++
+// mytgt_export.h
+#ifndef MYTGT_EXPORT
+#	define MYTGT_EXPORT __attribute__((visibility("default")))
+#endif
+```
+
+Now VS, gcc, clang are "unified"
+
+
+
+CMake visibility control
+
+```cmake
+# set default visibility to hidden for all targets (global setting)
+set((CMAKE_CXX_VISIBILITY_PRESET	hidden))
+set(CMAKE_VISIBILITY_INLIENS_HIDDEN	Yes)
+
+add_library(MyTgt ...)
+
+include(GeneratorExportHeader)
+generate_export_header(MyTgt)
+```
+
+TODO
+
+### Cross-platform considerations
+
+### Highlight CMake features
+
 ## C++ Unit Testing with Google Test
 
 ```c++
