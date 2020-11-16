@@ -464,11 +464,99 @@ VSCode use folder as project
 
 ## CMake
 
+- CMake is an open-source, cross-platform tool designed to build, test and package software
+- CMake is used to control the software compilation process using simple *platform and compiler independent* configuration files, and generate native makefiles and workspaces that can be used in the compiler environment of your choice
+- CMake is the standard from most C++ open source projects
+
 ### 6.1 cross-platform development
+
+assume we have cross-platform project with C++ code shared along different platforms/IDEs (e.g. `Visual studio` on Windows, `Xcode` on OSX an `Makefil` for Linux). If we want to add new source files. We have to add it to every tool used. To keep the environment consistent we have to do the similar update several times. And the most important thing is that we have to id is **manually**.
+
+CMake solve this design flaw by adding extra step to development process. We describe the project in `CMakeLists.txt` file and use `CMake` to generate tools you currently interest in using cross-platform CMake code
+
+<img src="../Media/CMakeFlow1.png" alt="CMakeFlow1" style="zoom:67%;" />
 
 ### 6.2 syntax
 
+- basic syntax: command(arg1 arg2)
+
+- command is case insensitive, arguments are case sensitive
+
+  ```cmake
+  set(HELLO hello.cpp)
+  add_executable(hello main.cpp hello.cpp)
+  ADD_EXECUTABLE(hello main.cpp ${HELLO})  # L2,3 are equivalent
+  ```
+
+- use \${} for variable value accessing, but in IF control flow use variable name directly (e.g. IF(HELLO))
+
 ### 6.3 important commands and CMake values
+
+- `cmake_minimum_required`
+
+- `project`: specify project name, can specify language
+
+  ```cmake
+  porject(HelloWorld CXX)
+  ```
+
+- `set`: define variable
+
+  ```cmake
+  set(SRC sayhello.cpp hello.cpp)
+  ```
+
+- `include_directories`: add header search directories to project
+
+  ```cmake
+  # add /usr/include/myinclude and ./include to the header search path
+  include_directories(/usr/include/myinclude ./include)  # absolute and relative path
+  ```
+
+- `link_directories`: add libraries search directories to project
+
+  ```cmake
+  # add /usr/lib/mylibfolder ./lib to the library search path
+  link_directories(/usr/lib/mylibfolder ./lib)  # absolute and relative path
+  ```
+
+- `add_library`: create library
+
+  ```cmake
+  ## add_library(libname [SHARED|STATIC|MODULE] [EXCLUDE_FROM_ALL] source1 source2 ...)
+  add_library(hello SHARED ${src})
+  ```
+
+- `add_compile_option`
+
+  ```cmake
+  add_compile_options(-Wall -std=c++11 -o2)
+  ```
+
+- `add_executable`
+
+  ```cmake
+  add_executable(main main.cpp)
+  ```
+
+- `target_link_libraries`: add shared libraries the need to be linked for the target
+
+  ```cmake
+  # link dynamic library 'hello' to executable 'main'
+  target_link_libraries(main hello)
+  ```
+
+- `add_subdirectory`: add subdirectories that store source files to the current project, it can specify binary files and store location
+
+  ```cmake
+  # syntax: add_subdirectory(source_dir [binary_dir] [EXCLUDE_FROM_ALL])
+  # add subdirectory src, in which there has to be one CMakeLists.txt
+  add_subdirectory(src)
+  ```
+
+- `aux_source_directory` - find all source files in a directory and store it in a variable, this command is used to automatically create source file list temporarily
+
+  
 
 ### 6.4 CMake compile project
 
