@@ -556,11 +556,83 @@ CMake solve this design flaw by adding extra step to development process. We des
 
 - `aux_source_directory` - find all source files in a directory and store it in a variable, this command is used to automatically create source file list temporarily
 
-  
+  ```cmake
+  # define SRC, the values are all the source files in current directory
+  aux_source_directory(. SRC)
+  # compile SRC, generate executable
+  add_executable(main ${SRC})
+  ```
+
+Commonly used CMake variables
+
+- `CMAKE_C_FLAGS`: gcc compile option
+
+- `CMAKE_CXX_FLAGS`: g++ compile option
+
+  ```cmake
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} - std=c++11")
+  ```
+
+- `CMAKE_BUILD_TYPE`
+
+  ```cmake
+  set(CMAKE_BUILD_TYPE Debug)
+  set(CMAKE_BUILD_TYPE Release)
+  ```
+
+- `CMAKE_BINDARY_DIR`, `PROJECT_BINARY_DIR`, `<projectname>_BINARY_DIR`
+
+- `CMAKE_SOURCE_DIR`, `PROJECT_SOURCE_DIR`, `<projectname>_SOURCE_DIR`
+
+- `CMAKE_C_COMPILER`
+
+- `CMAKE_CXX_COMPILER`
+
+- `EXECUTABLE_OUTPUT_PATH`
+
+- `LIBRARY_OUTPUT_PATH`
 
 ### 6.4 CMake compile project
 
+CMake structure: CMakeLists.txt file in the main directory
+
+Two ways to setting up the compilation rules:
+
+- the subdirectory that contains the source code has CMakeLists.txt file, the CMakeLists.txt in the main directory will use `add_subdirectory` to add the subdirectory
+- all subdirectory compilation rules are included in the CMakeLists.txt in he main directory
+
+Process
+
+- prepare CMakeLists.txt
+- run `cmake PATH` to generate Makefile (PATH is the top directory where CMakeLists.txt exists)
+- run `make` to compile
+
+```sh
+.	# pwd
+./	# pwd
+
+..	# parent directory
+../	# parent directory
+```
+
+Two compilation methods
+
+- in-source build: not recommended
+
+  will create a lot of intermedium files in the current directory, messy
+
+- out-of-source build: recommended
+
+  ```sh
+  mkdir build
+  cd build
+  cmake ..
+  make
+  ```
+
 ### 6.5 practice
+
+works well
 
 ## Project Development using VSCode
 

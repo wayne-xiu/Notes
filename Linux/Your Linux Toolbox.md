@@ -22,8 +22,20 @@
   - the bug is happening for a logical reason. It's never magic, even when it makes no sense
   - know your debugging toolkit
 - designing
-  - 
+  - you can't predict how requirements will change
+  - "good enough" is often really awesome
+  - making a proof of concept can really help
 - building expertise
+  - building expertise took time (years)
+  - picking something to focus on and
+  - *actively* working on getting better at it
+  - never late, start today
+  - methods
+    - learn fundamental concepts
+    - do experiments
+    - read books
+    - do hard projects
+    - dig in and be patient
 - strategies for learning
   - learning at work
     - read source code
@@ -42,10 +54,6 @@
     - teach/blog it
       - revisiting basic questions is important
       - it forces me to realize when I don't actually understand something well yet
-
-
-
-
 
 ## Bite size Linux
 
