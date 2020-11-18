@@ -647,7 +647,41 @@ case study
 
 ### 7.3 write CMakeLists.txt for compiling rules
 
+```cmake
+cmake_minimum_required(VERSION 3.5)
+
+project(HELLO)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -o2 -Wall")
+
+include_directories(${CMAKE_SOURCE_DIR}/include)
+
+add_executable(hello main.cpp src/Gun.cpp src/Solider.cpp)
+```
+
+
+
 ### 7.4 compile CMake project
 
+
+
 ### 7.5 configure VSCode json file and debug project
+
+To debug
+
+```cmake
+set(CMAKE_BUILD_TYPE Debug)
+```
+
+Configure launch.json file for debugging
+
+```json
+"program": "${workspaceFolder}/build/hello"
+```
+
+For some reason, I couldn't debug properly with [Clang 10.0.0] but [GCC 7.5.0] works just fine. - TODO
+
+Configure tasks.json and "preLaunchTask" in launch.json file for automatic build for debugging
+
+- "preLaunchTask": "Build"
 
