@@ -638,6 +638,11 @@ works well
 
 ### 7.1 setup project directory
 
+case study
+
+- Solider class
+- Gun class
+
 ### 7.2 write source code
 
 ### 7.3 write CMakeLists.txt for compiling rules
