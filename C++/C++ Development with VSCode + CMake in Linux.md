@@ -757,4 +757,99 @@ Configure tasks.json and "preLaunchTask" in launch.json file for automatic build
 
 
 
+## Appendix
+
+### VSCode for Windows
+
+- Install latest version CMake (>= 3.17) and add it to system path
+
+- download and install mingw-w64-install to use GCC and GDB (default will be Visual Studio MSBuild)
+
+  ```sh
+  # check cmake version
+  cmake --version
+  # test cmake from bash
+  cmake .. -G "MinGW Makefiles"  # -G select the generator
+  mingw32-make				 # make won't work
+  ```
+
+- setup launch.json (similar to Linux)
+
+  ```json
+  {
+      // Use IntelliSense to learn about possible attributes.
+      // Hover to view descriptions of existing attributes.
+      // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+      "version": "0.2.0",
+      "configurations": [
+          {
+              "name": "(gdb) Launch",
+              "type": "cppdbg",
+              "request": "launch",
+              "program": "${workspaceFolder}/build/hello.exe",  // 01
+              "args": [],
+              "stopAtEntry": false,
+              "cwd": "${workspaceFolder}",
+              "environment": [],
+              "externalConsole": false,
+              "MIMode": "gdb",
+              "miDebuggerPath": "C://Program Files//mingw-w64//x86_64-8.1.0-posix-seh-rt_v6-rev0//mingw64//bin/gdb.exe",  // 02
+              "setupCommands": [
+                  {
+                      "description": "Enable pretty-printing for gdb",
+                      "text": "-enable-pretty-printing",
+                      "ignoreFailures": true
+                  }
+              ],
+              "preLaunchTask": "Build"  // 03
+          }
+      ]
+  }
+  ```
+
+  notice the 3 marks above
+
+- setup tasks.json for "preLaunchTask"
+
+  ```json
+  {
+      // See https://go.microsoft.com/fwlink/?LinkId=733558
+      // for the documentation about the tasks.json format
+      "version": "2.0.0",
+      "options": {
+          "cwd": "${workspaceFolder}/build"
+      },
+      "tasks": [
+          {
+              "label": "cmake",
+              "type": "shell",
+              "command": "cmake",
+              "args": [
+                  ".."
+              ]
+          },
+          {
+              "label": "make",
+              "group": {
+                  "kind": "build",
+                  "isDefault": true
+              },
+              "command":"mingw32-make",  // 01
+              "args": []
+          },
+          {
+              "label": "Build",
+              "dependsOn":[
+                  "cmake",
+                  "make"
+              ]
+          }
+      ]
+  }
+  ```
+
+  notice we are calling "mingw32-make", which is different from Linux system
+
+
+
 -END-
