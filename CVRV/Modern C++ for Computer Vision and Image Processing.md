@@ -204,6 +204,83 @@ VSCode setting
 }
 ```
 
+### Setting up OpenCV 4/C++ dev box in Windows 10 WSL
+
+run Linux inside windows
+
+## Beginner's Guide to the Bash Terminal
+
+https://www.youtube.com/watch?v=oxuRxtrO2Ag&list=PLgnQpQtFTOGRM59sr3nSL8BmeMZR9GCIA&index=5
+
+```sh
+ls
+pwd
+ls -a	# everything including hidden directory
+ls -l	# long list
+```
+
+```sh
+cd  	# home with no argument; with auto completion
+cd ~  	# equivalent to cd
+cd ..	# up
+cd folder\ with\ space/	# ignore space with \
+
+pushd /etc	# goes to a new directory
+popd		# goes back
+```
+
+```sh
+file .profile	# type of the file (can be anything)
+```
+
+```sh
+locate fstab	# locate something from database
+sudo updatedb	# update the database
+which cal		# 
+history			# history commands (use arrows as well)
+```
+
+```sh
+# get help
+whatis cal
+apropos time	# find commans related to "something", e.g. time
+man
+```
+
+```sh
+# working with file, direcotry
+mkdir Test			# can be multiple
+touch CMakeLists.txt
+cp ~/.bashrc bashrc	# copy .bashrc file from home direcotry to Test directory
+cp bashrc bashrc.bak
+
+# rename file
+mv bashrc.bak bashrc	# rename .bak file to bashrc
+
+# removing files
+rm *		# remove everything
+rm *.bak	# remove everything *.bak
+rm -r		# remove the direcotry recursively
+rmdir 		# remove empty directory; rmdir *
+```
+
+```sh
+# working with files
+cat file1	# list file1 contents
+
+cat >> file2 # input contents
+#include <iostream>
+using namepaces std;
+int main(int argc, char* argv[]) {
+	cout << "hello world" << endl;
+	return 0;
+}
+# Ctrl + D
+cat file2
+
+cat file1 file2  # concatenate
+```
+
 
 
 ## Variables, Basic Types, Control Structure
