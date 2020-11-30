@@ -265,6 +265,7 @@ rmdir 		# remove empty directory; rmdir *
 ```
 
 ```sh
+
 # working with files
 cat file1	# list file1 contents
 
@@ -280,6 +281,25 @@ cat file2
 
 cat file1 file2  # concatenate
 ```
+
+```sh
+# check system info
+# check CPU
+lscpu
+# check memory info
+free -h
+# check disk info
+sudo fdisk -l
+# check external USB info
+lsusb
+# check OS info
+uname -a
+# check network ports
+ifconfig # may need "sudo apt install net-tools"
+
+```
+
+
 
 
 
