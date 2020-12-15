@@ -260,11 +260,435 @@ Note: *All classes in STL have no virtual destructor*, so be careful inheriting 
 
 Don't allow exceptions to escape from destructor, because the result could be disastrous.
 
+if object is stored in stack (created without new), then it's first in last out; the latest created object will be destroyed first
+
+We should not throw exception out of a destructor.
+
+- solution 1: the destructor swallows whatever exception it generates; i.e. have exception handle within the destructor; not leaking out
+
+- solution 2: move the exception-prone code to a different function (not within the destructor)
+
+The questions is who is a better person to handle the exception: the class itself or the client of the class object
+
+### Virtual Functions in Constructor or Destructor
+
+make virtual function explicit
+
+the power of dynamic binding
+
+- Avoid calling virtual function in Constructor or Destructor
+
+### Assignment to self in assignment operator
+
+```c++
+class collar;
+class Dog {
+  collar* pCollar;
+public:
+  dog& operator=(const dog& rhs) {
+      delete pCollar;
+      pCollar = new collar(*rhs.pCollar);
+      return *this;
+  }
+};
+```
+
+the above code will have issue with self-assignment
+
+```c++
+if (this == &rhs)
+    return *this;
+```
+
+there is still possible issue if there is only exception thrown after deletion
+
+```c++
+collar* pOrgCollar = pCollar;
+pCollar = new collar(*rhs.pCollar);
+delete pOrgCollar;
+```
+
+this code is exception-safe
+
+Solution 2: Delegation
+
+```c++
+class Dog {
+  collar* pCollar;
+public:
+  dog& operator=(const dog& rhs) {
+      *pCollar = *rhs.pCollar;  // member by member copying of collars or call collar's operator=
+      return *this;
+  }
+};
+```
+
+### RAII
+
+Use objects to manage resources: memory, hardware device, network handle etc.
+
+The only code that can be guaranteed to be executed after exception is thrown are the destructor of objects residing on the stack.
+
+Resource management therefore needs to be tied to the lifespan of suitable objects in order to gain automatic deallocation and reclamation.
+
+shared_ptr is another example of RAII
+
+The order of function's parameter passing are up to the compilers
+
+Conclusion: don't combine storing objects in shared pointer with other statement.
+
+
+
+What happens when resource management object is copied?
+
+- Solution 1: prohibit copying (=delete) of copy constructor and copy assignment operator
+- Solution 2: reference-count the underlying resource by using shared_ptr
+
+the "deleter" function can be customized for shared_ptr
+
+### Static Initialization Fiasco
+
+Initialization Fiasco: a subtle problem that can crash the program
+
+global objects in different scope, construction order are not defined
+
+Singleton design pattern
+
+```c++
+Dog* Singleton::getDog() {
+    if (!pd)
+        pd = new Dog("Gunner");  // Initialize upon First Usage Idiom
+    return pd;
+}
+Singleton::~Singleton {
+    if (pd) delete pd;
+    pd = nullptr;
+}
+```
+
+The beauty of design pattern
+
+### Struct vs. Class
+
+The only difference in language concern:
+
+- struct members are public by default while class members are private by default
+
+In practice, struct is used as data container (no or few basic member functions); Class is used as complex data structure, that carry private data, interfaced through public member functions
+
+Another convention: class member variables usually named with trailing "_" (instead of m_x), but static named as normal variable;
+
+separate interface and implementation;
+
+set rules through setter/mutator; getter/accessor
+
+From the other perspective, if there are too many setter/getter, that may indicate there are design issues with the class
+
+### Resource Managing Class
+
+Pitfalls of object with a pointer as member to another object
+
+shallow copy
+
+Solution 1: Define copy constructor and copy assignment operator for deep copying
+
+Solution 2: Delete copy constructor and copy assignment operator, define clone()
+
+Solution 2: use smart pointer
+
+Note: STL containers require the elements to be copy construct-able and copy assignable
+
+implicit copying can easily be a source of bugs
+
+### Virtual Constructor - Clone() function
+
+work like a virtual constructor
+
+```c++
+class Dog
+{
+public:
+    virtual Dog *clone() { return (new Dog(*this)); } // co-variant return type
+};
+
+class YelloDog : public Dog
+{
+    // override virtual function
+    virtual YelloDog *clone() { return (new YelloDog(*this)); }
+};
+
+void foo(Dog *d)
+{
+    Dog *c = d->clone();
+}
+
+int main()
+{
+    YelloDog d;
+    foo(&d);
+
+    return 0;
+}
+```
+
+### Define Implicit Type Conversion
+
+standard type conversion and user defined type conversion. Both can be explicit or implicit
+
+There are 2 methods to define implicit user defined type conversion:
+
+1. Use constructor that accept a single parameter; convert other types of object into your class
+   1. note: if you only want to define a constructor, and no implicit type conversion, always put "explicit" before the constructor to avoid inadvertent type conversion
+2. Use the type conversion function; convert an object of your class into other types
+
+```c++
+class Dog
+{
+public:
+    Dog(string name) : name_{name} {} // No explicit
+    // string getName() { return name_; }
+    // Object conversion
+    operator string() const { return name_; }
+
+private:
+    string name_;
+};
+
+int main()
+{
+    string dogname = "Bob";
+    Dog d = dogname; // implicit conversion
+    // cout << "My name is: " << d.getName() << endl;
+    // cout << "My name is: " << d << endl;  // this doesn't work; weird
+
+    string dog2 = d;
+    cout << "My name is: " << dog2 << endl; // but this does
+
+    return 0;
+}
+```
+
+This flexibility doesn't worth the risk!!!
+
+
+
+PRINCIPLE: make interface easy to use correctly and hard to use incorrectly. How hard is enough? Ideally, uncompilable
+
+General guideline:
+
+- avoid defining seemingly unexpected conversion
+- avoid defining two-way implicit conversion
+
+Implicit type conversion is useful when creating numerical types of class, such as a rational class
+
+### All Castings Considered - Part I
+
+C++ provides 4 casting (explicit conversion) operators: static_cast, dynamic_cast, const_cast, reinterpret_cast. It also inherits the C-style cast from C.
+
+1. static_cast
+
+```c++
+    int i = 9;
+    float f = static_cast<float>(i);
+
+    Dog d1 = static_cast<Dog>(string("Bob"));      // Type conversion needs to be defined
+    Dog *pd = static_cast<Dog *>(new YellowDog()); // convert pointer/reference from one type
+                                            	  // to a related type (down/up cast)
+```
+
+2. dynamic_cast
+
+```c++
+Dog* pd = new YellowDog():
+YellowDog* py = dynamic_cast<YellowDog*>(pd);
+```
+
+- convert pointer/reference from one type to a related type (typically downcast)
+- run-time type check. If succeed, py == pd; if fail, py == 0;
+- It requires the 2 types to be polymorphic (have virtual function)
+
+3. const_cast
+
+```c++
+const char* str = "Hello, world!";
+char* modifiable = const_cast<char*>(str);
+```
+
+- cast away the constness of the object being pointed to
+- only works on pointer/reference
+- only works on same type (not related type like dynamic_cast)
+
+4. reinterpret_cast
+
+```c++
+long p = 510010980;
+Dog* d = reinterpret_cast<Dog*>(p);
+```
+
+- re-interpret the bits of the object pointed to
+- only works on pointer/reference
+- the ultimate cast that can cast one pointer to any other type of pointer
+- typically used in lower-level coding
+
+C-style casting
+
+```c++
+shrot a = 200;
+int i = (int)a;  // c-like cast notation
+int j = int(a);  // funcitonal notation
+```
+
+A mixture of static_cast, const_cast and reinterpret_cast
+
+
+
+Generally, C++ style of casts are preferred over the C-style, because:
+
+- Easier to identify in the code
+- Less usage error. C++ style provides:
+  - Narrowly specified purpose of each cast (less error-prone), and
+  - Run-time type check capability
+
+### All Castings Considered - Part II
+
+```c++
+class Dog
+{
+public:
+    virtual ~Dog() {}
+};
+
+class YellowDog : public Dog
+{
+    int age_;
+public:
+    void bark() { cout << "woof. " << endl; }
+    // void bark() { cout << "woof. I am " << age_ << endl; }  // exception thrown
+};
+
+int main()
+{
+    Dog *pd = new Dog();
+    YellowDog *py = dynamic_cast<YellowDog *>(pd);
+    py->bark();
+
+    cout << "py = " << py << endl;
+    cout << "pd = " << pd << endl;
+
+    return 0;
+}
+// output:
+woof.
+py = 0
+pd = 0x6325c0
+```
+
+All YellowDog are Dog, but not vice versa. So the dynamic_cast failed
+
+bark() is treated as a static function since it doesn't access any member function
+
+
+
+The correct way
+
+```c++
+int main()
+{
+    Dog *pd = new Dog();
+    YellowDog *py = dynamic_cast<YellowDog *>(pd);
+    if (py)
+        py->bark();
+
+    cout << "py = " << py << endl;
+    cout << "pd = " << pd << endl;
+
+    return 0;
+}
+// output
+py = 0
+pd = 0xd025c0
+```
+
+Better way
+
+```c++
+class Dog
+{
+public:
+    virtual void bark() {}
+    virtual ~Dog() {}
+};
+
+class YellowDog : public Dog
+{
+    int age_;
+
+public:
+    // void bark() { cout << "woof. " << endl; }
+    void bark() { cout << "woof. I am " << age_ << endl; }
+};
+
+int main()
+{
+    Dog *py = new YellowDog();
+    py->bark();
+
+    cout << "py = " << py << endl;
+
+    return 0;
+}
+// output
+woof. I am 0
+py = 0xd025c0
+```
+
+Polymorphism is more elegant solution
+
+
+
+casting could be a handy hack tool
+
+```c++
+class Dog
+{
+public:
+    Dog() : m_name("Bob"){};
+    void bark() const { // *this is const
+        // m_name = "Henry"; // not allowed
+        const_cast<Dog *>(this)->m_name = "Henry";
+        cout << "My name is " << m_name << endl;
+    }
+
+private:
+    string m_name;
+};
+
+int main()
+{
+    Dog *pd = new Dog();
+    pd->bark();
+
+    return 0;
+}
+// output
+My name is Henry
+```
+
+
+
+![CppCasting](../Media/CppCasting.png)
+
+risky level (5 > 1)
+
+static_cast is risky (always succeed)
+
+![CStyleCast](../Media/CStyleCast.png)
+
 
 
 ## Modern C++
 
-## C++ Standard Library
+## C++ Standard Library	
 
 ## Advanced STL
 
