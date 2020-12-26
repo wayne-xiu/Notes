@@ -1236,7 +1236,7 @@ void mayShare(const std::shared_ptr<Widget>& shaWid);  // only borrows the resou
 
 Each container has an allocator which works in the background, and hence the size of a container can be adjusted at runtime.
 
-Sequential Contaiers
+Sequential Containers
 
 - std::array
 - vector

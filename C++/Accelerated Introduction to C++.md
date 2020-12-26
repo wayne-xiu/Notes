@@ -1039,3 +1039,24 @@ int main() {
 ```
 
 #END
+
+A C/C++ puzzle:
+
+```c++
+// what's the output of this code
+int main()
+{
+    int i = 0;
+    int arr[3] = {0};
+    for (; i <= 3; i++)
+    {
+        arr[i] = 0;
+        std::cout << "hello world\n";
+    }
+
+    return 0;
+}
+// it will print "hello world" infinitely
+// stack from high to low; i-a[2]-a[1]-a[0]; interesting
+```
+

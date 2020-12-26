@@ -684,6 +684,137 @@ static_cast is risky (always succeed)
 
 ![CStyleCast](../Media/CStyleCast.png)
 
+### Public, Protected, Private Inheritance
+
+The specifies different access control from the derived class to the base class.
+
+Protected, Private inheritance is rarely seen in production code
+
+Access control:
+
+- None of the derived classes can access anything that is private in base
+- public inheritance inherits public members of base as public and the protected members of base as protected
+- private inheritance inherits public and protected members of base as private
+- protected inheritance inherits public and protected members of base as protected
+
+```c++
+class B {};
+
+class D_priv: private B{};
+class D_prot: protected B{};
+class D_pub: public B{};
+```
+
+From casting:
+
+- Anyone can cast a D_pub* to B*. D_pub is a special kind of B
+- D_priv's members and friends can cast a D_priv* to B*
+- D_prot's members, friends, and children can cast a D_prot* to B*
+
+
+
+- public inheritance: is-a relationship
+- private inheritance: similar to has-a relation
+
+```c++
+class ring {
+  public:
+    void tinkle() {...}
+};
+
+// composition
+class Dog {
+    ring m_ring;
+  public:
+    void tinkle() {m_ring.tinkle()};  // call forwarding
+};
+// private inheritance
+class dog: private ring {
+  public:
+    using ring::tinkle;
+};
+```
+
+In general, composition is preferred (more flexible and less coupled)
+
+### Maintain is-a relation for Public Inheritance
+
+A Derived class should be able to do everything the base class can do
+
+```c++
+class dog
+{
+public:
+    virtual void bark() { cout << "I am just a dog.\n"; }
+};
+class yellowdog : public dog
+{
+public:
+    void bark() override { cout << "I am a yellow dog.\n"; }
+};
+
+int main()
+{
+    yellowdog *py = new yellowdog();
+    py->bark();
+
+    dog *pd = py;  // with/without virtual, this makes a big difference
+    pd->bark();
+    return 0;
+}
+// output
+I am a yellow dog.
+I am a yellow dog.
+```
+
+Polymorphism; only override virtual function
+
+```c++
+class dog
+{
+public:
+    virtual void bark(string msg = "just a")
+    {
+        cout << "I am " << msg << " dog." << endl;
+    }
+};
+class yellowdog : public dog
+{
+public:
+    void bark(string msg = "a yellow") override
+    {
+        cout << "I am " << msg << " dog." << endl;
+    }
+};
+
+int main()
+{
+    yellowdog *py = new yellowdog();
+    py->bark();
+
+    dog *pd = py;
+    pd->bark();
+    return 0;
+}
+// output:
+I am a yellow dog.
+I am just a dog.
+```
+
+This is crazy; 
+
+- *virtual function is bound in run time; however, the default value is bound at compile time*
+- lesson: never override the default parameter value for virtual function
+
+Summary:
+
+- Precise definition of classes
+- don't override non-virtual functions
+- don't override default parameter values for virtual functions
+- force inheritance of shadowed functions
+
+### Understanding rvalue and lvalue
+
 
 
 ## Modern C++
