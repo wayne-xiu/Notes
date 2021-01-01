@@ -815,6 +815,110 @@ Summary:
 
 ### Understanding rvalue and lvalue
 
+C++11 introduced rvalue reference
+
+- lvalue: an object that occupies some *identifiable* location in memory
+- rvalue: an object that is not a lvalue
+
+Most variables in C++ code are lvalues, which you can obtain their address
+
+```c++
+int& r = i;  // lvalue reference
+int& r = 5;  // Error
+const int& r = 5;  // Ok, exception
+```
+
+
+
+Misconception 1: function or operator always yields rvalues
+
+Misconception 2: lvalues are modifiable (e.g. const)
+
+Misconception 3: rvalues are not modifiable (it is not true for user defined type)
+
+
+
+Summary:
+
+- Every C++ expression yield either an rvalue or a lvalue
+- If the expression has an identifiable memory address, it's lvalue; otherwise, rvalue
+
+
+
+### Static Polymorphism
+
+When talking about polymorphism, by default, it's dynamic polymorphism; Dynamic polymorphism is great, coming with (small) prices
+
+- memory cost of the virtual table
+- run time cost of dynamic binding
+
+What we want to mimic from the dynamic polymorphism
+
+1. is-a relationship between base class and derived class
+2. Base class defines a "generic" algorithm that is used by derived class
+3. The "generic" algorithm is customized by the derived class
+
+```c++
+template <typename T>
+class Generic_Parser {
+  public:
+    void parse_preorder(TreeNode* node) {
+        if (node) {
+            process_node(node);
+            parse_preorder(node->left);
+            parse_preorder(node->right);
+        }
+    }
+    void process_node(TreeNode* node) {  // not virtual anymore
+        static_cast<T*>(this)->process_node(node);
+    }
+};
+
+class EmployeeChart_Parser: public Generic_Parser<EmployeeChart_Parser> {
+  public:
+    void process_node(TreeNode* node) {
+        cout << "Customized process_node() for EmployeeChart.\n";
+    }
+};
+
+int main() {
+    ...
+    EmployeeChart_Parser ep;
+    ep.parse_preorder(root);
+}
+```
+
+The above technique is called "Curiously recurring template pattern" or static polymorphism, simulated polymorphism
+
+Commonly used technique in Library code
+
+TMP: Template Metaprogramming
+
+move computation from run time to compile time
+
+
+
+Ref:
+
+polymorphism is an **ability to treat objects of different types as if they are of a same type**. 
+
+Static Polymorphism is the linking of a function with an object during  compile time is called static. It is also called static binding.
+
+polymorphism — providing a single interface to entities of different types. virtual functions provide dynamic (run-time) polymorphism through an interface provided by a base class. Overloaded functions and templates provide static (compile-time) polymorphism. - Bjarne Stroustrup
+
+Overloading
+
+- overloaded operator
+- overloaded function
+
+Template
+
+- Function template
+- Class template
+- Specializing template
+
+### Multiple Inheritance
+
 
 
 ## Modern C++
