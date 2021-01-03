@@ -988,7 +988,684 @@ lambda表达式赋值必须用auto，但auto不能用在类成员初始化，所
 
 lambda超越了早期的函数对象，因为它是“闭包”，所以有着与函数、函数对象完全不同的用法，可以说是一种“高维生物”。
 
+### C++ Callable Object
+
+callable object: “可被某种方式调用其某些函数”的对象。
+
+- 函数
+- 指向成员函数的指针 a pointer to a member function, 当你通过对象调用，该对象被传递成为第一实参（必须是reference or pointer），其它实参一一对应成员函数的参数
+- 函数对象 function object (定义了operator())
+- lambda，严格地说它是一种函数对象
+
+```c++
+void func(int x, int y) { cout << "in function\n"; }
+auto lam = [](int x, int y) { cout << "in lambda\n"; };
+class C {
+  public:
+    void operator() (int x, int y) const { cout << "in function object\n"; }
+    void memfunc (int x, int y) const { cout << "in member function\n"; }
+};
+
+#include <functional>
+#include <future>
+int main()
+{
+    C c;
+    std::shared_ptr<C> sp(new C); // shared pointer
+
+    // bind() uses callable object to bind arguments
+    std::bind(func, 77, 33)();
+    std::bind(lam, 77, 33)(); // equ. lam(77, 33);
+    std::bind(C(), 77, 33)();
+    std::bind(&C::memfunc, c, 77, 33)();
+    std::bind(&C::memfunc, sp, 77, 33)();
+
+    // async() uses callable objects to start (background) tasks
+    std::async(func, 42, 70);
+    std::async(lam, 42, 70);
+    std::async(c, 42, 70);
+    std::async(&C::memfunc, &c, 42, 70);
+    std::async(&C::memfunc, sp, 42, 70);
+
+    return 0;
+}
+```
+
+如果想声明callable object， 一般可用class std::function<>
+
+Ref: C++ Standard Library (2nd edition)
+
 ## 4. 标准库
+
+### 一枝独秀的字符串：C++也能处理文本？
+
+语言+标准库
+
+#### 认识字符串
+
+string是模板类basic_string的特化形式，是一个typedef
+
+```c++
+using string = std::basic_string<char>;  // string其实是类型别名
+```
+
+Unicode，它的目标是用一种编码方式统一处理人类语言文字，使用 32 位（4 个字节）来保证能够容纳过去或者将来所有的文字。但这就与 C++ 产生了矛盾。因为 C++ 的字符串源自 C，而 C 里的字符都是单字节的char 类型，无法支持 Unicode。
+
+C++ 一直没有提供处理编码的配套工具，我们只能“自己造轮子”。建议你只用 string（相对wstring），而且在涉及 Unicode、编码转换的时候，尽量不要用C++，目前它还不太擅长做这种工作，可能还是改用其他语言来处理更好。
+
+**字符串和容器完全是两个不同的概念**。把每个字符串都看作是一个不可变的实体，你才能在 C++ 里真正地用好字
+符串。
+
+```c++
+using namespace std::literals::string_literals;
+auto str = "std string"s;
+```
+
+Raw string literal
+
+```c++
+auto str = R"(nier:auto)";
+```
+
+字符串转换函数
+
+```c++
+assert(stoi("42") == 42); // 字符串转整数
+assert(stol("253") == 253L); // 字符串转长整数
+assert(stod("2.0") == 2.0); // 字符串转浮点数
+assert(to_string(1984) == "1984"); // 整数转字符串
+```
+
+
+
+C++17, 轻量的string_view，内部只有指针和长度。C++11的模仿实现
+
+```c++
+class my_string_view final // 简单的字符串视图类，示范实现
+{
+public:
+    using this_type = my_string_view; // 各种内部类型定义
+    using string_type = std::string;
+    using string_ref_type = const std::string&;
+    using char_ptr_type = const char*;
+    using size_type = size_t;
+private:
+    char_ptr_type ptr = nullptr; // 字符串指针
+    size_type len = 0; // 字符串长度
+public:
+    my_string_view() = default;
+    ~my_string_view() = default;
+    my_string_view(string_ref_type str) noexcept
+    : ptr(str.data()), len(str.length())
+    {}
+public:
+    char_ptr_type data() const // 常函数，返回字符串指针
+    {
+        return ptr;
+    }
+    size_type size() const // 常函数，返回字符串长度
+    {
+    	return len;
+    }
+};
+```
+
+
+
+#### 正则表达式
+
+https://www.pcre.org/
+
+C++ 正则表达式主要有两个类。
+
+- regex：表示一个正则表达式，是 basic_regex 的特化形式；
+- smatch：表示正则表达式的匹配结果，是 match_results 的特化形式
+
+C++ 正则匹配有三个算法，注意它们都是“只读”的，不会变动原字符串。
+
+- regex_match()：完全匹配一个字符串；
+- regex_search()：在字符串里查找一个正则匹配；
+- regex_replace()：正则查找再做替换
+
+在写正则的时候，记得最好要用“原始字符串”，不然转义符绝对会把你折腾得够呛。
+
+在使用 regex 的时候，还要注意正则表达式的成本。因为正则串只有在运行时才会处理，检查语法、编译成正则对象的代价很高，所以尽量不要反复创建正则对象，能重用就重用。
+
+TODO
+
+
+
+小结：
+
+1. C++ 支持多种字符类型，常用的 string 其实是模板类 basic_string 的特化形式；
+2. 目前 C++ 对 Unicode 的支持还不太完善，建议尽量避开国际化和编码转化，不要“自讨苦吃”；
+3. 应当把 string 视为一个完整的字符串来操作，不要把它当成容器来使用；
+4. 字面量后缀“s”表示字符串类，可以用来自动推导出 string 类型；
+5. 原始字符串不会转义，是字符串的原始形态，适合在代码里写复杂的文本；
+6. 处理文本应当使用正则表达式库 regex，它的功能非常强大，但需要花一些时间和精力才能掌握
+
+在string转换C字符串的时候，要注意c_str(), data()的区别，两个函数都返回const char*指针，但c_str()会在末尾添加'\0'
+
+
+
+标准C++的string接口不太友好，易用， QString顺手很多
+
+如果要用C++写界面，并且软件需要国际化，这种情况必须要用Unicode，这种情况用C++很费劲。
+
+
+
+### 三分天下的容器：恰当选择，事半功倍      
+
+容器，是C++泛型编程范式的基础。
+
+算法+数据结构 = 程序。In C++, containers are the "data structures"。容器就是C++对数据结构的抽象和封装。
+
+#### 容器的通用特性
+
+容器保存元素采用的是“值”语义：容器里存储的是元素的拷贝、副本，而不是引用。尽量为元素实现转移构造和转移赋值函数(move constructor, move assignment operator)
+
+emplace 函数可以“就地”构造元素，免去了构造后再拷贝、转移的成本。
+
+```c++
+Point p;
+v.push_back(std::move(p));
+
+v.emplace_back(...); // 直接在容易里构造函数，不需要拷贝或转移
+```
+
+不推荐在容器里存放指针，虽然开销低，但是麻烦且容易出错，有内存泄漏的隐患。推荐shared_ptr
+
+#### 容器的具体特性
+
+顺序容器、有序容器、无需容器
+
+#### 顺序容器：array, vector, deque, list, forward_list
+
+**array和vector直接对应C的内置数组，内存布局与C完全兼容，所以开销最低、速度最快**
+
+它们的区别在于容量能否动态增长。
+
+```c++
+array<int, 2> arr; // 初始一个array，长度是2
+assert(arr.size() == 2); // 静态数组的长度总是2
+
+vector<int> v(2); // 初始一个vector，长度是2
+for(int i = 0; i < 10; i++) {
+	v.emplace_back(i); // 追加多个元素
+}
+assert(v.size() == 12); // 长度动态增长到12
+```
+
+deque (double-end queue)可以在两端高效地插入删除元素
+
+vector, deque连续存储，随机访问，删除效率低
+
+链表查找效率低
+
+![顺序容器](../Media/顺序容器.png)
+
+
+
+#### 有序容器：set/multiset, map/multimap
+
+顺序容器的特点时,元素的次序时由它插入的次序而决定的,访问元素也就按照最初插入的顺序。 而有序容器则不同,它的元素在插入容器后就被按照某中规则自动排序,所以是"有序"的。
+
+C++的有序容器使用的是树结构，通常是红黑树 - 有最好查找性能的二叉树。
+
+“有序”容器决定了如何正确地排序。在定义容器的时候必须要指定key的比较函数。这个函数通常是默认的less
+
+```c++
+template<
+	class T // 模板参数只有一个元素类型
+> class vector; // vector
+template<
+	class Key, // 模板参数是key类型，即元素类型
+    class Compare = std::less<Key> // 比较函数
+> class set; // 集合
+template<
+	class Key, // 第一个模板参数是key类型
+	class T, // 第二个模板参数是元素类型
+	class Compare = std::less<Key> // 比较函数
+> class map; // 关联数组
+```
+
+对于自定义类型，有两种方式来确定比较函数：一个是重载'<'，另一个是自定义模板参数。
+
+```c++
+bool operator<(const Point& a, const Point& b)
+{
+	return a.x < b.x; // 自定义比较运算
+}
+set<Point> s; // 现在就可以正确地放入有序容器
+s.emplace(7);
+```
+
+函数对象或lambda表达式
+
+```c++
+set<int> s = {7, 3, 9};
+auto comp = [](auto a, auto b) { return a > b; };  // use of 'auto' in lambda parameter 													// declaration only available with -std=c++14
+
+set<int, decltype(comp)> gs(comp);
+std::copy(begin(s), end(s), inserter(gs, gs.end()));
+for (auto& x: gs) {
+    cout << x << ", ";  // output: 9, 7, 3,
+}
+```
+
+**集合关系就用set，关联数组就用map**
+
+如果需要实时插入排序，选择set/map没问题，如果是非实时，最好还是用vector，全部数据插入完成后再一次性排序，效果肯定会更好。
+
+#### 无序容器: unordered_set/unordered_map, unordered_multiset/unordered_multimap
+
+无序容器同样也是集合和关联数组，用法上与有序容器几乎是一样的，区别在于内部数据结构：**不是红黑树，而是散列表(也叫哈希表) - hash table*
+
+元素的位置取决于计算的散列值，没有规律可言，所以就是“无序”的
+
+```c++
+using map_type = // 类型别名
+	unordered_map<int, string>; // 使用无序关联数组
+map_type dict; // 定义一个无序关联数组
+dict[1] = "one"; // 添加三个元素
+dict.emplace(2, "two");
+dict[10] = "ten";
+for(auto& x : dict) { // 遍历输出
+	cout << x.first << "=>" // 顺序不确定
+	<< x.second << ","; // 既不是插入顺序，也不是大小序
+}
+```
+
+无序容器虽然不要求顺序，但是对 key 的要求反而比有序容器更“苛刻”一些
+
+```c++
+template<
+    class Key, // 第一个模板参数是key类型
+    class T, // 第二个模板参数是元素类型
+    class Hash = std::hash<Key>, // 计算散列值的函数对象
+    class KeyEqual = std::equal_to<Key> // 相等比较函数
+> class unordered_map;
+```
+
+key要具备两个条件：一是可以计算hash值，二是能够执行相等比较操作。第一个是因为散列表的要求，只有计算hash值才能放入散列表，二是因为hash值可能会冲突，当hash值相同时，就要比较真正的key值
+
+```c++
+bool operator==(const Point& a, const Point& b)
+{
+	return a.x == b.x; // 自定义相等比较运算
+}
+```
+
+散列函数就略麻烦一点，你可以用函数对象或者 lambda 表达式实现，内部最好调用标准的 std::hash 函数对象，而不要自己直接计算，否则很容易造成 hash 冲突：
+
+```c++
+auto hasher = [](const auto& p) {
+    return std::hash<int>()(p.x);	// 调用标准hash函数对象计算
+};
+```
+
+有了相等函数和散列函数，自定义类型可以放入无序容器
+
+```c++
+unordered_set<Point, decltype(hasher)> s(10, hasher);
+s.emplace(7);
+s.emplace(3);
+```
+
+
+
+如果选择有序还是无序容器
+
+如果只想要单纯的集合、字典，没有排序需求，就应该用无序容器，没有比较排序的成本，它的速度就会非常快。
+
+
+
+“不要有多余的操作”，不需为不需要的功能付出代价。
+
+小结：
+
+1. 标准容器可以分为三大类，即顺序容器、有序容器和无序容器；
+2. 所有容器中最优先选择的应该是 array 和 vector，它们的速度最快，开销最低；
+3. list 是链表结构，插入删除的效率高，但查找效率低；
+4. 有序容器是红黑树结构，对 key 自动排序，查找效率高，但有插入成本；
+5. 无序容器是散列表结构，由 hash 值计算存储位置，查找和插入的成本都很低；有序容器和无序容器都属于关联容器，元素有 key 的概念，操作元素实际上是在操作key，所以要定义对 key 的比较函数或者散列函数。
+
+![C++StandardContainers](../Media/C++StandardContainers.png)
+
+使用容器的技巧：**多利用类型别名，而不要“写死”容器定义**。因为容器的大部分接口是相同的，所以只要变动别名定义，就能够随意改换不同的容器。
+
+
+
+评判数据结构的基本指标是空间复杂度和时间复杂度。
+
+有了vector，不要用new/delete来创建动态数组
+
+散列表的理论上的时间复杂度是O(1)，比红黑树的O(logN)要快。但要注意，如果对元素里的大量数据计算hash，这个常数可能会很大，也许会超过O(logN)
+
+有序容器和无序容器里有“等价” equivalent和“相等” equality的概念，等价是!(x<y)&&!(x>y), 相等是==。“等价”基于次序关系，对象不一定相同，而“相等”是两个对象真正相同。
+
+标准库里还有stack, queue, priority_queue三个“容器适配器” container adapters, 它们不是真正的容器，而是由其它容器（通常是vector deque）“适配” 而实现的，使用接口上有变化，而内部结构相同。
+
+
+
+### 五花八门的算法：不要再手写for循环了 
+
+#### 认识算法
+
+C++里的算法，指的是工作在容器上的一些泛型函数，对容器内的元素进行操作。
+
+算法本质上都是for或者while
+
+追求更高层次上的抽象和封装，也是函数式编程的基本理念。
+
+算法+lambda
+
+```c++
+auto n = count_if(begin(v), end(v),
+                 [](auto x) {
+                     return x > 2;
+                 }
+         );
+```
+
+#### 认识迭代器
+
+算法只能通过迭代器iterator去“间接”访问容器及元素，算法的能力由迭代器决定。泛型编程，分离了数据和操作。算法可以不关心容器的内部结构，以一致的方式去操作元素。容器的特化函数可能比std space的更高效。
+
+迭代器可以理解为“只能指针”，它强调的是对数据的访问，而不是生命周期管理
+
+与指针类似，迭代器可以前进或后退，但是不能假设一定支持++, -- 操作符。常用函数
+
+- distance()
+- advance()
+- next()/prev()
+
+```c++
+array<int, 5> arr = {0,1,2,3,4}; // array静态数组容器
+auto b = begin(arr); // 全局函数获取迭代器，首端
+auto e = end(arr); // 全局函数获取迭代器，末端
+assert(distance(b, e) == 5); // 迭代器的距离
+auto p = next(b); // 获取“下一个”位置
+assert(distance(b, p) == 1); // 迭代器的距离
+assert(distance(p, b) == -1); // 反向计算迭代器的距离
+advance(p, 2); // 迭代器前进两个位置，指向元素'3'
+assert(*p == 3);
+assert(p == prev(e, 2)); // 是末端迭代器的前两个位置
+```
+
+#### 最有用的算法
+
+##### for_each
+
+```c++
+vector<int> v{3, 5, 6, 1, 10};
+for (const auto &x : v)
+{
+    cout << x << ", ";
+}
+
+auto print = [](const auto &x) { // c++14
+    cout << x << ", ";
+};
+for_each(cbegin(v), cend(v), print);
+```
+
+建议尽量多用for_each来替代for，促使我们更多地以“函数式”编程来思考。for_each算法的价值就体现在，它把要做的事情分成了两个部分：一个遍历容器元素，一个操纵容器元素。
+
+##### 排序算法
+
+- std::sort
+- stable_sort
+- partial_sort
+- nth_element
+- partition
+- minmax_element
+
+```c++
+// top3
+std::partial_sort(
+	begin(v), next(begin(v), 3), end(v)); // 取前3名
+// best3
+std::nth_element(
+	begin(v), next(begin(v), 3), end(v)); // 最好的3个
+// Median
+auto mid_iter = // 中位数的位置
+	next(begin(v), v.size()/2);
+std::nth_element( begin(v), mid_iter, end(v));// 排序得到中位数
+cout << "median is " << *mid_iter << endl;
+// partition
+auto pos = std::partition( // 找出所有大于9的数
+	begin(v), end(v),
+    [](const auto& x) // 定义一个lambda表达式
+    {
+    	return x > 9;
+    }
+);
+for_each(begin(v), pos, print); // 输出分组后的数据
+// min/max
+auto value = std::minmax_element( //找出第一名和倒数第一
+	cbegin(v), cend(v)
+);
+```
+
+注意，这些算法对迭代器要求比较高，通常都是随机访问迭代(minmax_element)除外，所以最好再顺序容器array/vector上调用。
+
+对list，调用成员函数sort()
+
+有序容器set/map本身已经排好序，直接对迭代器做运算就可以得到结果
+
+对无序容器，不要调用排序算法
+
+##### 查找算法
+
+排序再查找
+
+```c++
+vector<int> v = {3,5,1,7,10,99,42}; // vector容器
+std::sort(begin(v), end(v)); // 快速排序
+auto found = binary_search( // 二分查找，只能确定元素在不在
+	cbegin(v), cend(v), 7
+);
+// this is terrible
+```
+
+真正的二分查找，要用lower_bound
+
+```c++
+decltype(cend(v)) pos; // 声明一个迭代器，使用decltype
+pos = std::lower_bound( // 找到第一个>=7的位置
+	cbegin(v), cend(v), 7
+);
+found = (pos != cend(v)) && (*pos == 7); // 可能找不到，所以必须要判断
+assert(found); // 7在容器里
+pos = std::lower_bound( // 找到第一个>=9的位置
+	cbegin(v), cend(v), 9
+);
+found = (pos != cend(v)) && (*pos == 9); // 可能找不到，所以必须要判断
+assert(!found); // 9不在容器里
+// this is even worse
+```
+
+lower_bound的返回值是一个“大于或等于”的迭代器
+
+同理，upper_bound
+
+
+
+find, find_first_of/find_end可用在未排序容器
+
+```c++
+vector<int> v = {1,9,11,3,5,7}; // vector容器
+decltype(v.end()) pos; // 声明一个迭代器，使用decltype
+pos = std::find( // 查找算法，找到第一个出现的位置
+	begin(v), end(v), 3
+);
+assert(pos != end(v)); // 与end()比较才能知道是否找到
+pos = std::find_if( // 查找算法，用lambda判断条件
+	begin(v), end(v),
+	[](auto x) { // 定义一个lambda表达式
+		return x % 2 == 0; // 判断是否偶数
+	}
+);
+assert(pos == end(v)); // 与end()比较才能知道是否找到
+array<int, 2> arr = {3,5}; // array容器
+pos = std::find_first_of( // 查找一个子区间
+	begin(v), end(v),
+	begin(arr), end(arr)
+);
+assert(pos != end(v)); // 与end()比较才能知道是否找到
+```
+
+C++ STL naming is a disaster!!!
+
+
+
+小结：
+
+1. 算法是专门操作容器的函数，是一种“智能 for 循环”，它的最佳搭档是 lambda 表达式；
+2. 算法通过迭代器来间接操作容器，使用两个端点指定操作范围，迭代器决定了算法的能力；
+3. for_each 算法是 for 的替代品，以函数式编程替代了面向过程编程；有多种排序算法，最基本的是 sort，但应该根据实际情况选择其他更合适的算法，避免浪费；
+4. 在已序容器上可以执行二分查找，应该使用的算法是 lower_bound；
+5. list/set/map 提供了等价的排序、查找函数，更适应自己的数据结构；
+6. find/search 是通用的查找算法，效率不高，但不必排序也能使用。
+
+
+
+equal_range可以一次性获得[lower_bound, upper_bound]
+
+
+
+### 十面埋伏的并发：多线程真的很难吗？
+
+Concurrency and Multi-threading 并发与多线程
+
+通俗地说，“并发”是指再一个时间段内有多个操作再同时进行，与“多线程”并不是一回事。并发有很多种实现方式，多线程是其中最常用的一种手段。
+
+#### 认识线程与多线程
+
+线程的概念可以分成好几个层次，从CPU、操作系统等不同的角度看，它的定义也不同。**在C++语言里，线程是一个能够独立运行的函数**（？）
+
+```c++
+auto f = []() {
+    cout << "tid = " << this_thread::get_id() << endl;
+};
+thread t(f);  // 启动一个线程，运行lambda函数f
+t.join();  // got tid = 2 in VS code, seems strange
+```
+
+任何程序从一开始就有一个主线程，从main()开始运行。主线程可以调用接口函数，创建出子线程。子线程会立即脱离主线程的控制流程，单独运行，但共享主线程的数据。程序创建出多个子线程，执行多个不同的函数，也就成了多线程。
+
+多线程有很多好处：任务并行、避免I/O阻塞、充分利用CPU、提高UI响应速度
+
+问题：同步、死锁、数据竞争、系统调度开销等
+
+难也不难。难，因为现实业务复杂，很难做到完美的解耦。一旦线程间有共享数据的需求，麻烦就接踵而至，要考虑各种情况、用各种手段去同步数据。随着线程数量的增加，复杂程度以几何数量级攀升。
+
+基本常识：“读而不写”就不会有数据竞争。在C++多线程编程里读取const变量总是安全的，对类调用const成员函数、对容器调用只读算法总是线程安全的。
+
+> 最好的并发就是没有并发，最好的多线程就是没有线程。
+>
+> 在大的、宏观层面“看得到”并发和线程，在小的、微观的层面上“看不到”线程
+
+#### 多线程开发实践
+
+四个基本的工具：仅调用一次、线程局部存储、原子变量和线程对象
+
+##### 仅调用一次
+
+初始化在多线程里 could be troublesome. 可以声明一个once_flag类型的变量来保证“仅调用一次”的功能，变量最好是静态、全局的（线程可见），来作为初始化的标志
+
+```c++
+static std::once_flag flag;  // 全局的初始化标志
+```
+
+然后调用专门call_once()函数，以函数式编程的方式，传递这个标志和初始化函数。这样C++会保证，即使多个线程重入call_once，也只能有一个线程会成功运行初始化。
+
+```c++
+static std::once_flag flag;
+
+auto f = []() {
+    std::call_once(flag, []() {
+        cout << "only once" << endl;
+    });
+};
+
+int main()
+{
+    thread t1(f);
+    thread t2(f);
+
+    t1.join();
+    t2.join();
+    return 0;
+}
+
+// output:
+// only once
+```
+
+call_once()完全消除了初始化时的并发冲突，在它的调用位置根本看不到并发和线程。它也可以轻松地解决多线程领域里令人头疼的“双重检查锁定”问题。
+
+##### 线程局部存储
+
+读写全局（或者局部静态）变量是另一个比较常见的数据竞争场景。但是，有的时候，全局变量不一定是必须共享的，可能仅仅是为了方便线程传入传出数据，或者是本地cache，而不是为了共享所有权。这应该是线程独占所有权，不应该在多线程之间共同拥有，术语叫“线程局部存储” thread local storage
+
+thread_local标记的变量在每个线程里都会有一个独立的副本，是“线程独占”的
+
+```c++
+int main()
+{
+    thread_local int n = 0;
+
+    auto f = [&](int x) {
+        n += x;
+        cout << n << endl;  // note this "endl" may not necessarily work
+    };
+
+    thread t1(f, 10);
+    thread t2(f, 10);
+    t1.join();
+    t2.join();
+
+    return 0;
+}
+// output
+// 1010
+```
+
+两个线程互不干扰。
+
+把thread_local改成static 结果是“1020”
+
+##### 原子变量
+
+对于非独占、必须共享的数据，要想保证多线程读写共享数据的一致性，关键是要*解决同步问题*
+
+Mutex成本太高，对于小数据，应该“原子化” atomic
+
+```c++
+using atomic_int = std::atomic<int>;
+using atomic_bool = std::atomic<bool>;
+using atomic_long = std::atomic<long>;
+```
+
+原子变量禁用了拷贝构造函数（so, atomic is an object type, like Java Integer?) ，所以在初始化的时候不能用“=”赋值，只能用{}()
+
+```c++
+using atomic_int = atomic<int>;
+using atomic_long = atomic<long>;
+
+atomic_int x{0};
+assert(++x == 1);
+
+atomic_long y{1000L};
+y += 200;
+assert(y < 2000);
+```
+
+
+
+
 
 ## 5. 技能进阶
 
