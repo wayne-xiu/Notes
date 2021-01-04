@@ -1663,11 +1663,121 @@ y += 200;
 assert(y < 2000);
 ```
 
+除了模拟整数运算，原子变量还有一些特殊的原子操作，比如store, load, fetch_add, fetch_sub, exchange, compare_exchange_weak/compare_exchange_strong，最后一组就是著名的CAS（compare and swap）操作。另一个同样著名的TAS（Test and Set）操作，则需要用到一个特殊的原子类型atomic_flag，保证绝对无锁。
+
+原子变量的最基本用法是当作线程安全的全局计数器或者标志位，一个更重要的应用领域是实现高效的无锁数据结构(lock-free)
+
+boost.lock_free
+
+##### 线程
+
+call_once, thread_lock, atomic都尽量消除显性地使用线程。必须要用线程的时候，也不能逃避。
+
+C++标准库里有线程类thread，std::this_thread有yield(), get_id(), sleep_for(), sleep_until()几个函数
+
+```c++
+int main()
+{
+    static atomic_flag flag{false}; // 原子化的标志量
+    static atomic_int n;            // 原子化的int
+    auto f = [&]()                  // 在线程里运行的lambda表达式，捕获引用
+    {
+        auto value = flag.test_and_set(); // TAS检查原子标志量
+        if (value)
+        {
+            cout << "flag has been set." << endl;
+        }
+        else
+        {
+            cout << "set flag by " << this_thread::get_id() << endl; // 输出线程id
+        }
+        n += 100;               // 原子变量加法运算
+        this_thread::sleep_for( // 线程睡眠
+            n.load() * 10ms);   // 使用时间字面量
+        cout << n << endl;
+    };            // 在线程里运行的lambda表达式结束
+    thread t1(f); // 启动两个线程，运行函数f
+    thread t2(f);
+    t1.join(); // 等待线程结束
+    t2.join();
+}
+// output
+// set flag by flag has been set.2
+//
+// 200
+// 200
+```
+
+建议不要使用thread这个“原始”的线程概念，最好把它隐藏到底层，因为“看不到的线程才是好线程”
+
+建议调用函数async()，它的含义是“异步运行”一个任务，隐含的动作是启动一个线程去执行，但不绝对保证立即启动（也可以在第一个参数传递std::launch::async，要求立即启动线程）
+
+```c++
+int main()
+{
+    auto task = [](auto x) {
+        this_thread::sleep_for(x * 1ms);
+        cout << "sleep for " << x << endl;
+        return x;
+    };
+    auto f = std::async(task, 10);  // type: std::__basic_future<int>
+    f.wait();
+
+    assert(f.valid());
+    cout << f.get() << endl;
+}
+// output
+// sleep for 10
+// 10
+```
+
+函数式编程的思路，在更高的抽象级别上去看待问题，*异步并发多个任务，让底层去自动管理线程* （比手动管理好）
+
+async()会返回一个future变量，可以人为是代表了执行结果的“期货”，如果任务有返回值，就可以用成员函数get()获取。get()只能调用一次
+
+ 一个很隐蔽的“坑”，如果不显式获取async()的返回值，会*同步阻塞*直至任务完成（由于临时对象的析构函数），async变成了sync。所以即使我们不关心返回值，也要用auto配合async()，避免同步阻塞
+
+```c++
+auto::async(task, ...);	// will block
+auto f = std::async(task, ...);  // use this
+```
+
+标准库里还有mutex, lock_guard, condition_variable, promise
 
 
 
+小结
+
+1. 多线程是并发最常用的实现方式，好处是任务并行、避免阻塞，坏处是开发难度高，有数据竞争、死锁等很多“坑”；
+2. call_once() 实现了仅调用一次的功能，避免多线程初始化时的冲突；
+3. thread_local 实现了线程局部存储，让每个线程都独立访问数据，互不干扰；
+4. atomic 实现了原子化变量，可以用作线程安全的计数器，也可以实现无锁数据结构；async() 启动一个异步任务，相当于开了一个线程，但内部通常会有优化，比直接使用线程更好
+
+C++20 协程co_wait/co_yield/co_return
+
+
+
+atomic_init() 在C++20里被废弃
+
+如果只是想简单地在线程里启动一个异步任务，完全不关心返回值，可以调用thread的成员函数detach()，比async()会更方便一点。
+
+
+
+取决于传给子线程的参数，局部变量也可以给子线程共享。
+
+Q: 当需要获取线程的结果，使用async可以直接获取其记过；使用thread则需要通过共享数据来获取，需要使用锁、条件变量。async的缺点是只能获取一次。若需要保证线程一直运行，多次获取其结果是，只能使用thread+condition_variable，不知道这样理解对吗？
+
+A：基本正确。async()是一种简化的线程用法，目的就是获取future值，如果不是这个场景就不如thread灵活。 比如说线程里要保存一些cache数据，很显然这些cache不会是多线程共享的，用thread_local比较好。可以把它理解成是专门给线程准备的static全局变量。
+
+多线程调试（比如断点）从来都不是个简单的工作，一般都是打日志，里面给出线程号和使用的变量，然后慢慢分析。
 
 ## 5. 技能进阶
+
+### 序列化：简单通用的数据交换格式有哪些？
+
+精选的第三方工具：序列化/反序列化、网络通信、脚本语言混合编程和性能分析
+
+
 
 ## 6. 总结篇
 
