@@ -1773,9 +1773,230 @@ A：基本正确。async()是一种简化的线程用法，目的就是获取fut
 
 ## 5. 技能进阶
 
+精选的第三方工具：序列化/反序列化、网络通信、脚本语言混合编程和性能分析
+
 ### 序列化：简单通用的数据交换格式有哪些？
 
-精选的第三方工具：序列化/反序列化、网络通信、脚本语言混合编程和性能分析
+序列化：把内存里“活的对象”转换成精致的字节序列，便于存储和网络传输；而反序列化则是反向操作，从镜子的字节序列重新构建出内存里可用的对象。
+
+三种简单又高效的数据交换格式：JSON、MessagePack，ProtoBuffer
+
+#### JSON
+
+human readable
+
+起源于JavaScript，Web开发事实上的标准。因为JSON本身就是个KV结构，很容易映射到类似map的关联数组操作方式。
+
+JSON格式注重的时方便易用，通常不会太在意性能
+
+推荐JSON for modern C++。不是最小最快，但功能足够完善，使用方便，仅需要包含一个头文件"json.hpp"，没有外部依赖，也不需要额外的安装、编译、链接 （已测试）
+
+```c++
+#include <nlohmann/json.hpp>
+
+using json_h = nlohmann::json;
+```
+
+```c++
+json_h j2 = {
+    {"pi", 3.141},
+    {"happy", true},
+    {"name", "Niels"},
+    {"nothing", nullptr},
+    {"answer", {
+        {"everything", 42}
+    }},
+    {"list", {1, 0, 2}},
+    {"object", {
+        {"currency", "USD"},
+        {"value", 42.99}
+    }}
+};
+j2["foo"] = 23;
+j2["bar"] = false;
+j2.emplace("weather", "sunny");
+std::vector<int> v {10, 80, 100};
+j2["numbers"] = v;
+std::map<std::string, int> m = {{"one", 1}, {"two", 2}};
+j2["kv"] = m;
+j2["gear"]["suits"] = "2099";
+
+// write to JSON file
+std::ofstream out("test.json");
+out << std::setw(4) << j2 << std::endl;
+// dump() to finish serialization; with 2 indent
+std::cout << j2.dump(2) << std::endl;
+
+// de-serialize, e,g, raw string
+std::string str = R"(
+		{
+			"name": "wayne",
+			"age": 23,
+			"married": true
+		}
+	)";
+auto jr = json_h::parse(str);
+assert(jr["age"] == 23);
+assert(jr["name"] == "wayne");
+
+// read a JSON file
+std::ifstream in("test.json");
+json_h j;
+in >> j;
+```
+
+- 添加数据像标准容器map一样自然简单
+- 不需要特别指定数据的类型，会自动推导
+- 可直接dump(), parse()
+- 如果不能保证JSON数据的完整性，对可能发生的解析错误，用try-catch来保护
+
+```c++
+auto txt = "bad:data"s;
+try {
+    auto j = json_h::parse(txt);  // de-serialize
+}
+catch(std::exception& e) {
+    cout << e.what() << endl;
+}
+```
+
+#### MessagePack
+
+也是一种轻量级的数据交换格式，与JSON的不同之处在于它不是纯文本，而是二进制。MessagePack比JSON更小巧，处理起来更快。
+
+[MessagePack](http://msgpack.org/) is an efficient binary serialization format, which lets you exchange data among multiple languages like JSON, except that it's faster and smaller. Small integers are encoded into a single byte and short strings require only one extra byte in addition to the strings themselves. - from github
+
+MessagePack支持几乎所有的编程语言，C++的官方实现是[msgpack-c](https://github.com/msgpack/msgpack-c/tree/cpp_master)。msgpack-c is header only library and requires boost library. You don't need to link boost libraries. 和JSON for Modern C++一样，msgpack-c也是仅头文件的库，只要包含一个"msgpack.hpp"就行了，不需要额外的编译链接选项。
+
+MessagePack的设计理念和JSON是完全不同的，它没有定义JSON那样的数据结构，而是比较底层，只能对基本类型和标准容器序列化/反序列化，需要你自己去组织、整理要序列化的数据。
+
+official example (need FIND_PACKAGE (Boost REQUIRED) in CMakeLists.txt)
+
+```c++
+#include <msgpack.hpp>
+#include <string>
+#include <iostream>
+#include <sstream>
+
+int main()
+{
+    msgpack::type::tuple<int, bool, std::string> src(1, true, "example");
+    // serialize the object into the buffer.
+    // any classes that implements write(const char*,size_t) can be a buffer.
+    std::stringstream buffer;
+    msgpack::pack(buffer, src);
+    // send the buffer ...
+    buffer.seekg(0);
+    // deserialize the buffer into msgpack::object instance.
+    std::string str(buffer.str());
+    msgpack::object_handle oh =
+        msgpack::unpack(str.data(), str.size());
+    // deserialized object is valid during the msgpack::object_handle instance is alive.
+    msgpack::object deserialized = oh.get();
+    // msgpack::object supports ostream.
+    std::cout << deserialized << std::endl;
+    // convert msgpack::object instance into the original type.
+    // if the type is mismatched, it throws msgpack::type_error exception.
+    msgpack::type::tuple<int, bool, std::string> dst;
+    deserialized.convert(dst);
+    // or create the new instance
+    msgpack::type::tuple<int, bool, std::string> dst2 =
+        deserialized.as<msgpack::type::tuple<int, bool, std::string> >();
+    
+    return 0;
+}
+```
+
+```c++
+std::vector<int> v = {1, 2, 3, 4, 5};
+msgpack::sbuffer sbuf;      // output buffer
+msgpack::pack(sbuf, v);     // serialization
+std::cout << sbuf.size() << std::endl;  // check data length after serialization
+```
+
+不像JSON那么简单直观，必须同时传递序列化的输出目标(sbuf)和被序列化的对象(v)。
+
+输出目标sbuffer是个简单的缓冲区，可以被理解成是对字符串数组的封装，和vector<char>很像，有data(), size()方法来获取内部数据和长度
+
+除了sbuffer，还可以选择zbuffer, fbuffer，它们是压缩输出和文件输出。
+
+MessagePack的反序列化略微麻烦一些，要用到函数unpack()和两个核心类：object_handle和object
+
+```c++
+auto handle = msgpack::unpack(sbuf.data(), sbuf.size());
+auto obj = handle.get();
+std::cout << obj << std::endl;
+```
+
+obj 是MessagePack对数据的封装，相当于JSON for Modern C++的JSON对象，但是不能直接使用，必须知道数据的原始类型，才能转换还原：
+
+```c++
+// the original data type needs to be known for converstion back
+std::vector<int> v2;
+obj.convert(v2);
+assert(std::equal(std::begin(v), std::end(v), std::begin(v2)));
+```
+
+因为MessagePack不能直接打包复杂数据，所以用起来比JSON麻烦一些，必须自己把数据逐个序列化，连在一起才行。
+
+好在MessagePack又提供了一个packet类，可以实现串联的序列化操作
+
+```c++
+// packer for continuous serialization
+msgpack::sbuffer sbufs;
+msgpack::packer<decltype(sbufs)> packer(sbufs);
+
+using namespace std::string_literals;  // need C++14
+packer.pack(10).pack("mondao"s).pack(std::vector<int>{1, 2, 3});
+
+for (decltype(sbufs.size()) offset = 0; offset != sbufs.size();) {
+    auto handle = msgpack::unpack(sbufs.data(), sbufs.size(), offset);
+    auto obj2 = handle.get();
+}
+```
+
+还是比较麻烦。MessagePack提供了一个特别的宏：MSGPACK_DEFINE，把它放进你的类定义里，就可以像标准类型一样被MessagePack处理。
+
+```c++
+// pack(), unpack() like JSON
+Book book1 = {1, "1984", {"a", "b"}}; // user defined type
+msgpack::sbuffer sbufb;               // output buffer
+msgpack::pack(sbufb, book1);          // serialize
+Book book2;
+try
+{
+    auto objb = msgpack::unpack( // deserialize
+        sbufb.data(), sbufb.size())
+        .get();
+    objb.convert(book2); // conversion, this failed?
+}
+catch (std::exception &e)
+{
+    std::cout << e.what() << std::endl;
+}
+assert(book2.id == book1.id);
+assert(book2.tags.size() == 2);
+std::cout << book2.title << std::endl;
+```
+
+the above conversion to book2 actually failed (TODO):
+
+terminate called after throwing an instance of 'msgpack::v1::type_error'
+  what():  std::bad_cast
+
+
+
+#### ProtoBuffer
+
+Made by Google
+
+PB要安装一个预处理器和开发库，编译时还要链接动态库(-lprotobuf)
+
+```c++
+apt-get install protobuf-compiler
+apt-get install libprotobuf-dev
+g++ protobuf.cpp -std=c++14 -lprotobuf -o a.out
+```
 
 
 
@@ -1784,3 +2005,4 @@ A：基本正确。async()是一种简化的线程用法，目的就是获取fut
 ## 7. 结束语
 
 ## 8. 轻松话题
+
