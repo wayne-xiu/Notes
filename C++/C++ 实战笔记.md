@@ -109,7 +109,7 @@ sudo pip install cpplint
 
 
 
-### 预处理阶段能做什么：宏定义和条件编译      
+### 预处理阶段能做什么：宏定义和条件编译   
 
 #### 预处理编程：#include, #define
 
@@ -1990,7 +1990,7 @@ terminate called after throwing an instance of 'msgpack::v1::type_error'
 
 Made by Google
 
-PB要安装一个预处理器和开发库，编译时还要链接动态库(-lprotobuf)
+PB是工业级产品，要安装一个预处理器和开发库，编译时还要链接动态库(-lprotobuf)
 
 ```c++
 apt-get install protobuf-compiler
@@ -1998,9 +1998,738 @@ apt-get install libprotobuf-dev
 g++ protobuf.cpp -std=c++14 -lprotobuf -o a.out
 ```
 
+PB的另一个特点是数据又“模式”（schema），必须要先写一个IDL（Interface Description Language）文件，在里面定义好数据结构，只有预先定义了的数据结构，才能被序列化和反序列化。
+
+这个特点既有好处也有坏处：一方面，接口就是清晰明确的规范文档，沟通简单五歧义；令一方面，就是缺乏灵活性，改接口会导致一连串的操作，繁琐
+
+```protobuf
+syntax = "proto2";	// 使用第二版
+package sample; 	// 定义名字空间
+message Vendor 		// 定义消息
+{
+    required uint32 id = 1; // required表示必须字段
+    required string name = 2; // 有int32/string等基本类型
+    required bool valid = 3; // 需要指定字段的序号，序列化时用
+    optional string tel = 4; // optional字段可以没有
+}
+```
+
+有了接口定义文件，需要再用protoc工具生成对应的C++源码，然后把源码文件加入自己的项目中，就可以使用了
+
+```protobuf
+protoc --cpp_out=. sample.proto		// 生成C++代码
+```
+
+重要的接口
+
+- 字段名会生成对应的 has/set 函数，检查是否存在和设置值；
+- IsInitialized() 检查数据是否完整（required 字段必须有值）；
+- DebugString() 输出数据的可读字符串描述；
+- ByteSize() 返回序列化数据的长度；
+- SerializeToString() 从对象序列化到字符串；
+- ParseFromString() 从字符串反序列化到对象；
+- SerializeToArray()/ParseFromArray() 序列化的目标是字节数组。
+
+示例
+
+```c++
+using vendor_t = sample::Vendor; // 类型别名
+
+vendor_t v; // 声明一个PB对象
+assert(!v.IsInitialized()); // required等字段未初始化
+
+v.set_id(1); // 设置每个字段的值
+v.set_name("sony");
+v.set_valid(true);
+
+assert(v.IsInitialized()); // required等字段都设置了，数据完整
+assert(v.has_id() && v.id() == 1);
+assert(v.has_name() && v.name() == "sony");
+assert(v.has_valid() && v.valid());
+
+cout << v.DebugString() << endl; // 输出调试字符串
+
+string enc;
+v.SerializeToString(&enc); // 序列化到字符串
+
+vendor_t v2;
+assert(!v2.IsInitialized());
+v2.ParseFromString(enc);
+```
+
+PB在业界广泛使用，但是不能算是最好的，IDL定义和接口都太死板生硬，只能用最基本的数据类型，不支持标准容器。但是有Google“撑腰”，近年有gRPC“助拳”
+
+另一个缺点是支持的编程语言太少，不能和JSON、MessagePack相比
+
+##### ProtoBuff official tutorial - C++
+
+implement a simple application using protocol buffers; introducing the language's protocol buffer API and the basics of creating and using .proto files.
+
+- Define message formats in a .proto file
+- Use the protocol buffer compiler
+- use the C++ protocol buffer API to write and read message
+
+Why use Protocol Buffers?
+
+How to serialize and retrieve structured data?
+
+- The raw in-memory data structures can be sent/saved in binary form. Over time, this is a fragile approach, as the receiving/reading code must be compiled with exactly the same memory layout, endianness, etc. Also, as files accumulate data in the raw format and copies of software that are wired for that format are spread around, it's very hard to extend the format.
+- Serialize the data to XML. This approach can be very attractive since XML is (sort of) human readable and there are binding libraries for lots of languages. This can be a good choice if you want to share data with other applications/projects. However, XML is notoriously space intensive, and encoding/decoding it can impose a huge performance penalty on applications. Also, navigating an XML DOM tree is considerably more complicated than navigating simple fields in a class normally would be.
+
+With protocol buffers, you write a `.proto` description of the data structure you wish to store. From that, the protocol buffer compiler creates a class that implements automatic encoding and parsing of the protocol buffer data with an efficient binary format. The generated class provides getters and setters for the fields that make up a protocol buffer and takes care of the details of reading and writing the protocol buffer as a unit. Importantly, the protocol buffer format supports the idea of extending the format over time in such a way that the code can still read data encoded with the old format.
+
+
+
+小结：
+
+JSON, MessagePack adn ProtoBuffer三种数据格式各有特色：
+
+1. JSON 是纯文本，容易阅读，方便编辑，适用性最广；
+2. MessagePack 是二进制，小巧高效，在开源界接受程度比较高；
+3. ProtoBuffer 是工业级的数据格式，注重安全和性能，多用在大公司的商业产品里
+
+PB代码写的比较差劲，不建议作为学习源码使用。
+
+直接memcpy，同一种语言不同机器，或者不同语言可能存在兼容问题（变量内存存储布局、编码可能不同），而JSON是一种标准，有JSON库处理编码问题，且不同语言间统一。
+
+序列化和反序列化实际是通信内容的一种标准协议（只规定了数据的格式，不涉及传输方式），有点像JVM，不区分平台只要同一套协议就可以互相通信。
+
+序列化是数据交换时打包的一种方式，在数据量比较大，而且需要和其他语言打交道时使用，本地序列化，发送，接收方接收后，反序列化，读取一气呵成。
+
+### 网络通信：我不想写原生Socket      
+
+Socket网络编程，使用TCP/IP协议栈收发数据，不仅可以在本地的进程间通信，也可以在主机、机房之间异地通信。原生的Socket API非常底层，要考虑很多细节，如果再加上异步就更复杂了。像Socket建连/断连、协议格式解析、网络参数调整等，想要“凭空”写出一个健壮可靠的网络应用程序还是相当麻烦的。
+
+C++里好用的网络通信库：libcurl, cpr, ZMQ
+
+#### libcurl：高可移植、功能丰富的通信库
+
+来源于著名的curl项目，也是curl的底层核心。稳定可靠，用户多Apple, Facebook, Google, Netflix
+
+从Http到支持所有应用层协议：HTTPS, FTP, LDAP, SMTP
+
+纯C语言开发，兼容性、可移植性好，基于C接口可以很容易写出很多语言的的封装 (github only has repo for curl？)。see this [build-libcurl-windows](https://github.com/blackrosezy/build-libcurl-windows) repo
+
+libcurl的接口可以初略地分成两大类：easy系列和multi系列。easy系列是同步调用，比较简单；multi系列是异步的多线程调用，比较复杂。easy系统通常够用。
+
+libcurl收发HTTP四个基本步骤：
+
+1. 使用 curl_easy_init() 创建一个句柄，类型是 CURL*。但我们完全没有必要关心句柄的
+   类型，直接用 auto 推导就行。
+2. 使用 curl_easy_setopt() 设置请求的各种参数，比如请求方法、URL、header/body 数
+   据、超时、回调函数等。这是最关键的操作。
+3. 使用 curl_easy_perform() 发送数据，返回的数据会由回调函数处理。
+4. 使用 curl_easy_cleanup() 清理句柄相关的资源，结束会话
+
+```c++
+#include <url/curl.h>                    // header
+
+auto curl = curl_easy_init();			// create CURL handler
+assert(curl);
+
+curl_easy_setopt(curl, CURLOPT_URL, "http:://nginx.org");  // set request URL
+
+auto res = curl_easy_perform(curl);		// send data
+if (res != CURL_OK) {				   // check execution status
+    cout << curl_easy_strerror(res) << endl;
+}
+
+curl_easy_cleanup(curl);				// clean handler resources
+```
+
+由于没有设置的回调函数，所以 libcurl 会使用内部的默认回调，把得到的 HTTP 响应数据输出到标准流，也就是直接打印到屏幕上。如果想要自己处理返回的 HTTP 报文，就得写一个回调函数，在里面实现业务逻辑。因为 libcurl 是 C 语言实现的，所以回调函数必须是函数指针。不过，C++11 允许你写lambda 表达式，这利用了一个特别规定：**无捕获的 lambda 表达式可以显式转换成一个函数指针**。注意一定要是“无捕获”，空[]
+
+```c++
+// 回调函数的原型
+size_t write_callback(char* , size_t , size_t , void* );
+
+curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, // 设置回调函数
+    (decltype(&write_callback)) // decltype获取函数指针类型，显式转换
+    [](char *ptr, size_t size, size_t nmemb, void *userdata)// lambda
+    {
+        cout << "size = " << size * nmemb << endl; // 简单的处理
+        return size * nmemb; // 返回接收的字节数
+    }
+);
+```
+
+libcurl的准备和结尾的清理工作都很简单，关键是curl_easy_setopt()这一步的参数设置。
+
+
+
+#### cpr：更现代、更易用的通信库
+
+cpr 是对 libcurl 的一个 C++11 封装，使用了很多现代 C++ 的高级特性，对外的接口模仿了 Python 的 requests 库，非常简单易用
+
+TLDR: C++ Requests is a simple wrapper around [libcurl](http://curl.haxx.se/libcurl) inspired by the excellent [Python Requests](https://github.com/kennethreitz/requests) project. Using the more expressive language facilities of C++11, this library  captures the essence of making network calls into a few concise idioms.
+
+```cmake
+cmake_minimum_required(VERSION 3.5)
+
+set(PROJECT_VERSION "0.0.1")
+project(CprPilot
+        VERSION ${PROJECT_VERSION}
+        LANGUAGES CXX)
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GUN" OR
+    "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    set(warnings "-Wall -Wextra -Werror")
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    set(warnings "/W4 /WX /EHsc")
+endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_STANDARD 14)
+# Set build type if not set
+set(default_build_type "Release")
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE ${default_build_type})
+endif()
+
+# include(FetchContent)
+# FetchContent_Declare(cpr GIT_REPOSITORY https://github.com/whoshuu/cpr.git GIT_TAG c8d33915dbd88ad6c92b258869b03aba06587ff9) # the commit hash for 1.5.0
+# FetchContent_MakeAvailable(cpr)
+
+find_package(cpr CONFIG REQUIRED)
+# include_directories("${CMAKE_SOURCE_DIR}/include")
+
+set(TEST_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Source.cpp
+)
+
+add_executable(CprTest ${TEST_SOURCES})
+target_link_libraries(CprTest PRIVATE cpr)
+```
+
+很奇怪VSCode+vcpkg+CMake is not working properly, but Visual studio+vcpkg+CMake with the same CMakelists.txt没有问题
+
+```c++
+#include <cpr/cpr.h>
+#include <iostream>
+
+int main(int argc, char** argv) {
+
+	auto res = cpr::Get(cpr::Url{ "http://openresty.org" });
+
+	std::cout << res.elapsed << std::endl;  // request cost time
+	std::cout << res.url << std::endl;		// requested url
+	std::cout << res.status_code << std::endl;	// response status code
+	std::cout << res.text.length() << std::endl; // response body data
+
+	for (auto& x: res.header)
+	{
+		std::cout << x.first << " => " << x.second << std::endl;
+	}
+
+    return 0;
+}
+// output:
+0.262475
+http://openresty.org/en/
+200
+34697
+Cache-Control => max-age=3600
+Cache-Status => HIT
+Connection => keep-alive
+Content-Encoding => gzip
+Content-Type => text/html; charset=utf-8
+Date => Fri, 08 Jan 2021 12:27:51 GMT
+Edge-Cache-Age => 790
+Last-Modified => Mon, 10 Aug 2020 12:53:59 GMT
+Req-ID => 0000288000042d76ae384f3f
+Server => OpenResty Edge 2
+Transfer-Encoding => chunked
+Vary => Accept-Encoding
+```
+
+跟libcurl相比，cpr用起来太轻松了，不需要考虑什么初始化、设置参数、清理等杂事，一句话就能发送HTTP请求；也不用写回调函数，HTTP响应就是函数的返回值，用成员变量url, header, status_code, text就能得到报文的各个组成部分。
+
+在cpr里，HTTP协议的概念都被实现为相应的函数或者类，内部再转化为libcurl操作，主要有
+
+- GET/HEAD/POST 等请求方法，使用同名的 Get/Head/Post 函数；
+- URL 使用 Url 类，它其实是 string 的别名；
+- URL 参数使用 Parameters 类，KV 结构，近似 map；
+- 请求头字段使用 Header 类，它其实是 map 的别名，使用定制的函数实现了大小写无关比较；
+- Cookie 使用 Cookies 类，也是 KV 结构，近似 map；
+- 请求体使用 Body 类；
+- 超时设置使用 Timeout 类
+
+这些函数和类的用法非常自然，类似于Python requests库
+
+```c++
+const auto url = "http://openresty.org"s; // 访问的URL
+auto res1 = cpr::Head( // 发送HEAD请求
+	cpr::Url{url} // 传递URL
+);
+auto res2 = cpr::Get( // 发送GET请求
+    cpr::Url{url}, // 传递URL
+    cpr::Parameters{ // 传递URL参数
+    {"a", "1"}, {"b", "2"}}
+);
+auto res3 = cpr::Post( // 发送POST请求
+    cpr::Url{url}, // 传递URL
+    cpr::Header{ // 定制请求头字段
+    {"x", "xxx"},{"expect",""}},
+    cpr::Body{"post data"}, // 传递body数据
+    cpr::Timeout{200ms} // 超时时间
+);
+```
+
+cpr也支持异步处理，但它内部没有使用libcurl的multi接口，而是用了标注库里的future和async，跟libcurl的实现相比，简单而好理解。
+
+调用方式基本相同，只是多了个"Async"后缀，返回的是一个future对象
+
+```c++
+// Async call
+auto f = cpr::GetAsync(cpr::Url(url));  // Async request
+auto res4 = f.get();
+std::cout << res4.elapsed << std::endl;
+```
+
+prefer cpr over libcurl
+
+#### ZMQ：高效、快速、多功能的通信库
+
+libcurl, cpr处理的都是HTTP协议，协议自身有限制，比如必须一来一回，点对点直连，再超大数据量通信的时候不太合适。libcurl, cpr只能充当HTTP的客户端，不能写服务端程序。
+
+ZMQ 不仅是一个单纯的网络通信库，更像是一个高级的异步并发框架。Zero Message Queue - 零延迟的消息队列，意味着它除了可以收发数据外，还可以用作消息中间件，解耦多个应用服务之间的强依赖关系，搭建高效、
+有弹性的分布式系统，从而超越原生的 Socket。
+
+作为消息队列，ZMQ 的另一大特点是零配置零维护零成本，不需要搭建额外的代理服务器，只要安装了开发库就能够直接使用，相当于把消息队列功能直接嵌入到你的应用程序里
+
+ZeroMQ (also known as ØMQ, 0MQ, or zmq) looks like an embeddable  networking library but acts like a concurrency framework. It gives you sockets that carry atomic messages across various transports like  in-process, inter-process, TCP, and multicast. You can connect sockets N-to-N with patterns like  fan-out, pub-sub, task distribution, and request-reply. It's fast enough to be the fabric for clustered products. Its asynchronous I/O model  gives you scalable multicore applications, built as asynchronous message-processing tasks. It has a score of language APIs and runs on most operating systems.
+
+ ```bash
+apt-get install libzmq3-dev
+ ```
+
+ZMQ 是用 C++ 开发的，但出于兼容的考虑，对外提供的是纯 C 接口。不过它也有很多C++ 封装，可以选择自带的cppzmq
+
+由于 ZMQ 把自身定位于更高层次的“异步消息队列”，所以它的用法就不像 Socket、HTTP 那么简单直白，而是定义了 5 种不同的工作模式，来适应实际中常见的网络通信场景。
+
+- 原生模式（Raw），没有消息队列功能，相当于底层Socket的简单封装
+- 结对模式（PAIR），两个端点一对一通信
+- 请求响应模式（REQ-REP），两个端点一对一通信，但请求必须有响应
+- 发布订阅模式（PUB-SUB），一对多通信，一个端点发布消息，多个端点接收处理；
+- 管道模式（PUSH-PULL），或者叫流水线，可以一对多，也可以多对一。
+
+前四种模式类似HTTP协议、Client-Server架构，很简单。管道模式非常适合进程间无阻塞传送海量数据，有点map-reduce的意思
+
+![ZMQ-PushPull](../Media/ZMQ-PushPull.png)
+
+在ZMQ里有两个基本的类
+
+- context_t, 它是 ZMQ 的运行环境。使用 ZMQ 的任何功能前，必须要先创建它
+- socket_t, 表示 ZMQ 的套接字，需要指定刚才说的那 5 种工作模式。注意它与原生 Socket 没有任何关系，只是借用了名字来方便理解
+
+```c++
+const auto thread_num = 1;				// 并发线程数
+zmq::context_t context(thread_num);		 // ZMQ 环境变量
+auto make_sock = [&](auto mode) {		 // lambda
+    return zmq::socket_t(context, mode);  // 创建ZMQ套接字
+};
+```
+
+和原生Socket一样，ZMQ套接字也必须关联到一个确定的地址才能收发数据，但它不仅支持TCP/IP，还支持进程内和进程间通信，这在本机交换数据时会更高效：
+
+- TCP 通信地址的形式是“tcp://…”，指定 IP 地址和端口号；
+- 进程内通信地址的形式是“inproc://…”，指定一个本地可访问的路径；
+- 进程间通信地址的形式是“ipc://…”，也是一个本地可访问的路径。
+
+用bind()/connect()两个函数把ZMQ套接字连接起来之后，就可以用send()/recv()来收发数据了
+
+```c++
+const auto addr = "ipc:///dev/shm/zmq.sock"s; // 通信地址
+auto receiver = [=]() // lambda表达式接收数据
+{
+    auto sock = make_sock(ZMQ_PULL); // 创建ZMQ套接字，拉数据
+    
+    sock.bind(addr); // 绑定套接字
+    assert(sock.connected());
+    
+    zmq::message_t msg;
+    sock.recv(&msg); // 接收消息
+    
+    string s = {msg.data<char>(), msg.size()};
+    cout << s << endl;
+};
+auto sender = [=]() // lambda表达式发送数据
+{
+    auto sock = make_sock(ZMQ_PUSH); // 创建ZMQ套接字，推数据
+    
+    sock.connect(addr); // 连接到对端
+    assert(sock.connected());
+    
+    string s = "hello zmq";
+    sock.send(s.data(), s.size()); // 发送消息
+};
+```
+
+这段代码实现了两个最基本的客户端和服务器，看起来好像没什么特别的。但你应该注意到，使用 ZMQ 完全不需要考虑底层的 TCP/IP 通信细节，它会保证消息异步、安全、完整地到达服务器，让你关注网络通信之上更有价值的业务逻辑
+
+ZMQ 的用法就是这么简单，但想要进一步发掘它的潜力，处理大流量的数据还是要去看它的[文档](https://zeromq.org/languages/cplusplus/)，选择合适的工作模式，再仔细调节各种参数
+
+Built and install libzmq on Windows 10 successfully, but couldn't build (but header only) cppzmq, not sure why. finally used vcpkg - TODO
+
+两个有用的细节
+
+- ZMQ环境的线程数。默认值1，太小了，适当增大可以提高ZMQ的并发处理能力。建议用4-6结合具体性能测试
+- 收发消息时的本地缓存数量。ZMQ的属于叫 High Water Mark。如果收发的数据过多，数量超过HWM， ZMQ要么阻塞，要么丢弃信息
+
+```c++
+// setting
+sock.setsockopt(ZMQ_RCVHWM, 1000); // 接收消息最多缓存1000条
+sock.setsockopt(ZMQ_SNDHWM, 100); // 发送消息最多缓存100条
+```
+
+HWM设置多大都可以，高并发系统里用过100万以上
+
+
+
+小结：
+
+1. libcurl 是一个功能完善、稳定可靠的应用层通信库，最常用的就是 HTTP 协议；
+2. cpr 是对 libcurl 的 C++ 封装，接口简单易用；
+3. libcurl 和 cpr 都只能作为客户端来使用，不能编写服务器端应用；
+4. ZMQ 是一个高级的网络通信库，支持多种通信模式，可以把消息队列功能直接嵌入应用程序，搭建出高效、灵活、免管理的分布式系统。
+
+networking library 推迟到了C++23。networking库基于已有多年实践的boost.asio，采用前摄器模式Proactor统一封装了操作系统的各种异步机制（epoll, kqueue, IOCP），而且支持协程。里面的概念很多，用起来也是很复杂的。
+
+
+
+个人认为cpr的Body类设计得不是很好，其他的类都是把标准容器作为成员，以组合的方式使用，而它却直接从string继承
+
+Beast是Boost提供的一个高级网络通信库。它基于asio，简单易用，完全异步无阻塞，支持HTTP和WebSocket
+
+军工行业，强调实时，一般采用UDP，采用Qt的库
+
+看开源代码库：先从代码风格看起，再熟悉C++关键字，再到整体架构、接口设计
+
+库能减轻底层的一部分工作，把时间和经历集中在上层应用上。网络协议也要知道些
+
+zmq 对比 rpc框架：zmq是消息中间件，可以保证消息不丢失，准确送达；rpc适用于开发请求-响应的场景，是远程调用，而zmq是更底层一些的网络传输库，应用范围更广。
+
+C++是否有类似JAVA Netty这样的框架？没有，目前C++还没有非常完善易用的高级框架，rpc框架倒是有一些。
+
+ASIO用起来及其别扭：可能是proactor，但是设计架构还是挺好的，作为底层比较合适，如果有高级封装库就更好了。
+
+ZMP是否支持websocket：不支持，它用的是自己的协议，不走标准
+
+
+
+### 脚本语言：搭建高性能的混合系统      
+
+C++不能完全适应现在的快速开发和迭代的节奏，最终只能退到后端、底层等领域。要充分发挥C++的功力，要辅助其他的语言搭建混合系统，扬长避短，做好那最关键、最核心的部分。
+
+当前的操作系统、虚拟机、解释器、引擎很多都是C或者C++编写的，使用C++可以很容易地编写各种底层模块，为上册的Java, Go等语言提供扩展功能。
+
+两种轻便的脚本语言：Python, Lua与C++的无缝对接：以C++为底层基础，Python和Lua作为上层建筑，共同搭建高性能、易维护、可扩展的混合系统。
+
+#### Python
+
+最好的使用C++来开发Python扩展的工具：Pybind11
+
+Pybind11借鉴了Boost.Python，能够在C++，Python之间自由转换，任意翻译两者的语言要素，比如把C++的vector转换为Python的列表，把Python的元组转换为C++的tuple，既可以在C++里调用Python脚本，也可以在Python里调用C++的函数、类。开发基于现代C++ （11以上）
+
+Pybind11是一个纯头文件的库，但是必须结合Python，所以首先要有Python的开发库，然后再用pip工具安装
+
+Pybind11充分利用了C++预处理和模板元编程，把无聊重复的代码都隐藏了起来，只需要短短几行代码，就可以实现一个Python扩展模块。
+
+你只要用一个宏“PYBIND11_MODULE”，再给它两个参数，Python 模块名和C++ 实例对象名
+
+```c++
+#include <pybind11/pybind11.h> // pybind11的头文件
+PYBIND11_MODULE(pydemo, m) // 定义Python模块pydemo
+{
+	m.doc() = "pybind11 demo doc"; // 模块的说明文档
+} // Python模块定义结束
+```
+
+module: pydemo
+
+第二个参数“m”其实是 pybind11::module 的一个实例对象，封装了所有的操作，比如这里的 doc() 就是模块的说明文档。它只是个普通的变量，起什么名字都可以，但为了写起来方便，一般都用“m”。
+
+Pybind11 [cmake_example](https://github.com/pybind/cmake_example), my [pilot project](https://github.com/wayne-xiu/LibSampleCode/tree/master/Pybind11Pilot)
+
+用g++编译"pybind11.cpp"为Python里可调用的模块
+
+```bash
+g++ pybind.cpp \ #编译的源文件
+	-std=c++11 -shared -fPIC \ #编译成动态库
+	`python3 -m pybind11 --includes` \ #获得包含路径
+	-o pydemo`python3-config --extension-suffix` #生成的动态库名字
+```
+
+第一行是指定编译的源文件，第二行是指定编译成动态库，这两个不用多说。第三行调用了 Python，获得 pybind11 所在的包含路径，让 g++ 能够找得到头文件。第四行最关键，是生成的动态库名字，前面必须是源码里的模块名，而后面那部分则是Python 要求的后缀名，否则 Python 运行时会找不到模块。
+
+```python
+import pydemo
+help(pydemo)
+```
+
+Pybind11也支持函数的参数、返回值使用标准容器，会自动转换成Python里的list, dict，不过需要额外再包含一个"stl.h"的头文件。
+
+```c++
+// use STL containers: string, tuple, vector
+m.def("use_str", [](const std::string& str) {
+    py::print(str);
+    return str+"!!";
+});
+
+m.def("use_tuple", [](std::tuple<int, int, std::string> x) {
+    std::get<0>(x)++;
+    std::get<1>(x)++;
+    std::get<2>(x)+="??";
+    return x;
+});
+
+m.def("use_list", [](const std::vector<int>& v) {
+    auto vv = v;
+    py::print("input : ", vv);
+    vv.push_back(100);
+    return vv;
+});
+```
+
+```python
+>>> Pybind11Pilot.use_str("hello")
+'hello!!'
+>>> Pybind11Pilot.use_tuple([10, 20, "hello there"])
+(11, 21, 'hello there??')
+>>> Pybind11Pilot.use_list([10, 20, 30])
+input :  [10, 20, 30]
+[10, 20, 30, 100]
+```
+
+因为都是面向对象的编程语言，C++里的类也能够等价地转换到Python里面调用，这要用到一个特别的模板类class_
+
+```c++
+class Point final
+{
+public:
+    Point() = default;
+    Point(int a) : p_{a} {};
+
+    int get() const { return p_; };
+    void set(int a) { p_ = a; };
+
+private:
+    int p_ = 0;
+};
+
+PYBIND11_MODULE(Pybind11Pilot, m) {
+    // class
+    py::class_<Point>(m, "Point")
+        .def(py::init())
+        .def(py::init<int>())
+        .def("get", &Point::get)
+        .def("set", &Point::set)
+        .def("__repr__", [](const Point& p) {
+            return "<Point with value: " + std::to_string(p.get()) + " >";
+        });
+}
+```
+
+需要在模板参数里写上类名，然后在构造函数里指定它在Python里的名字。到处成员函数还是调用def，但它会返回对象自身的引用，所以可以连续调用，在一句话里导出所有接口
+
+```python
+>>> import Pybind11Pilot
+>>> p = Pybind11Pilot.Point(10)
+>>> p.get()
+10
+>>> print(p)
+<Point with value: 10 >
+>>> p.set(100)
+>>> p.get()
+100
+```
+
+对于一般的成员函数来说，定义的方式和普通函数一样，只是你必须加上取地址操作符“&”，把它写成函数指针的形式。而构造函数则比较特殊，必须调用 init() 函数来表示，如果有参数，还需要在 init() 函数的模板参数列表里写清楚。
+
+Pybind11还支持异常、枚举、智能指针等C++特性
+
+
+
+#### Lua
+
+Lua小巧高效，号称是“最快的脚本语言”
+
+在游戏开发领域，Lua是一种通用的工作语言（魔兽世界，愤怒的小鸟）
+
+Lua 与其他语言最大的不同点在于它的设计目标：不追求“大而全”，而是“小而美”。Lua 自身只有很小的语言核心，能做的事情很少。但正是因为它小，才能够很容易地嵌入到其他语言里，为“宿主”添加脚本编程的能力，让“宿主”更容易扩展和定制。
+
+标准的Lua使用解释器运行，速度不错，但和C/C++比起来还是有差距的。[LuaJIT](https://luajit.org/)，使用了Just in time技术，能够把Lua代码即时编译成机器码，速度几乎可以媲美原生C/C++，推荐[Open-Resty-LuaJIT](https://github.com/openresty/luajit2)
+
+TODO
+
+LuaJI+LuaBridge+C++
+
+
+
+小结
+
+Python 很“大众”，但比较复杂、性能不是特别高；而 Lua 比较“小众”，很小巧，有LuaJIT 让它运行速度极快。你可以结合自己的实际情况来选择
+
+1. C++ 高效、灵活，但开发周期长、成本高，在混合系统里可以辅助其他语言，编写各种底层模块提供扩展功能，从而扬长避短；
+2. pybind11 是一个优秀的 C++/Python 绑定库，只需要写很简单的代码，就能够把函数、类等 C++ 要素导入 Python；
+3. Lua 是另一种小巧快速的脚本语言，它的兼容项目 LuaJIT 速度更快；
+4. 使用 LuaBridge 可以导出 C++ 的函数、类，但直接用 LuaJIT 的 ffi 库更好；使用 LuaBridge 也可以很容易地执行 Lua 脚本、调用 Lua 函数，让 Lua 跑在 C++里。
+
+
+
+Boost.Python没有Pybind11轻便（历史包袱C++98，Python2.4/2.5太重）
+
+Lua/LuaJIT都是纯C编写的，所以在包含头文件的时候不要忘记用extern "C"
+
+OpenResty把Lua嵌入C做到了极致，完美结合了Lua的协程和Nginx的事件机制，实现了100%无阻塞，非常值得研究学习
+
+
+
+把C++嵌入到脚本语言可以提升脚本语言的执行效率；把脚本语言嵌入到C++可以通过利用脚本语言特性的优势来弥补相对C++的弱项，使得C++开发变得更灵活和开放。
+
+
+
+### 性能分析：找出程序的瓶颈      
+
+#### 运行阶段能做什么
+
+在运行阶段，C++ 静态程序变成了动态进程，是一个实时、复杂的状态机，由 CPU 全程掌控。
+
+在运行阶段能做、应该做的事情主要有三件：**调试（Debug）、测试（Test）和性能分析（Performance Profiling）**。
+
+调试：GDB
+
+测试：单元测试，集成测试
+
+性能分析：可以把它跟 Code Review 对比一下。Code Review 是一种静态的程序分析方法，在编码阶段通过观察源码来优化程序、找出隐藏的 Bug。而性能分析是一种动态的程序分析方法，在运行阶段采集程序的各种信息，再整合、研究，找出软件运行的“瓶颈”，为进一步优化性能提供依据，指明方向。
+
+性能分析的关键就是“测量”，优化需要数据支撑
+
+性能分析的范围非常广，可以从 CPU 利用率、内存占用率、网络吞吐量、系统延迟等许多维度来评估。
+
+多数时候最看重的是 CPU 性能分析。因为 CPU 利用率通常是评价程序运行的好坏最直观、最容易获取的指标，优化它是提升系统性能最快速的手段。其他维度也大多与CPU分析相关
+
+#### 系统级工具
+
+Linux 系统自己就内置了很多用于性能分析的工具，比如 top、sar、vmstat、netstat，等等。但是，Linux 的性能分析工具太多、太杂
+
+根据我这些年的经验，挑选了四个“高性价比”的工具：top、pstack、strace 和 perf。它们用起来很简单，而且实用性很强，可以观测到程序的很多外部参数和内部函数调用，由内而外、由表及里地分析程序性能。
+
+- top：通常是性能分析的“起点”。无论你开发的是什么样的应用程序，敲个 top 命令，就能够简单直观地看到 CPU、内存等几个最关键的性能指标。按“M”，看内存占用（RES/MEM），另一个是按“P”，看 CPU 占用，这两个都会从大到小自动排序，方便你找出最耗费资源的进程。
+
+- pstack, strace：要深入进程内部，看看到底是哪些操作消耗了 CPU。pstack 可以打印出进程的调用栈信息，有点像是给正在运行的进程拍了个快照，你能看到某个时刻的进程里调用的函数和关系，对进程的运行有个初步的印象。
+
+  pstack 显示的只是进程的一个“静态截面”，信息量还是有点少，而 strace 可以显示出进程的正在运行的系统调用，实时查看进程与系统内核交换了哪些信息。把 pstack 和 strace 结合起来，你大概就可以知道，进程在用户空间和内核空间都干了些什么。当进程的 CPU 利用率过高或者过低的时候，我们有很大概率能直接发现瓶颈所在。
+
+- perf 可以说是 pstack 和 strace 的“高级版”，它按照固定的频率去“采样”，相当于连续执行多次的 pstack，然后再统计函数的调用次数，算出百分比。只要采样的频率足够大，把这些“瞬时截面”组合在一起，就可以得到进程运行时的可信数据，比较全面地描述出 CPU 使用情况。
+
+  常用的 perf 命令是“perf top -K -p xxx”，按 CPU 使用率排序，只看用户空间的调用，这样很容易就能找出最耗费 CPU 的函数。
+
+  **使用 perf 通常可以快速定位系统的瓶颈，帮助你找准性能优化的方向**
+
+#### 源码级工具
+
+top、pstack、strace 和 perf 属于“非侵入”式的分析工具，不需要修改源码，就可以在软件的外部观察、收集数据
+
+一个专业的源码级性能分析工具：Google Performance Tools，一般简称为 [gperftools](https://github.com/gperftools/gperftools)。它是一个 C++ 工具集，里面包含了几个专门的性能分析工具（还有一个高效的内存分配器 tcmalloc），分析效果直观、友好、易理解，被广泛地应用于很多系统，经过了充分的实际验证。
+
+gperftools 的性能分析工具有 CPUProfiler 和 HeapProfiler 两种，用来分析 CPU 和内存。不过，如果按照建议的，总是使用智能指针、标准容器，不使用 new/delete，就完全可以不用关心 HeapProfiler。
+
+CPUProfiler 的原理和 perf 差不多，也是按频率采样，默认是每秒 100 次（100Hz），也就是每 10 毫秒采样一次程序的函数调用情况。
+
+用法简单，只需要在源码里添加三个函数：
+
+- ProfilerStart()，开始性能分析，把数据存入指定的文件
+- ProfilerRegisterThread()，允许对线程做性能分析
+- ProfilerStop()，停止性能分析
+
+为了写起来方便，我用 shared_ptr 实现一个自动管理功能。这里利用了 void* 和空指针，可以在智能指针析构的时候执行任意代码（简单的 RAII 惯用法）：
+
+```c++
+auto make_cpu_profiler =       // lambda表达式启动性能分析
+    [](const string &filename) // 传入性能分析的数据文件名
+{
+    ProfilerStart(filename.c_str()); // 启动性能分析
+    ProfilerRegisterThread();        // 对线程做性能分析
+    return std::shared_ptr<void>(    // 返回智能指针
+        nullptr,                     // 空指针，只用来占位
+        [](void *) {                 // 删除函数执行停止动作
+            ProfilerStop();          // 停止性能分析
+        });
+};
+```
+
+测试代码，测试正则表达式处理文本的性能
+
+```c++
+auto cp = make_cpu_profiler("case1.perf"); // 启动性能分析
+auto str = "neir:automata"s;
+for(int i = 0; i < 1000; i++) { // 循环一千次
+    auto reg = make_regex(R"(^(\w+)\:(\w+)$)");// 正则表达式对象
+    auto what = make_match();
+    assert(regex_match(str, what, reg)); // 正则匹配
+}
+```
+
+编译运行后会得到一个“case1.perf”的文件，里面就是 gperftools 的分析数据，但它是二进制的，不能直接查看，如果想要获得可读的信息，还需要另外一个工具脚本[pprof](https://github.com/google/pprof)。下载代码后用“--text”选项，就可以输出文本形式的分析报告
+
+```bash
+pprof --text ./a.out case1.perf > case1.txt
+Total: 72 samples
+```
+
+pprof 的文本分析报告和 perf 的很像，也是列出了函数的采样次数和百分比，但因为是源码级的采样，会看到大量的内部函数细节，虽然很详细，但很难找出重点。
+好在 pprof 也能输出图形化的分析报告，支持有向图和火焰图，需要你提前安装 Graphviz和 FlameGraph
+
+然后，你就可以使用“--svg”“--collapsed”等选项，生成更直观易懂的图形报告了
+
+```bash
+pprof --svg ./a.out case1.perf > case1.svg
+pprof --collapsed ./a.out case1.perf > case1.cbt
+flamegraph.pl case1.cbt > flame.svg
+flamegraph.pl --invert --color aqua case1.cbt > icicle.svg
+```
+
+根据找到的问题，优化
+
+```c++
+auto reg = make_regex(R"(^(\w+)\:(\w+)$)"); // 正则表达式对象
+auto what = make_match();
+for(int i = 0; i < 1000; i++) { // 循环一千次
+	assert(regex_match(str, what, reg)); // 正则匹配
+}
+```
+
+因为优化效果太好，gperftools 甚至都来不及采样，不会产生分析数据 （哈哈！！）。
+
+gperftools可以使用环境变量和信号来控制启停性能分析，或者链接 tcmalloc 库，优化 C++ 的内存分配速度。
+
+
+
+小结
+
+1. 最简单的性能分析工具是 top，可以快速查看进程的 CPU、内存使用情况；
+2. pstack 和 strace 能够显示进程在用户空间和内核空间的函数调用情况；
+3. perf 以一定的频率采样分析进程，统计各个函数的 CPU 占用百分比；
+4. gperftools 是“侵入”式的性能分析工具，能够生成文本或者图形化的分析报告，最直观的方式是火焰图。
+
+性能分析与优化是一门艰深的课题，也是一个广泛的议题，CPU、内存、网络、文件系统、数据库等等
+
+perf, gperftools的性能分析基于“采样”，数据只具有统计意义
+
+GCC/Clang内置了google开发的Santinizer工具，编译时使用-fsantize=address就可以检查内存可能存在的内存泄漏。
+
+基于动态追踪技术和火焰图，OpenResty公司开发出了全新的性能分析工具"OpenResty XRay"，性能非常强大
+
+Windows下的使用 wpr 和 wpa ，通过pdb文件直达堆栈，也很方便
+
+
+
 
 
 ## 6. 总结篇
+
+
 
 ## 7. 结束语
 
