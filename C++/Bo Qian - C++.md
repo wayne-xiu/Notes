@@ -917,7 +917,87 @@ Template
 - Class template
 - Specializing template
 
-### Multiple Inheritance
+### Multiple Inheritance - Devil or Angel
+
+Pure Abstract Class is also known as Interface. Languages like C# and Java even have a keyword "Interface" for this reason and they don't  support multiple inheritance the way C++ does. Classes in C# and Java can have only 1 base class and many Interfaces. In other words, multiple inheritance in C++ (without using Pure Abstract Classes) is generally considered to be a bad practice. That is the reason languages like C#  and Java don't support it at all.
+
+Diamond shape of hierarchy
+
+virtual inheritance; however, initialization problem: the most derived class should be responsible for the initialization of the virtual base class (awkward)
+
+Why use multiple inheritance in the first place? *Interface segregation principle*: Split large interfaces into smaller and more specific ones so that clients only need to know about the methods that are of interest to them.
+
+
+
+Abstract class: a class has one or more pure virtual functions.
+
+Pure Abstract class (interface in Java): a class containing only pure virtual functions
+
+- no data
+- no concrete functions
+
+
+
+Summary:
+
+1. Multiple inheritance is an important technique, e.g. ISP
+2. Derive only from PACs when using multiple inheritance
+
+
+
+### Duality of Public Inheritance:  Interface & Implementation
+
+- inheritance of interface
+- inheritance of implementation
+
+pure abstract function provides no implementation, need to be overridden; abstract function provides default implementation, can be overridden; non-abstract function provides implementation, can't be overridden
+
+```c++
+class Dog {
+  public:
+    virtual void bark() = 0;
+    virtual void eat() {cout << "eating. \n";}
+    void run() {cout << "running.";}
+}
+```
+
+
+
+Types of Inheritance in C++
+
+1. Pure virtual public function - inherit interface only
+2. Non-virtual public function - inherit both interface and implementation
+3. Impure virtual public function - inherit interface and default implementation
+4. Protected function - inherit implementation only
+
+As as software designer, it is very important to separate the concepts of interface and implementation
+
+
+
+*Interface inheritance* is the main feature of inheritance:
+
+- Subtyping
+- Polymorphism
+
+Pitfalls:
+
+- be careful of interface bloat
+- interfaces do not reveal implementation
+
+*Implementation inheritance*
+
+- increase code complexity
+- not encouraged in general
+
+Guidelines for Implementation inheritance
+
+1. Do not use inheritance for code reuse, use composition (with helper function)
+2. Minimize the implementation in base classes. Base classes should be thin
+3. Minimize the level of hierarchies in implementation inheritance
+
+"Inheritance is often useful, but more often overused (abused)"
+
+### Code Reuse - Inheritance vs Composition
 
 
 

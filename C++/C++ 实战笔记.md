@@ -2811,7 +2811,9 @@ Windows下的使用 wpr 和 wpa ，通过pdb文件直达堆栈，也很方便
 
 关于单件模式，一个“老生常谈”的话题是“双重检查锁定”，可以用来避免在多线程环境里多次初始化单件，写起来特别繁琐。
 
-call_once可以很轻松地解决这个问题，像更省事的话，在C++里还有一种方法（C++11之后），可以直接使用函数内部的static静态变量。C++语言会保证静态变量的初始化是线程安全的，绝对不会有线程冲突。
+call_once可以很轻松地解决这个问题，像更省事的话，在C++里还有一种方法（C++11之后），可以直接使用函数内部的static静态变量。C++语言会保证静态变量的初始化是线程安全的，绝对不会有线程冲突（Starting in C++11, scoped static initialization is now thread-safe）。
+
+Ref: [Thread-safe initialization of a Singleton](https://www.modernescpp.com/index.php/thread-safe-initialization-of-a-singleton)
 
 ```c++
 auto& instance() {  // function to creating singleton object
@@ -2819,8 +2821,6 @@ auto& instance() {  // function to creating singleton object
     return obj;
 }
 ```
-
-
 
 工厂模式包括抽象工厂、工厂方法两个模式。
 
@@ -2833,9 +2833,509 @@ auto ptr1 = make_unique<int>(42);
 auto ptr2 = make_shared<string>("metroid");
 ```
 
+函数抛出异常、创建正则对象、创建Lua虚拟机，其实也都应用了工厂模式。
+
+使用工厂模式的关键，就是要理解它面对的问题和解决问题的思路，比如说创建专属的对象、创建成套的对象，重点是“如何创建对象、创建出什么样的对象”。
+
+#### 结构性模式
+
+关注的是对象的静态联系，以灵活、可拆卸、可装配的方式组合出新的对象。多个参与者，最后必得到“一个”对象。
+
+![StucturalPattern](../Media/StucturalPattern.png)
+
+##### 适配器模式
+
+目的是接口转换
+
+适配器模式在 C++ 里多出现在有第三方库或者外部接口的时候，通常这些接口不会恰好符合我们自己的系统，功能很好，但不能直接用，想改源码很难，甚至是不可能的。所以，就需要用适配器模式给“适配”一下，让外部工具能够“match”我们的系统，而两边都不需要变动，“皆大欢喜”。
+
+std::array就是一个适配器，包装了 C++ 的原生数组，转换成了容器的形式，让“裸内存数据”也可以接入标准库的泛型体系。
+
+##### 外观模式
+
+封装了一组对象，目的是简化这组对象的通信关系，提供一个高层次的易用接口，让外部用户更容易使用，降低系统的复杂度。
+
+外观模式的特点是内部会操作很多对象，然后对外表现成一个对象。使用它的话，你就可以不用“事必躬亲”了，只要发一个指令，后面的杂事就都由它代劳了，就像是一个“大管家”。
+
+async()函数就是外观模式的一个例子，它封装了线程的创建、调度等细节，用起来很简单，但也不排斥你直接使用 thread、mutex 等底层线程工具。
+
+##### 代理模式
+
+它和适配器有点像，都是包装一个对象，但关键在于它们的目的、意图有差异：不是为了适配插入系统，而是要“控制”对象，不允许外部直接与内部对象通信，所以叫作“代理”。
+代理模式的应用非常广泛，如果你想限制、屏蔽、隐藏、增强或者优化一个类，就可以使用代理。这样，客户代码看到的只是代理对象，不知道原始对象（被代理的对象）是什么样，只能用代理对象给出的接口，这样就实现了控制的目的。
+
+代理在C++里的一个典型应用就是智能指针，它接管了原始指针，限制了某些危险操作，并且添加了自动生命周期管理，少了自由，获得了安全。
+
+#### 行为模式
+
+它描述了对象之间*动态的*消息传递，也就是对象的“行为”，工作的方式。
+
+11个。面向对象的设计更注重运行时的组合，比静态的组合更能增加系统的灵活性和扩展性。
+
+![BehaviorPattern](../Media/BehaviorPattern.png)
+
+行为模式都是在运行时才建立联系，所以通常都很复杂，不太好理解对象之间的关系和通信机制。
+
+比较难用的是解释器和中介者；比较容易理解、使用的是*职责链、命令和策略*
+
+职责链和命令这两个模式经常联合起来使用。职责链把多个对象串成一个“链条”，让链条里的每个对象都有机会去处理请求。而请求通常使用的是命令模式，把相关的数据打包成一个对象，解耦请求的发送和接收方。
+
+C++的异常处理机制就是“职责链+命令”的一个实际应用。异常对象会自下而上地走过函数调用栈——也就是职责链，直到在链条中找到一个能够处理的 catch 块。
+
+##### 策略模式
+
+“策略”封装了不同的算法，可以在运行的时候灵活地互相替换，从而在外部“非入侵”地改变系统的行为内核。
+
+策略模式有点像装饰模式和状态模式，你可不要弄混了。跟它们相比，策略模式的的特点是不会改变类的外部表现和内部状态，只是动态替换一个很小的算法功能模块。
+
+容器和算法里用到的比较函数、散列函数，还有for_each算法里的lambda表达式，都可以算是策略模式的具体应用。
+
+策略模式非常适合应用在if-else/switch-case的“分支决策”的代码里。你可以把每个分支逻辑都封装成类或者 lambda 表达式，再把它们存进容器，让容器来帮你查找最合适的处理策略。
 
 
 
+小结
+
+借鉴这些用法，尝试看看自己以前写的程序，是不是能应用工厂、适配器、代理、策略等模式去重构，让代码更加优雅、灵活。
+
+1. 创建型模式里常用的有单件和工厂，封装了对象的创建过程，隔离了对象的生产和使用；
+2. 结构型模式里常用的有适配器、外观和代理，通过对象组合，得到一个新对象，目的是适配、简化或者控制，隔离了客户代码与原对象的接口；
+3. 行为模式里常用的有职责链、命令和策略，只有在运行时才会建立联系，封装、隔离了程序里动态变化的那部分。
+
+![DesignPatternsSummary](../Media/DesignPatternsSummary.png)
+
+
+
+少数公司有联席CEO，这在设计模式里也有对应，叫“多件”，但不太常用。
+
+JSON/MessagePack等的序列化和反序列化可以不严格地看成是备忘录模式。
+
+*观察者模式*是一个应用很广的行为模式，更常用的别名是信号机制、发布-订阅机制，但它比较复杂，自己实现的难度比较高，所以大多内置在语言或者应用框架里。
+
+很多设计模式的结构都很相似，因为用的都是对象组合技术，但区别就在于它们的使用方式、目的、用途。
+
+我个人是很反对单例模式的，其缺点大于优点：破坏了程序的封装，可以随便传来传去的多可怕，有全局变量的全部缺点（如果你需要使用全局变量，这说明你的设计有很大的问题），违背了单一职责原则，难以单元测试，依赖不清等；实在要使用单例模式的话，一定要注意原则：如果你使用单例是因为某个类的实例不能超过一个，那么这通常是可以的。如果使用它是因为singleton是一个全局可访问的对象，那用法是错误的。
+
+
+
+### 知识串讲（上）：带你开发一个书店应用      
+
+四个生命周期和五个编程范式
+
+“语言特性”：自动类型推导、常量、智能指针、异常。函数式编程
+
+“标准库”：字符串、容器、算法和并发
+
+“技能进阶”：第三方工具，序列化、网络通信、脚本语言和性能分析
+
+C++的设计模式和设计原则
+
+#### 项目设计
+
+网络版的C++ Primer里的书店程序
+
+UML
+
+![bookstoreSalesUML](../Media/bookstoreSalesUML.png)
+
+#### 核心头文件
+
+```c++
+// cpplang.hpp
+// Copyright (c) 2020 by Chrono
+
+#ifndef _CPP_LANG_HPP
+#define _CPP_LANG_HPP
+
+#include <cassert>
+
+#include <iostream>
+
+#include <string>
+#include <vector>
+#include <set>
+#include <map>
+#include <unordered_set>
+#include <unordered_map>
+#include <algorithm>
+#include <regex>
+
+#include <atomic>
+#include <future>
+#include <thread>
+
+//never 'using namespace std;' in c++ header
+
+// must be C++11 or later
+#if __cplusplus < 201103
+#   error "C++ is too old"
+#endif  // __cplusplus < 201103
+
+// [[deprecated]]
+#if __cplusplus >= 201402
+#   define  CPP_DEPRECATED [[deprecated]]
+#else
+#   define  CPP_DEPRECATED [[gnu::deprecated]]
+#endif  // __cplusplus >= 201402
+
+// static_assert
+#if __cpp_static_assert >= 201411
+#   define STATIC_ASSERT(x) static_assert(x)
+#else
+#   define STATIC_ASSERT(x) static_assert(x, #x)
+#endif
+
+// macro for convienient namespace
+#define BEGIN_NAMESPACE(x)  namespace x {
+#define END_NAMESPACE(x)    }
+#define USING_NAMESPACE(x)  using namespace x
+
+//static_assert(
+//    __GNUC__ >= 4, "GCC is too old");
+
+#endif  //_CPP_LANG_HPP
+```
+
+定义核心头文件：cpplang.hpp。它集中了C++ 标准头和语言相关的定义，被用于其他所有的源文件。
+
+include guard
+
+在核心头文件里，我们还可以利用预处理编程，使用宏定义、条件编译来屏蔽操作系统、语言版本的差异，增强程序的兼容性。比如，这里我就检查了 C++ 的版本号，然后定义了简化版的"deprecated"和"static_assert"
+
+#### 自旋锁
+
+可以考虑引入多线程，提高吞吐量，减少阻塞。在多线程里保护数据一般要用到互斥量（Mutex），但它的代价太高，所以我设计了一个自旋锁，它使用了原子变量，所以成本低，效率高。
+
+自旋锁被封装为一个 SpinLock 类，所以就要遵循一些 C++ 里常用的面向对象的设计准则，比如用 final 禁止继承、用 default/delete 显式标记构造 /析构函数、成员变量初始化、类型别名，等等
+
+```c++
+// SpinLock.hpp
+
+// Copyright (c) 2020 by Chrono
+
+#ifndef _SPIN_LOCK_HPP
+#define _SPIN_LOCK_HPP
+
+#include "cpplang.hpp"
+
+BEGIN_NAMESPACE(cpp_study)
+
+// atomic spinlock with TAS
+class SpinLock final
+{
+public:
+    using this_type   = SpinLock;
+    using atomic_type = std::atomic_flag;
+
+public:
+    SpinLock() = default;
+   ~SpinLock() = default;
+
+    SpinLock(const this_type&) = delete;
+    SpinLock& operator=(const this_type&) = delete;
+public:
+    void lock() noexcept
+    {
+        for(;;) {
+            if (!m_lock.test_and_set()) {
+                return;
+            }
+
+            std::this_thread::yield();
+        }
+    }
+
+    bool try_lock() noexcept
+    {
+        return !m_lock.test_and_set();
+    }
+
+    void unlock() noexcept
+    {
+        m_lock.clear();
+    }
+private:
+    atomic_type m_lock {false};
+};
+
+// RAII for lock
+// you can change it to a template class
+class SpinLockGuard final
+{
+public:
+    using this_type      = SpinLockGuard;
+    using spin_lock_type = SpinLock;
+public:
+    SpinLockGuard(spin_lock_type& lock) noexcept
+        : m_lock(lock)
+    {
+        m_lock.lock();
+    }
+
+   ~SpinLockGuard() noexcept
+   {
+       m_lock.unlock();
+   }
+
+public:
+    SpinLockGuard(const this_type&) = delete;
+    SpinLockGuard& operator=(const this_type&) = delete;
+private:
+    spin_lock_type& m_lock;
+};
+
+
+END_NAMESPACE(cpp_study)
+
+#endif  //_SPIN_LOCK_HPP
+```
+
+- 在编写成员函数的时候，为了尽量高效，需要 给函数都加上noexcept修饰，表示绝不会抛出异常
+- 为了保证异常安全，在任何时候都不会死锁，还需要利用 RAII 技术再编写一个 LockGuard类。它在构造时锁定，在析构时解锁，这两个函数也应该用 noexcept 来优化
+- 这样自旋锁就完成了，有了它就可以在多线程应用里保护共享的数据，避免数据竞争。
+
+#### 网络通信
+
+核心是“网络”。在现代 C++ 里，应当避免直接使用原生 Socket 来编写网络通信程序。这里我选择 ZMQ 作为底层通信库，它不仅方便易用，而且能够保证消息不丢失、完整可靠地送达目的地。
+
+程序里使用 ZmqContext 类来封装底层接口（包装外观），它是一个模板类，整数模板参数用来指定线程数，在编译阶段就固定了 ZMQ 的多线程处理能力。对于 ZMQ 必需的运行环境变量（单件），我使用了一个小技巧：以静态成员函数来代替静态成员变量。这样就绕过了 C++ 的语言限制，不必在实现文件“*.cpp”里再写一遍变量定义，全部的代码都可以集中在 hpp 头文件里
+
+```c++
+// Zmq.hpp
+
+// Copyright (c) 2020 by Chrono
+
+#ifndef _ZMQ_HPP
+#define _ZMQ_HPP
+
+#include "cpplang.hpp"
+
+// /usr/include/zmq.hpp
+#include <zmq.hpp>
+
+BEGIN_NAMESPACE(cpp_study)
+
+using zmq_context_type  = zmq::context_t;
+using zmq_socket_type   = zmq::socket_t;
+using zmq_message_type  = zmq::message_t;
+
+template<int thread_num = 1>
+class ZmqContext final
+{
+#if 0
+public:
+    using zmq_context_type  = zmq::context_t;
+    using zmq_socket_type   = zmq::socket_t;
+    using zmq_message_type  = zmq::message_t;
+#endif
+public:
+    ZmqContext() = default;
+   ~ZmqContext() = default;
+public:
+    static
+    zmq_context_type& context()
+    {
+        static zmq_context_type ctx(thread_num);
+        return ctx;
+    }
+public:
+    static
+    zmq_socket_type recv_sock(int hwm = 1000, int linger = 10)
+    {
+        zmq_socket_type sock(context(), ZMQ_PULL);
+
+        sock.setsockopt(ZMQ_RCVHWM, hwm);
+        sock.setsockopt(ZMQ_LINGER, linger);    // wait for 10ms
+
+        return sock;
+    }
+
+    static
+    zmq_socket_type send_sock(int hwm = 1000, int linger = 10)
+    {
+        zmq_socket_type sock(context(), ZMQ_PUSH);
+
+        sock.setsockopt(ZMQ_SNDHWM, hwm);
+        sock.setsockopt(ZMQ_LINGER, linger);    // wait for 10ms
+
+        return sock;
+    }
+};
+
+END_NAMESPACE(cpp_study)
+
+#endif  //_ZMQ_HPP
+```
+
+我们要实现两个静态工厂函数，创建收发数据的 Socket 对象。
+这里要注意，如果你看 zmq.hpp 的源码，就会发现，它的内部实际上是使用了异常来处理错误的。所以，这里我们不能在函数后面加上 noexcept 修饰，同时也就意味着，在使用ZMQ 的时候，必须要考虑异常处理。
+
+有了 ZmqContext 类，书店程序的网络基础也就搭建出来了，后面就可以用它来收发数据了。
+
+#### 配置文件解析
+
+大多数程序都会用到配置文件来保存运行时的各种参数，常见的格式有 INI、XML、JSON，等等。但我通常会选择把 Lua 嵌入 C++，用 Lua 脚本写配置文件
+
+这么做的好处在哪里呢？
+Lua 是一个完备的编程语言，所以写起来就非常自由灵活，比如添加任意的注释，数字可以写成“m × n”的运算形式。而 INI、XML 这些配置格式只是纯粹的数据，很难做到这样，很多时候需要在程序里做一些转换工作。
+另外，在 Lua 脚本里，我们还能基于 Lua 环境写一些函数，校验数据的有效性，或者采集系统信息，实现动态配置。
+总而言之，就是把 Lua 当作一个“可编程的配置语言”，让配置“活起来”。
+
+```lua
+-- conf.lua
+
+-- copyright (c) 2020 chrono
+
+-- lua is more flexible than json
+-- you can use comment/expression
+-- and more lua pragram
+
+config = {
+
+    -- should be same as client
+    -- you could change it to ipc
+    zmq_ipc_addr = "tcp://127.0.0.1:5555",
+
+    -- see http_study's lua code
+    http_addr = "http://localhost/cpp_study?token=cpp@2020",
+
+    time_interval = 5,  -- seconds
+
+    keyword = "super",
+
+    sold_criteria = 100,
+
+    revenue_criteria = 1000,
+
+    best_n  = 3,
+
+    max_buf_size = 4 * 1024,
+
+}
+
+-- more config
+others = {
+    -- add more
+}
+
+-- debug: luajit conf.lua
+
+--print(config.http_addr)
+```
+
+Config类使用shared_ptr来管理Lua虚拟机，因为封装在类里，所以要注意类型别名和成员变量初始化的用法。
+
+```c++
+// Config.hpp
+
+// Copyright (c) 2020 by Chrono
+
+#ifndef _CONFIG_HPP
+#define _CONFIG_HPP
+
+#include "cpplang.hpp"
+
+extern "C" {
+#include <luajit.h>
+#include <lualib.h>
+#include <lauxlib.h>
+}
+
+#include <LuaBridge/LuaBridge.h>
+
+BEGIN_NAMESPACE(cpp_study)
+
+class Config final
+{
+public:
+    using vm_type           = std::shared_ptr<lua_State>;
+    using value_type        = luabridge::LuaRef;
+
+    using string_type       = std::string;
+    using string_view_type  = const std::string&;
+    using regex_type        = std::regex;
+    using match_type        = std::smatch;
+public:
+    Config() noexcept
+    {
+        assert(m_vm);
+
+        luaL_openlibs(m_vm.get());
+    }
+
+   ~Config() = default;
+public:
+    void load(string_view_type filename) const  // parse config file
+    {
+        auto status = luaL_dofile(m_vm.get(), filename.c_str());
+
+        if (status != 0) {	// throw exception
+            throw std::runtime_error("failed to parse config");
+        }
+    }
+
+    template<typename T>
+    T get(string_view_type key) const
+    {
+        if (!std::regex_match(key, m_what, m_reg)) {
+            throw std::runtime_error("config key error");
+        }
+
+        auto w1 = m_what[1].str();
+        auto w2 = m_what[2].str();
+
+        using namespace luabridge;
+
+        auto v = getGlobal(
+                    m_vm.get(), w1.c_str());
+
+        return LuaRef_cast<T>(v[w2]);
+    }
+private:
+    vm_type     m_vm {luaL_newstate(), lua_close};
+
+    const regex_type    m_reg {R"(^(\w+)\.(\w+)$)"};
+    mutable match_type  m_what;
+};
+
+END_NAMESPACE(cpp_study)
+
+#endif  //_CONFIG_HPP
+```
+
+为了访问 Lua 配置文件里的值，我决定采用“key1.key2”这样简单的两级形式，有点像INI 的小节，这也正好对应 Lua 里的表结构。
+想要解析出字符串里的前后两个 key，可以使用正则表达式（  第 11 讲），然后再去查询Lua 表。
+因为构造正则表达式的成本很高，所以我把正则对象都定义为成员变量，而不是函数里的局部变量。
+
+正则的匹配结果（m_what）是“临时”的，不会影响常量性，所以要给它加上 mutable修饰。
+
+在 C++ 正则库的帮助下，处理字符串就太轻松了，拿到两个 key，再调用 LuaBridge 就可以获得 Lua 脚本里的配置项。为了进一步简化客户代码，我把 get() 函数改成了模板函数，显式转换成 int、string 等 C++ 标准类型，可读性、可维护性会更好。
+
+Config 类也就完成了，可以轻松解析 Lua 格式的配置文件。
+
+#### 小结
+
+1. 在项目起始阶段，应该认真做需求分析，然后应用设计模式和设计原则，得出灵活、可扩展的面向对象系统；
+2. C++ 项目里最好要有一个核心头文件（cpplang.hpp），集中定义所有标准头和语言特性，规范源文件里的 C++ 使用方式；
+3. 使用原子变量（atomic）可以实现自旋锁，比互斥量的成本要低，更高效；
+4. 使用 ZMQ 可以简化网络通信，但要注意它使用了异常来处理错误；
+5. 使用 Lua 脚本作为配置文件的好处很多，是“可编程的配置文件”；在编写代码时要理解、用好 C++ 特性，恰当地使用 final、default、const 等关键字，让代码更安全、更可读，有利于将来的维护。
+
+我们分析了需求，设计出了架构，开发了一些工具类，但还没有涉及业务逻辑代码
+
+
+
+UML画图工具：TODO uml其实并不难，也没有必要完全学通学精，本质上就是个画图。先学会最基本的类图、时序图，其他的可以在实践中慢慢学。
+
+在编写类的时候，反复用"= delete"禁止拷贝非常麻烦，在Boost里，有一个很小的工具类noncopyable，它实现了等价的功能，直接继承就行，能够节约大量代码
+
+正文里里实现的自旋锁还不能算是严格的自旋锁，因为它TAS失败后立刻调用了yield()让出了CPU，真正的自旋锁应当再用一个循环，不停地try_lock“自旋”
+
+Q：能否说说需求到UML图的过程，是怎么把需求提到UML的。还有就是给一张UML图，应该怎么看？
+
+A：1.这个就是基本的需求分析了，简单来说，就是提取出需求里的名词和动词，转化成相应的类，比
+如销售记录、配置文件、锁、XX主循环。
+2.UML图有很多种，这里用到的是类图，表示的是类之间的关系，需要理解UML的基本语言要素，比如聚合、联系等，然后可以随便选一个类作为起点，像爬虫一样，沿着关系链接去看它相关的类，逐步去理解这些类是如何配合工作的。
 
 ## 7. 结束语
 
