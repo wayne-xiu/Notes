@@ -999,6 +999,87 @@ Guidelines for Implementation inheritance
 
 ### Code Reuse - Inheritance vs Composition
 
+two main ways for code reuse: inheritance and composition
+
+we should always strike for precise, self-explanatory names
+
+
+
+Composition is better than inheritance
+
+- Less code coupling between reused code and reuser of the code
+  - Child class automatically inherits ALL parent class's public members
+  - Child class can access parent's protected members
+    - Inheritance breaks encapsulation
+- Dynamic binding
+  - Inheritance is bound at compile time
+  - Composition can be bound either at compile time (polymorphism) or at run time (dynamic binding)
+- Flexible code construct with composition
+
+"Friends and children, biggest enemy of your privacy. It's a philosophy of life." - haha
+
+
+
+### Namespace and Keyword "using"
+
+using
+
+1. using directive: to bring all namespace members into current scope
+2. using declaration
+   1. bring one specific namespace member to current scope
+   2. bring a member from base class to current class's scope (illegal in global scope)
+
+```c++
+using namespace std;
+using std::cout;
+
+using B::f;
+```
+
+Children class can "name hiding" base class function even with different function signature;
+
+anonymous namespace
+
+
+
+### Koenig Lookup - Argument Dependent Lookup (ADL)
+
+```c++
+namespace A {
+    struct X{};
+    void g(X) { cout << "calling A::g() \n";}
+}
+
+int main() {
+    A::X x1;
+    /*A::*/g(x1);			// Koenig lookup, or Argument Dependent Lookup (ADL)
+}
+```
+
+The above code will compile and run even g is defined in namespace A (because x1 is defined in A, so compiler will search in A)
+
+Koenig lookup only works in namespace, can't look into a class
+
+name hidding
+
+
+
+Name Lookup Sequence
+
+- With namespaces
+  - current scope => next enclosed scope => ... => global scope
+  - To override the sequence
+    - Qualifier or using declaration
+    - Koening Lookup
+- With classes
+  - current class scope => parent scope => ... => global scope
+  - To override the sequence
+    - Qualifier or using declaration
+
+
+
+### Koenig Lookup and Namespace Design
+
 
 
 ## Modern C++
