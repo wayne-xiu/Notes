@@ -3337,7 +3337,610 @@ A：1.这个就是基本的需求分析了，简单来说，就是提取出需�
 如销售记录、配置文件、锁、XX主循环。
 2.UML图有很多种，这里用到的是类图，表示的是类之间的关系，需要理解UML的基本语言要素，比如聚合、联系等，然后可以随便选一个类作为起点，像爬虫一样，沿着关系链接去看它相关的类，逐步去理解这些类是如何配合工作的。
 
+### 知识串讲（下）：带你开发一个书店应用
+
+主要业务逻辑部分：数据的表示和统计，数据的接受和发送主循环
+
+#### 数据定义
+
+写C++代码的“惯用法”
+
+- 适当使用空行分隔代码里的逻辑段落
+- 类名使用CamelCase，函数和变量使用snake_case，成员变量加m_前缀（I don't like m_ prefix)
+- 在编译阶段使用静态断言，保证整数、浮点数的精度
+- 使用final终结类继承体系，不允许别人产生子类
+- 使用default显示定义拷贝构造、拷贝赋值、转移构造、转移赋值等重要函数
+- 使用委托构造来编写不同形式的构造函数
+- 成员变量在声明时直接初始化
+- using定义类型别名
+- 使用const来修饰常函数
+- 使用nonexcept标记不抛出异常，优化函数
+
+```c++
+// SalesData.hpp
+// Copyright (c) 2020 by Chrono
+
+#ifndef _SALES_DATA_HPP
+#define _SALES_DATA_HPP
+
+#include "cpplang.hpp"
+
+#include <msgpack.hpp>
+
+#if MSGPACK_VERSION_MAJOR < 2
+#   error "msgpack  is too old"
+#endif
+
+BEGIN_NAMESPACE(cpp_study)
+
+// demo oop in C++
+class SalesData final
+{
+public:
+    using this_type = SalesData;
+
+public:
+    using string_type       = std::string;
+    using string_view_type  = const std::string&;
+    using uint_type         = unsigned int;
+    using currency_type     = double;
+
+    STATIC_ASSERT(sizeof(uint_type) >= 4);
+    STATIC_ASSERT(sizeof(currency_type) >= 4);
+public:
+    SalesData(string_view_type id, uint_type s, currency_type r) noexcept
+        : m_id(id), m_sold(s), m_revenue(r)
+    {}
+
+    SalesData(string_view_type id) noexcept
+        : SalesData(id, 0, 0)
+    {}
+
+public:
+#if 0
+    SalesData(SalesData&& s) noexcept
+        : m_id(std::move(s.m_id)),
+          m_sold(std::move(s.m_sold)),
+          m_revenue(std::move(s.m_revenue))
+    {}
+
+    SalesData& operator=(SalesData&& s) noexcept
+    {
+        m_id = std::move(s.m_id);
+        m_sold = std::move(s.m_sold);
+        m_revenue = std::move(s.m_revenue);
+
+        return *this;
+    }
+#endif
+
+    SalesData() = default;
+   ~SalesData() = default;
+
+    SalesData(const this_type&) = default;
+    SalesData& operator=(const this_type&) = default;
+
+    SalesData(this_type&& s) = default;
+    SalesData& operator=(this_type&& s) = default;
+
+private:
+    string_type m_id        = "";
+    uint_type   m_sold      = 0;
+    currency_type   m_revenue   = 0;
+
+public:
+    MSGPACK_DEFINE(m_id, m_sold, m_revenue);
+
+    msgpack::sbuffer pack() const
+    {
+        msgpack::sbuffer sbuf;
+        msgpack::pack(sbuf, *this);
+
+        return sbuf;
+    }
+
+    SalesData(const msgpack::sbuffer& sbuf)
+    {
+        auto obj = msgpack::unpack(
+                    sbuf.data(), sbuf.size()).get();
+        obj.convert(*this);
+    }
+
+public:
+    void inc_sold(uint_type s) noexcept
+    {
+        m_sold += s;
+    }
+
+    void inc_revenue(currency_type r) noexcept
+    {
+        m_revenue += r;
+    }
+public:
+    string_view_type id() const noexcept
+    {
+        return m_id;
+    }
+
+    uint_type sold() const noexcept
+    {
+        return m_sold;
+    }
+
+    currency_type revenue() const noexcept
+    {
+        return m_revenue;
+    }
+
+    CPP_DEPRECATED
+    currency_type average() const
+    {
+        return m_revenue / m_sold;
+    }
+};
+
+END_NAMESPACE(cpp_study)
+
+#endif  //_SALES_DATA_HPP
+```
+
+代码里显式声明了转移构造和转移赋值函数，这样，在放入容易的时候就避免了拷贝，提高效率。
+
+#### 序列化
+
+SalesData作为销售记录，需要在网络上传输，就需要序列化和反序列化。
+
+MessagePack小巧轻便，只要在类定义里添加一个宏，就可以实现序列化。为了方便使用，还可以为SalesData添加一个专门序列化的pack()成员函数。不过要注意，写这个函数给SalesData类增加了复杂度，在一定程度上违反了单一职责原则和接口隔离原则。
+
+#### 数据存储和统计
+
+Summary类可以用于数据存储和统计。
+
+从UML类图可以看到，它关联了好几个类，所以类型别名对于它来说就特别重要，不仅*可以简化代码*， 也方便后续的维护。
+
+```c++
+// Summary.hpp
+// Copyright (c) 2020 by Chrono
+
+#ifndef _SUMMARY_HPP
+#define _SUMMARY_HPP
+
+#include "cpplang.hpp"
+#include "SalesData.hpp"
+#include "SpinLock.hpp"
+
+BEGIN_NAMESPACE(cpp_study)
+
+class Summary final
+{
+public:
+    using this_type = Summary;
+public:
+    using sales_type        = SalesData;
+    using lock_type         = SpinLock;
+    using lock_guard_type   = SpinLockGuard;
+
+    using string_type       = std::string;
+    using map_type          =
+            std::map<string_type, sales_type>;
+            //std::unordered_map<string_type, sales_type>;
+    using minmax_sales_type =
+            std::pair<string_type, string_type>;
+public:
+    Summary() = default;
+   ~Summary() = default;
+
+    Summary(const this_type&) = delete;
+    Summary& operator=(const this_type&) = delete;
+private:
+    mutable lock_type   m_lock;
+    map_type            m_sales;
+public:
+    void add_sales(const sales_type& s)
+    {
+        lock_guard_type guard(m_lock);
+
+        const auto& id = s.id();
+
+        // not found
+        if (m_sales.find(id) == m_sales.end()) {
+            m_sales[id] = s;
+            return;
+        }
+
+        // found
+        // you could use iter to optimize it
+        m_sales[id].inc_sold(s.sold());
+        m_sales[id].inc_revenue(s.revenue());
+    }
+
+    minmax_sales_type minmax_sales() const
+    {
+        lock_guard_type guard(m_lock);  // 自动锁定，自动解锁
+
+        if (m_sales.empty()) {
+            return minmax_sales_type();
+        }
+
+        // algorithm
+        auto ret = std::minmax_element(  // 求最大最小值
+            std::begin(m_sales), std::end(m_sales),
+            [](const auto& a, const auto& b)
+            {
+                return a.second.sold() < b.second.sold();
+            });
+
+        // min max
+        auto min_pos = ret.first;
+        auto max_pos = ret.second;
+
+        return {min_pos->second.id(), max_pos->second.id()};
+    }
+};
+
+END_NAMESPACE(cpp_study)
+
+#endif  //_SUMMARY_HPP
+```
+
+考虑到销售记录不仅要存储，还有对数据的排序要求，所以选择了插入时自动排序的有序容器map（红黑树）
+
+由于没有定制比较函数，所以默认是按照书号来排序的，不符合按销售量排序的要求。如果要按销售量排序的话就比较麻烦，因为不能用随时变化的销量作为Key，而标准库里又没有多索引容器，你可以试着把它改成unordered_map，然后用vector暂存来排序
+
+为了能够再多线程正确访问，Summary使用自旋锁来保护核心数据，在对容器进行任何操作前都获取锁。锁不影响类的状态，所有要用mutable
+
+因为有了RAII的SpinLockGuard，所以自旋锁用起来很优雅，直接构造一个变量就行，不用担心异常安全的问题。
+
+#### 服务端主线程
+
+客户端比较简单，只要序列化，再用ZMQ发送
+
+```c++
+// client.cpp
+// Copyright (c) 2020 by Chrono
+//
+// g++ client.cpp -std=c++14 -I../common -I../common/include -lzmq -lpthread -o c.out;./c.out
+// g++ client.cpp -std=c++14 -I../common -I../common/include -lzmq -lpthread -g -O0 -o c.out
+// g++ client.cpp -std=c++14 -I../common -I../common/include -lzmq -lpthread -g -O0 -o c.out;./c.out
+
+//#include <iostream>
+
+#include "cpplang.hpp"
+#include "SalesData.hpp"
+#include "Zmq.hpp"
+
+// you should put json.hpp in ../common
+#include "json.hpp"
+
+USING_NAMESPACE(std);
+USING_NAMESPACE(cpp_study);
+
+static
+auto debug_print = [](auto& b)
+{
+    using json_t = nlohmann::json;
+
+    json_t j;
+
+    j["id"] = b.id();
+    j["sold"] = b.sold();
+    j["revenue"] = b.revenue();
+    //j["average"] = b.average();
+
+    std::cout << j.dump(2) << std::endl;
+};
+
+// sales data
+static
+auto make_sales = [=](const auto& id, auto s, auto r)
+//-> msgpack::sbuffer
+{
+    return SalesData(id, s, r).pack();
+
+#if 0
+    SalesData book(id);
+
+    book.inc_sold(s);
+    book.inc_revenue(r);
+
+    debug_print(book);
+
+    auto buf = book.pack();
+    cout << buf.size() << endl;
+
+    //SalesData book2 {buf};
+    //assert(book.id() == book2.id());
+    //debug_print(book2);
+
+    return buf;
+#endif
+};
+
+// zmq send
+static
+auto send_sales = [](const auto& addr, const auto& buf)
+{
+    using zmq_ctx = ZmqContext<1>;
+
+    auto sock = zmq_ctx::send_sock();
+
+    sock.connect(addr);
+    assert(sock.connected());
+
+    auto len = sock.send(buf.data(), buf.size());
+    assert(len == buf.size());
+
+    cout << "send len = " << len << endl;
+};
+
+int main() {
+    try
+    {
+        cout << "hello cpp_study client" << endl;
+
+        //auto buf = make_sales("001", 10, 100);
+        //send_sales("tcp://127.0.0.1:5555", buf);
+
+        send_sales("tcp://127.0.0.1:5555",
+                 make_sales("001", 10, 100));
+
+        std::this_thread::sleep_for(100ms);
+
+        send_sales("tcp://127.0.0.1:5555",
+                 make_sales("002", 20, 200));
+
+    }
+    catch(std::exception& e)
+    {
+        std::cerr << e.what() << std::endl;
+    }
+}
+```
+
+服务器端
+
+```c++
+// Copyright (c) 2020 by Chrono
+//
+// g++ srv.cpp -std=c++14 -I../common -I../common/include -I/usr/local/include/luajit-2.1 -lluajit-5.1 -ldl -lzmq -lpthread -lcpr -lcurl -o a.out;./a.out
+// g++ srv.cpp -std=c++14 -I../common -I../common/include -I/usr/local/include/luajit-2.1 -lluajit-5.1 -ldl -lzmq -lpthread -lcpr -lcurl -g -O0 -o a.out
+// g++ srv.cpp -std=c++14 -I../common -I../common/include -I/usr/local/include/luajit-2.1 -lluajit-5.1 -ldl -lzmq -lpthread -lcpr -lcurl -g -O0 -o a.out;./a.out
+
+//#include <iostream>
+
+#include "cpplang.hpp"
+#include "Summary.hpp"
+#include "Zmq.hpp"
+#include "Config.hpp"
+
+// you should put json.hpp in ../common
+#include "json.hpp"
+
+#include <cstdio>
+#include <cpr/cpr.h>
+
+USING_NAMESPACE(std);
+USING_NAMESPACE(cpp_study);
+
+static
+auto debug_print = [](auto& b)
+{
+    using json_t = nlohmann::json;
+
+    json_t j;
+
+    j["id"] = b.id();
+    j["sold"] = b.sold();
+    j["revenue"] = b.revenue();
+    //j["average"] = b.average();
+
+    std::cout << j.dump(2) << std::endl;
+};
+
+int main()
+try
+{
+    cout << "hello cpp_study server" << endl;
+
+    Config conf;			   // 封装读取Lua配置文件
+    conf.load("./conf.lua");	// 解析配置文件
+
+    Summary sum;
+    std::atomic_int count {0};
+
+    // todo: try-catch
+    auto recv_cycle = [&]()
+    {
+        using zmq_ctx = ZmqContext<1>;	// ZMQ的类型别名
+
+        // zmq recv
+
+        auto sock = zmq_ctx::recv_sock();	// 自动类型推导获得接收Socket
+
+        sock.bind(conf.get<string>("config.zmq_ipc_addr"));	// 绑定ZMQ接收端口；读取Lua配置文件
+        assert(sock.connected());
+
+        for(;;) {						// 服务器无限循环
+
+            // xxx : shared_ptr/unique_ptr
+            auto msg_ptr = std::make_shared<zmq_message_type>();	// 自动类型推导获得智能指针
+
+            sock.recv(msg_ptr.get());		// ZMQ阻塞接收数据
+            //cout << msg_ptr->size() << endl;
+
+            ++count;
+            cout << count << endl;
+            //printf("count = %d\n", static_cast<int>(count));
+
+            // async process msg
+
+            // todo: try-catch
+            //auto f = std::async(std::launch::async,
+            std::thread(					// 再启动一个线程反序列化存储，没有用async
+            [&sum, msg_ptr]()				// 显式捕获，注意！！
+            //[&sum, &count](decltype(msg_ptr) ptr)
+            {
+                //cout << ptr.unique() << endl;
+
+                SalesData book;
+                // xxx: json/msgpack/protobuf
+                auto obj = msgpack::unpack(		// 反序列化
+                            msg_ptr->data<char>(), msg_ptr->size()).get();
+                obj.convert(book);
+                //cout << book.id() << endl;
+                //debug_print(book);
+
+                sum.add_sales(book);
+            }).detach();   // async
+        }   // for(;;)
+    };  // recv_cycle lambda
+
+    auto log_cycle = [&]()
+    {
+        auto http_addr = conf.get<string>("config.http_addr");
+        auto time_interval = conf.get<int>("config.time_interval");
+
+        for(;;) {
+            std::this_thread::sleep_for(time_interval * 1s);
+            //cout << "log_cycle" << endl;
+
+            //auto info = sum.minmax_sales();
+            //cout << "log_cycle get info" << endl;
+
+            using json_t = nlohmann::json;
+
+            json_t j;
+
+            j["count"] = static_cast<int>(count);
+            j["minmax"] = sum.minmax_sales();//{info.first, info.second};
+
+            auto res = cpr::Post(
+                       cpr::Url{http_addr},
+                       cpr::Body{j.dump()},
+                       cpr::Timeout{200ms}
+            );
+
+            if (res.status_code != 200) {
+                cerr << "http post failed" << endl;
+                //printf("http post failed\n");
+            }
+        }   // for(;;)
+    };  // log_cycle lambda
+
+    // launch log_cycle
+    auto fu1 = std::async(std::launch::async, log_cycle);
+
+    // launch recv_cycle then wait
+    auto fu2 = std::async(std::launch::async, recv_cycle);
+
+    fu2.wait();
+}
+catch(std::exception& e)
+{
+    std::cerr << e.what() << std::endl;
+}
+```
+
+在main()函数开头，首先要加载配置文件，然后是数据存储类Summary，再定义一个用来技术的原子变量count，这些就是程序运行的全部环境数据
+
+接下来的服务器主循环，使用了lambda表达式，引用获取上面的那些变量
+
+主要的业务逻辑其实很简单，就是*ZMQ接收数据，然后MessagePack反序列化，存储数据*
+
+不过为了避免阻塞、充分利用多线程，我在收到数据后，就把它包装进智能指针，再扔到另外一个线程里去处理了。这样主循环就只接收数据，不会因为反序列化、插入、排序等大计算量的工作而阻塞。代码里加上了详细的注释，你一定要仔细看、认真理解
+
+要特别注意 lambda 表达式与智能指针的配合方式，要用值捕获而不能是引用捕获，否则，在线程运行的时候，智能指针可能会因为离开作用域而被销毁，引用失效，导致无法预知的错误。
+
+有了这个lambda，就可以用async来启动服务循环
+
+```c++
+auto ful = std::async(std::launch::async, rec_cycle);
+ful.wait();
+```
+
+
+
+#### 数据外发线程
+
+rev_cycle是接收前端发来的数据，还需要一个线程把统计数据外发出去。同样，实现了一个lambda表达式：log_cycle
+
+它采用了HTTP协议，把数据打包成JSON，发送到后台的某个RESTful服务器。搭建符合要求的Web服务不是件小事，所以这里为了方便测试，联动了一下《透视HTTP协议》，用那里的OpenResty写了个的HTTP接口：接收POST数据，然后打印到日志里，可以在Linux上搭建这个后台服务
+
+log_cycle其实就是一个简单的HTTP客户端，所以代码的处理逻辑比较好理解，要注意的知识点有三点：
+
+- 读取 Lua 配置中的 HTTP 服务器地址和周期运行时间；
+- JSON 序列化数据；
+- HTTP 客户端发送请求。
+
+然后，还是要在主线程里用async()函数来启动这个lambda表达式，让它在后台定时上报数据。
+
+
+
+#### 小结
+
+把书店示例程序从头到尾给讲完了。可以看到，代码里面应用了很多我们之前讲的 C++ 特性，这些特性互相重叠、嵌套，紧凑地集成在了这个不是很大的程序里，代码整齐，逻辑清楚，很容易就实现了多线程、高性能的服务端程序，开发效率和运行效率都非常高。
+
+1. 编写类的时候要用好 final、default、using、const 等关键字，从代码细节着手提高效率和安全性；
+2. 对于中小型项目，序列化格式可以选择小巧高效的 MessagePack；
+3. 在存储数据时，应当选择恰当的容器，有序容器在插入元素时会自动排序，但注意排序的依据只能是 Key；
+4. 在使用 lambda 表达式的时候，要特别注意捕获变量的生命周期，如果是在线程里异步执行，应当尽量用智能指针的值捕获，虽然有点麻烦，但比较安全。
+
+作业
+
+- 写一个动态库，用Lua/Python调用C++发送请求，以脚本的方式简化客户端测试
+- 把前端与服务器的数据交换格式改成JSON或者ProtoBuf,然后用工厂类封装序列化和反序列化功能，隔离接口
+
+
+
+一个pybind11的问题：代码Client.cpp使用了第三方zmq组件，如果要转化成python可以调用的模块，除了适配Client.cpp自身接口需要用pybind11声明外，zmq涉及到的接口也要做么？ 看转换的格式比较固定，是不是有自动化的工具来做这件事呢？ 
+
+ 可以把zmq的调用封装起来，不对外暴露zmq接口，Python调用只传递几个参数
+
+
+
+只要没有显式声明noexcept的地方，其实都应该加上try-catch。
+
+通过PYBIND11的方式把Client.cpp里的接口转化成python能够加载模块，在利用python测试该模块？用C++写底层接口，然后用Python、lua去调用
+
+unique_ptr只能管理对象的生命周期，自动销毁堆上的对象。而SpinLockGuard的目的是在生命周期结束时自动解锁。虽然用的都是RAII技术，但两者的行为、作用不同。
+
+每次接受请求，都开启一个线程，是否合理？每个请求开新线程的代价是比较高的，但课程里的代码只是为了演示目的，实际项目里最好用线程池。
+
+测试答对11/20
+
+1. 现代C++内置了对并发、线程的支持，下面哪些说法是正确的
+   1. call_once能够避免函数被线程重复调用
+   2. thread_local表示线程独占所有权，每个线程都会有变量的独立副本，读写不会互相影响
+   3. async()会启动一个线程，但不一定会立即启动
+2. 关于网络通信，哪些描述是错误的
+   1.  使用libcurl的时候，如果想要自己处理HTTP响应函数，就必须编写回调函数
+   2. cpr内部封装了libcurl的easy系列接口，可以直接从函数的返回值获取HTTP响应数据
+   3. [x] ZMQ只能使用TCP协议在进程间传输数据
+   4. 使用libcurl和cpr开发不出HTTP服务端应用
+3. static_assert不会生成运行阶段可执行的代码
+4. 面向对象编程时，应该尽量使用typedef和using定义类型别名，解除与外部类型的强联系
+5. 自动类型推导是现代C++的重要特性，下面的哪些说法是正确的
+   1. 自动类型推导不是必需的，没有它我们也能写出正确的C++代码
+   2. auto只能推导出“值类型”，不能推导出“引用类型”
+   3. auto只能用于初始化，而decltype没有这个限制，可以用在任何地方
+   4. 应当尽量使用"const auto&"的形式，避免拷贝的代价
+6. 关于const
+   1. 有const标记的变量其实也是变量，不是绝对不能修改的
+7. 关于智能指针
+   1. 智能指针是代理模式和RAII技术的具体实践
+   2. 智能指针其实不是指针，而是对象
+8. lambda是C++函数式编程的核心要素
+   1. lambda表达式时变量，不是函数（对）
+   2. [x] lambda表达式不允许嵌套定义，不能在一个lambda表达式里再定义另外一个lmabda表达式
+   3. 可以在[]里混用引用捕获和值捕获（对）
+
 ## 7. 结束语
+
+C++最大的优点是与C兼容，最大的缺点也是与C兼容
+
+它是C之外唯一成熟可靠的系统级编程语言（Rust）
+
+学习C++的一个基本原则：不要当“语言律师”（language lawyer），重实践不要在细节上下功夫
 
 ## 8. 轻松话题
 
@@ -3492,3 +4095,4 @@ Countdown Event - 倒计时，人生里程碑；人生“小目标” - Nice TOD
 
 睡前不看手机
 
+END
