@@ -8,7 +8,7 @@
 
 ## A Quick Overview
 
-![ConcurrrencyInC++](Media/ConcurrrencyInC++.png)
+![ConcurrrencyInC++](../Media/ConcurrrencyInC++.png)
 
 With C++11, C++ got a multithreading library and a memory model. atomic variables, threads, locks and condition variables
 
@@ -95,7 +95,7 @@ the weaker the rules are that the programmer has to follow, the more  potential 
 
 Roughly speaking, there are three contract levels in C++11
 
-![contractLevels](Media/contractLevels.png)
+![contractLevels](../Media/contractLevels.png)
 
 the *sequential consistency*  is called the strong memory model, and the *relaxed semantic* is called the weak memory model.
 
