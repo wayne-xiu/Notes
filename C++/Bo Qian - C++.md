@@ -1078,7 +1078,37 @@ Name Lookup Sequence
 
 
 
-### Koenig Lookup and Namespace Design
+### Koenig Lookup and Namespace Design/Interface Principle
+
+```c++
+namespace A {
+    struct X {};
+    void g(X) { cout << "calling A::g() \n";}
+    void g() {cout << "calling A::g() \n";}
+}
+int main() {
+    A::X x1;
+    g(x1);  // Koenig lookup, argument dependent lookup; runs ok
+    g();	// Error; not seen in namespace
+}
+```
+
+Engineering Principle
+
+- Functions that operate on class C and in a same namespace with C are part of C's interface
+- Functions that are part of C's interface should be in the same namespace as C
+
+```c++
+A::C c;
+c.f();
+h(c);	// also interface
+```
+
+
+
+### Demystifying Operator new/delete
+
+#### How to Define new Handler
 
 
 
