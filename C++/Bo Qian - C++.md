@@ -1108,11 +1108,101 @@ h(c);	// also interface
 
 ### Demystifying Operator new/delete
 
-#### How to Define new Handler
+### How to Define new Handler
+
+What: New handler is a function invoked when operator new failed to allocate memory. It's purpose is to help memory allocation to succeed. set_new_handler() installs a new handler and returns current new handler
+
+The new-handler must do one of following things:
+
+- make more memory available
+- install a different new handler
+- uninstall the new-handler (passing a null pointer)
+- throw an exception bad_alloc or its descendent
+- terminate the program
+
+```c++
+void NoMoreMem() {
+    std::cerr << "Unable to allocate memory" << std::endl;
+    abort();
+}
+int main() {
+    std::set_new_handler(NoMoreMem);
+    int* pGiant = new int[1000000000L];
+    delete[] pGiant;
+}
+```
+
+
+
+Class specific new-handler
 
 
 
 ## Modern C++
+
+### Learn C++11 in 20 Minutes - Part I
+
+#### 1. Initializer List
+
+All the relevant STL containers have been updated to accept initializer_list for constructing.
+
+We can also define own initializer_list constructor for customized class
+
+#### 2. Uniform Initialization
+
+C++11 extends the scope of curly brace initialization
+
+Uniform Initialization Search Order
+
+1. Initializer_list constructor
+2. Regular constructor that takes the appropriate parameters
+3. Aggregate initializer
+
+```c++
+class Dog {
+  public:
+    int age_;									// 3rd choice
+    Dog(int a) {								// 2nd choice
+        age_ = a;
+    }
+    Dog(const initializer_list<int>& vec) {
+        age_ = *(vec.begin());					  // 1st choice
+    }
+};
+```
+
+#### 3. auto
+
+IDE becomes more important
+
+#### 4. foreach (range-based for loop)
+
+works on any class that has begin() and end() functions defined
+
+#### 5. nullptr
+
+#### 6. enum class
+
+more strong typed and safe
+
+#### 7. static_assert
+
+```c++
+// run-time assert
+assert(myPonter != NULL);
+// compile-time assert
+static_assert(sizeof(int) == 4);
+```
+
+#### 8. Delegating Constructors
+
+init() function is not needed in constructors 
+
+
+
+### Learn C++11 in 20 Minutes - Part II
+
+
 
 ## C++ Standard Library	
 
