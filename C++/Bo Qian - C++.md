@@ -828,15 +828,11 @@ int& r = 5;  // Error
 const int& r = 5;  // Ok, exception
 ```
 
-
-
 Misconception 1: function or operator always yields rvalues
 
 Misconception 2: lvalues are modifiable (e.g. const)
 
 Misconception 3: rvalues are not modifiable (it is not true for user defined type)
-
-
 
 Summary:
 
@@ -1201,6 +1197,290 @@ init() function is not needed in constructors
 
 
 ### Learn C++11 in 20 Minutes - Part II
+
+#### 9. override (for virtual function)
+
+To avoid inadvertently create new function in derived classes
+
+#### 10. final (for virtual function and for class)
+
+- no class can be further derived
+- no class method can override
+
+#### 11. Compiler Generated Default Constructor
+
+```c++
+class Dog {
+  public:
+    Dog(int age);
+    Dog() = default; 	// force compiler to geenrate the default constructor
+}
+```
+
+#### 12. delete
+
+disallow some functions, e.g. assignment operator
+
+#### 13. constexpr
+
+```c++
+constexprt int A() {return 3;}  // computation at compile time
+int arr[A()+3];
+
+// write faster program with constexpr
+constexpr int cubed(int x) { return x*x*x; }
+int y = cubed(200);		// computed at compile time
+```
+
+#### 14. New string literals
+
+```c++
+char*		a = u8"string";	// UTF-8 string
+char16_t*	b = u"string";	// UTF-16 string
+char32_t*	c = U"string";	// UTF-32 string
+char*		d = R"string \\";	// raw string; \\ not escape anymore
+```
+
+#### 15. Lambda function
+
+```c++
+auto f = [](int x, int y) {
+    return x+y;
+}
+```
+
+the C++ way of functional programming
+
+```c++
+template <typename func>
+void filter(func f, vector<int> arr) {
+    for (auto i : arr) {
+        if (f(i))
+            cout << i << " ";
+    }
+}
+
+vector<int> v = {1, 2, 3, 4, 5, 5};
+filter([](int x) {return (x>3);}, v);  // output: 4, 5, 6
+int y = 4;
+filter([&](int x) {return (x>y);}, v); // output: 5, 6
+```
+
+
+
+### Rvalue Reference  - Move Semantics
+
+C++11 Rvalue Reference:
+
+1. Moving semantics
+2. Perfect forwarding
+
+you can overload a function with rvalue or lvalue reference
+
+costly copy constructor
+
+std::move
+
+```c++
+foo_by_ref(resuable);		// call no constructor - most efficient
+foo(resuable);				// call copy constructor - most expensive
+foo(std::move(reusable));	// call move constructor
+```
+
+
+
+Note:
+
+1. The most useful place for rvalue reference is overloading copy constructor and copy assignment operator, to achieve move semantics
+
+```c++
+X& X::operator=(X const& rhs);
+X& X::operator=(X&& rhs);
+```
+
+2. Move semantics is implemented for all STL containers, which means:
+   1. move to C++, you code will be faster without changing a thing
+   2. pass-by-value can be used for STL containers
+
+Move Constructor/Move Assignment operator:
+
+- purpose: conveniently avoid costly and unnecessary deep copying
+- they are particularly powerful where passing by reference and passing by value are both used
+- they give you finer control of which part of your object to be moved
+
+### Rvalue Reference - Perfect Forwarding
+
+```c++
+void foo(boVector arg);
+// boVector has both move constructor and copy constructor
+
+template <typename T>
+void relay(T arg) {
+    foo(arg);
+}
+int main() {
+    boVector reusable = createBoVector();
+    relay(reusable);
+    ...
+    relay(createBoVector);
+}
+```
+
+
+
+Requirements:
+
+1. No costly and unnecessary copy construction of boVector is made
+2. rvalue is forwarded as rvalue, and lvalue is forwarded as lvalue
+
+Solution:
+
+```c++
+template <typename T>
+void relay(T&& arg) {
+    foo(std::forward<T>(arg));
+}
+
+// Implementation of std::forward
+template <typename T>
+T&& forward(typename remove_reference<T>::type& arg) {
+    return static_cast<T&&>(arg);
+}
+// foo and relay will get the exact same type of arg, that's how perfect forwarding is achieved
+```
+
+Note: this will work because type T is a template type
+
+
+
+Reference Collapsing Rules (C++11)
+
+- T& &     ==> T&
+- T& &&   ==> T&
+- T&& &   ==> T&
+- T&& && ==> T&&
+
+back to the relay example
+
+rvalue reference is specified with type&&. type&& is always rvalue reference?
+
+```c++
+// T&& variable is initialized with rvalue => rvalue reference
+relay(9); => T = int&& => T&& = int&& && = int&&  // T = int
+// T&& variable is initialized with lvaue => lvalue reference
+relay(x); => T = int& ==> T&& = int& && = int&    
+```
+
+a universal reference by Scott Meyers
+
+T&& is a universal reference: rvalue, lvalue, const, non-const, etc...
+
+conditions (otherwise it is rvalue reference):
+
+1. T is a template type
+2. Type deduction (reference collapsing) happens to T
+   1. T is a function template type, not class template type
+
+
+
+compare std::move vs. std::forward()
+
+```c++
+std::move<T>(arg);			// turn arg into an rvalue type
+std::forward<T>(arg);		// turn arg to type of T&&
+```
+
+
+
+Summary:
+
+Usage of rvalue reference:
+
+1. Move semantics
+2. Perfect forwarding
+
+### User Defined Literals
+
+Literals are constants. C++ has 4 kinds of leterals
+
+- integer
+- floating point
+- character
+- string
+
+```c++
+constexpr long double operator"" _cm(long double x)
+{
+    return x * 10;
+}
+constexpr long double operator"" _m(long double x) { return x * 1e3; }
+constexpr long double operator"" _mm(long double x) { return x; }
+constexpr long double operator"" _inch(long double x) { return x * 25.4; }
+
+long double height = 3.4_cm + 1.5_inch;
+```
+
+constexpr makes the computation done during compiling time;
+
+C++ went a long way to make user defined types (classes) to behave same as build-in types. User defined literals pushes this effort even further
+
+limitations of arguments types (long double works, but not double): TODO
+
+### Compiler Generated Functions
+
+C++03
+
+1. default constructor (generated only if no constructor is declared by user)
+2. copy constructor (generated only if no 5, 6 declared by user)
+3. copy assignment operator (generated only if no 5, 6 declared by user)
+4. destructor
+
+C++11:
+
+5. move constructor (generated only if 2, 3, 4, 6 not declared by user)
+6. move assignment operator (generated only if 2, 3, 4, 5 not declared by user)
+
+```c++
+class Duck {  // 4
+	Duck(Duck&&) {}  // move constructor
+}
+```
+
+the above Duck class will only have destructor to be auto-generated by the compiler (it won't be copied but only copied)
+
+### C++11 Library: Shared Pointer - 1
+
+memory leaks and dangling pointer
+
+```c++
+std::shared_ptr<Dog> p(new Dog("Gunner"));
+cout << p.use_count() << endl;
+```
+
+be careful with this
+
+```c++
+// An object should be assigned to a smart pointer as soon as it is created. Raw pointer should not be used again.
+Dog* d = new Dog("Tank");
+shared_ptr<Dog> p(d);
+shared_ptr<Dog> p2(d);
+```
+
+undefined behavior, d will be destroyed twice
+
+```c++
+shared_ptr<Dog> p = std::make_shared<Dog>("Tank");
+```
+
+make_shared is the preferred way of creating shared_ptr, faster and safer
+
+static_pointer_cast
+
+dynamic_pointer_cast
+
+const_pointer_cast
+
+### C++11 Library: Shared Pointer - 2
 
 
 
