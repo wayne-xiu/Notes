@@ -1482,6 +1482,94 @@ const_pointer_cast
 
 ### C++11 Library: Shared Pointer - 2
 
+stack
+
+```c++
+class Dog
+{
+    std::string _name = "nameless";
+
+public:
+    Dog(std::string name) : _name{name}
+    {
+        cout << "Dog is created: " << _name << endl;
+    }
+    Dog() { cout << "Nameless dog created." << endl; }
+    ~Dog() { cout << "Dog is destroyed: " << _name << endl; }
+    void bark() { std::cout << "Dog" << _name << " rocks!" << std::endl; }
+};
+
+int main()
+{
+    shared_ptr<Dog> p1 = std::make_shared<Dog>("Gunner");
+    shared_ptr<Dog> p2 = std::make_shared<Dog>("Tank");
+    p1 = p2; // Gunner is deleted - 1
+    cout << p1.use_count() << endl;
+    p1 = nullptr;  // Gunner is deleted - 2
+    p1.reset(); // Gunner is deleted - 3
+
+    return 0;
+}
+```
+
+
+
+custom deleter
+
+```c++
+// Custom deleter with lambda
+int main()
+{
+    shared_ptr<Dog> p1 = std::make_shared<Dog>("Gunner");
+    // shared_ptr<Dog> p2 = std::make_shared<Dog>("Tank");
+    shared_ptr<Dog> p2 = shared_ptr<Dog>(new Dog("Tank"),
+                                         [](Dog *p) {cout << "Custom deleting. "; delete p; });
+    p2 = p1;
+
+    return 0;
+}
+```
+
+```c++
+int main()
+{
+    // shared_ptr<Dog> p3(new Dog[3]); // dog[1] and dog[2] have memory leaks
+    // fix
+    shared_ptr<Dog> p4(new Dog[3], [](Dog *p) { delete[] p; });
+
+    return 0;
+}
+```
+
+.get() method returns the raw pointer
+
+```c++
+int main()
+{
+    shared_ptr<Dog> p1 = std::make_shared<Dog>("Gunner");
+    // shared_ptr<Dog> p2 = std::make_shared<Dog>("Tank");
+    shared_ptr<Dog> p2 = shared_ptr<Dog>(new Dog("Tank"),
+                                         [](Dog *p) {cout << "Custom deleting. "; delete p; });
+    p2 = p1;
+
+    Dog *d = p1.get();
+    // delete d; // double delete
+    shared_ptr<Dog> p5(d); // double delete
+
+    return 0;
+}
+```
+
+The use of raw pointer should be avoided if possible. Make sure you know what you are doing if you have to use raw pointer
+
+### C++11 Library: Weak Pointers
+
+cyclic reference
+
+weak_ptr has no ownership of the pointed object
+
+### C++ 11 Library: Unique Pointers
+
 
 
 ## C++ Standard Library	
