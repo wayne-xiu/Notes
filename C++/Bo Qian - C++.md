@@ -1568,7 +1568,189 @@ cyclic reference
 
 weak_ptr has no ownership of the pointed object
 
-### C++ 11 Library: Unique Pointers
+### C++11 Library: Unique Pointers
+
+Unique pointers: exclusive ownership, light weight smart pointer (1st time hear this, less expensive to use than shared_ptr)
+
+the release() function of the unique_ptr gives up the ownership
+
+```c++
+unique_ptr<Dog> pD(new Dog("Gunner"));
+// Dog* p = pD.release(); // release the ownership, pD == nullptr
+pD.reset(new Dog("Tank")); // "Gunner" is destroyed, pD owns "Tank"
+pD.reset();		// pD == nullptr
+```
+
+```c++
+unique_ptr<Dog> pD2(new Dog("Tank"));
+pD2 = std::move(pD);		// transfer ownership
+```
+
+Effects of move:
+
+1. Tank is destroyed
+2. pD becomes empty
+3. pD2 owns Gunner
+
+std::move for argument and return
+
+unique_ptr don't need custom deleter for array
+
+unique_ptr as member variable
+
+### C++11 Resource Managing Class
+
+```c++
+class Person
+{
+public:
+    Person(string name) : pName_(new string(name)) {}
+    ~Person() { delete pName_; }
+    void printName() { cout << *pName_ << endl; }
+
+private:
+    string *pName_;
+};
+
+int main()
+{
+    vector<Person> persons;
+    persons.push_back(Person("George"));
+    persons.front().printName();
+
+    cout << "Bye" << endl;
+}
+// output
+this code has Segmentation fault error
+    
+```
+
+C++03 solution:
+
+1. Define copy constructor and copy assignment operator
+2. Delete copy constructor and copy assignment operator
+
+```c++
+class Person
+{
+public:
+    Person(string name) : pName_(new string(name)) {}
+    // Person(const Person &) = delete;
+    ~Person() { delete pName_; }
+    void printName() { cout << *pName_ << endl; }
+
+private:
+    string *pName_;
+};
+
+int main()
+{
+    vector<Person> persons;
+    // persons.push_back(Person("George"));
+    persons.emplace_back("George");  // construct object in place (in the space allocated to the vector)
+    persons.front().printName();
+
+    cout << "Bye" << endl;
+}
+// output
+this works since there is copy needed
+```
+
+remember vector would required the contained objects to be copyable or moveable
+
+```c++
+class Person
+{
+public:
+    Person(string name) : pName_(new string(name)) {}
+    // Person(const Person &) = delete;
+    // ~Person() { delete pName_; }
+    void printName() { cout << *pName_ << endl; }
+
+private:
+    shared_ptr<string> pName_;
+};
+
+int main()
+{
+    vector<Person> persons;
+    persons.push_back(Person("George"));
+    persons.front().printName();
+
+    cout << "Bye" << endl;
+}
+// output
+this works with shared_ptr
+```
+
+or with uniqe_ptr we need do this
+
+```c++
+class Person
+{
+public:
+    Person(string name) : pName_(new string(name)) {}
+    // Person(const Person &) = delete;
+    // ~Person() { delete pName_; }
+    void printName() { cout << *pName_ << endl; }
+
+private:
+    unique_ptr<string> pName_;
+};
+
+int main()
+{
+    vector<Person> persons;
+    Person p("George");
+    persons.push_back(std::move(p));  // need move
+    persons.front().printName();
+
+    cout << "Bye" << endl;
+}
+```
+
+Note: in order for the above code to work, the Person class needs to have the move constructor defined (user or default); So, if the destructor is defined, we need have the move constructor defined explicitly
+
+```c++
+class Person
+{
+public:
+    Person(string name) : pName_(new string(name)) {}
+    // Person(const Person &) = delete;
+    Person(Person &&) = default;
+    ~Person() {}
+    void printName() { cout << *pName_ << endl; }
+
+private:
+    unique_ptr<string> pName_;
+};
+
+int main()
+{
+    vector<Person> persons;
+    Person p("George");
+    persons.push_back(std::move(p));
+    persons.front().printName();
+
+    cout << "Bye" << endl;
+}
+```
+
+C++11 solution
+
+1. keyword "delete"
+2. emplace_back()
+3. shared_ptr
+4. unique_ptr
+5. move()
+
+
+
+### C++11 Regular Expression - TODO
+
+
+
+
 
 
 
