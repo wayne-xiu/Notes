@@ -1748,9 +1748,218 @@ C++11 solution
 
 ### C++11 Regular Expression - TODO
 
+### C++11 Library: Clocks and Timers - I
+
+<chrono>: a precision-neutral library for time and date
+
+Clock
+
+- std::chrono::system_clock: current time according to the system - is not steady
+- std::chrono::steady_clock: goes at a uniform rate
+- std::chrono::high_resolution_clock: provides smallest possible tick period
+
+ratio
+
+```c++
+std::ratio<2, 10> r;
+cout << r.num << "/" << r.den << endl;
+
+cout << chrono::system_clock::period::num << "/" << 				chrono::system_clock::period::den << endl;
+```
 
 
 
+std::chrono::duration<>: represents time duration
+
+duration<int, ratio<1,1>>  // number of seconds stored in a int
+
+duration<double, ratio<60, 1>>  // number of minutes stored in a double
+
+<chrono> provides nanoseconds, microseconds, milliseconds, seconds, minutes, hours
+
+system_clock::duration -- duration<T, system_clock::period>
+
+```c++
+chrono::microseconds mi(2700);
+cout << mi.count() << endl;
+
+chrono::nanoseconds na = mi;
+cout << na.count() << endl;
+
+chrono::milliseconds mill = 						    		chrono::duration_cast<chrono::milliseconds>(mi); // truncated
+cout << mill.count() << endl;                        // 2 ms
+mi = mill + mi;
+```
+
+
+
+### C++11 Library: Clocks and Timers - II
+
+chrono::time_point<>: represents a point of time
+
+​	00:00 January 1, 1970(coordinated universal time - UTC)  -- epoch of a clock
+
+time_point<system_clock, milliseconds>: according to system_clock, the elapsed time since epoch in milliseconds
+
+- system_clock::time_point -- time_point<system_clock, system_clock::duration>
+- steady_clock::time_point -- time_point<steady_clock, steady_clock::duration>
+
+```c++
+chrono::system_clock::time_point tp = chrono::system_clock::now();
+cout << tp.time_since_epoch().count() << endl;
+
+tp = tp + chrono::seconds(2);
+cout << tp.time_since_epoch().count() << endl;
+
+chrono::steady_clock::time_point start = 							chrono::steady_clock::now();
+this_thread::sleep_for(chrono::seconds(1));
+chrono::steady_clock::time_point end = 								chrono::steady_clock::now();
+chrono::steady_clock::duration d = end - start;
+if (d == chrono::steady_clock::duration::zero())
+    cout << "no time elapsed";
+cout << chrono::duration_cast<chrono::microseconds>(d).count() << endl;
+
+// output
+1611662210798996000
+1611662212798996000
+// no time elapsed
+1001726		// about 1 second
+```
+
+better use steady_clock rather than system_clock
+
+### C++11 Library: Random Number Engine
+
+Random number Engine + distribution
+
+Engine:
+
+- stateful generator that generates random values within predefined min and max
+- not truly random - pseudorandom
+
+```c++
+std::default_random_engine eng;
+cout << "Min: " << eng.min() << endl;
+cout << "Max: " << eng.max() << endl;
+
+cout << eng() << endl;
+cout << eng() << endl;
+
+std::stringstream state;
+state << eng; // save the current state
+
+cout << eng() << endl;
+cout << eng() << endl;
+
+state >> eng; // restore the state
+
+cout << eng() << endl;
+cout << eng() << endl;
+// output
+Min: 1
+Max: 2147483646
+16807
+282475249
+1622650073
+984943658
+1622650073  // repeat
+984943658
+```
+
+We need a seed for the number to be "random"
+
+```c++
+void printRandom(std::default_random_engine e)
+{
+    for (auto i = 0; i < 10; ++i)
+        cout << e() << " ";
+    cout << endl;
+}
+
+int main()
+{
+    std::default_random_engine e1;
+    std::default_random_engine e2;
+
+    printRandom(e1);
+    printRandom(e2);
+
+    unsigned seed = std::chrono::steady_clock::now().time_since_epoch().count();
+    std::default_random_engine e3(seed);
+    printRandom(e3);  // generate different numbers with seed
+    
+    e1.seed(); // reset eigine e to initial state
+    e1.seed(109);
+    e2.seed(109);
+    if (e1 == e2)
+        cout << "e and e2 have the same state" << endl;
+    
+    vector<int> d{1, 2, 3, 4, 5, 6, 7, 8, 9};
+    std::shuffle(d.begin(), d.end(), std::default_random_engine());
+    for (auto &i : d)
+        cout << i << " ";
+}
+```
+
+C++ standard library provides 16 random engines, including default_random_engine, mt19937_64
+
+### C++11 Library: Random Number Distribution
+
+```c++
+unsigned seed = std::chrono::steady_clock::now().time_since_epoch().count();
+std::default_random_engine e(seed);
+
+std::uniform_int_distribution<int> distr(0, 5); // range: [0, 5], note not half open
+cout << distr(e) << endl;
+
+std::uniform_real_distribution<double> distrR(0, 5); // range: [0, 5), note not half open
+cout << distrR(e) << endl;
+
+std::poisson_distribution<int> distrP(1.0); // mean
+cout << distrP(e) << endl;
+
+cout << "Normal distribution:\n";
+std::normal_distribution<double> distrN(10.0, 3.0); // mean and std
+vector<int> v(20);
+for (auto i = 0; i < 800; i++)
+{
+    int num = distrN(e); // convert double to int
+    if (num >= 0 && num < 20)
+        v[num]++; // records number appear frequency
+}
+
+for (auto j = 0; j < 20; j++)
+{
+    cout << j << ": " << std::string(v[j], '*') << endl;
+}
+cout << endl;
+// output
+Normal distribution:
+0: **
+1: ****
+2: ******
+3: *********
+4: ******************
+5: **********************************
+6: ********************************************************
+7: *************************************************************************
+8: *************************************************************************************************************
+9: ******************************************************************************************************** 
+10: ******************************************************************************************************  
+11: ********************************************************************************************
+12: ************************************************************************
+13: **********************************************************
+14: ****************************
+15: **************
+16: ***********
+17: *****
+18: ***
+19:
+```
+
+C++ provides many distributions
+
+### C++11 Library: Tuple
 
 
 
