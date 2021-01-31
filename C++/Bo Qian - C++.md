@@ -1961,7 +1961,76 @@ C++ provides many distributions
 
 ### C++11 Library: Tuple
 
+std::pair<int, string>
 
+tuple as extended pair
+
+```c++
+tuple<int, string, char> t = make_tuple(23, "hello", 'f');
+
+cout << get<0>(t) << endl;
+string &s = get<1>(t);	// capture by reference
+s = "Patience is virtue";
+cout << get<1>(t) << endl;
+
+auto t2 = make_tuple(12, "Curiosity kills cat", 'd');
+const type_info &typet2 = typeid(t2);
+cout << typet2.name() << endl;
+
+// Tuple can store references
+// none of STL containers actually can contain references
+string st = "In for a penny";
+tuple<string &> t3(st);
+get<0>(t3) = "In for a pound";
+
+int x;
+string y;
+char z;
+tie(x, y, z) = t2;
+tie(x, std::ignore, z) = t2; // ignore "Curiosity kills cat"
+
+auto t4 = std::tuple_cat(t2, t3); // t3 is a tuple<int, string, char, string>
+
+// type traits
+cout << std::tuple_size<decltype(t4)>::value << endl; // 4
+std::tuple_element<1, decltype(t4)>::type d;          // d is string
+cout << typeid(d).name() << endl;
+```
+
+### C++11 Library: When to use Tuple?
+
+Tuple vs struct
+
+```c++
+    struct Person
+    {
+        string name;
+        int age;
+    } p;
+
+    tuple<string, int> t;
+    cout << p.name << " " << p.age << endl;
+    cout << get<0>(t) << " " << get<1>(t) << endl;
+```
+
+struct makes the code more readable
+
+
+
+Tuple can be useful as a one-time only structure to transfer a group of data
+
+```c++
+// multi index map
+map<tuple<int, char, float>, string> m;
+m[make_tuple(2, 'a', 2.3)] = "Faith will move mountains";
+unordered_map<tuple<int, char, float>, string> hash_table; // won't compile
+
+// "swap"
+int a, b, c;
+tie(b, c, a) = make_tuple(a, b, c);
+```
+
+compact but not readable, not abusing
 
 ## C++ Standard Library	
 
@@ -1972,6 +2041,10 @@ C++ provides many distributions
 ## Boost Library
 
 ## C++ Unit Test
+
+### Setup Googletest in Visual Studio
+
+
 
 ## Practical Programming Algorithms
 
