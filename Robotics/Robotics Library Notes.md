@@ -522,12 +522,64 @@ kinematics using DH frames. deprecated and transition to rl::mdl
 
 ## Code Review
 
-### math
+### rl::math
 
-- [ ] Real.h
-- [ ] 
+- [x] Real.h using Real = double
+- [x] Transform.h
 
-### kin
+### rl::util
 
-### mdl
+### rl::xml
+
+### rl::kin
+
+### rl::mdl
+
+## Demo Project
+
+### rlInversePositionDemo
+
+Inverse kinematics demo.
+
+- input: robot model file (.xml, .urdf)
+- input: robot joint angles
+
+showed following functionalities
+
+- construct robot model (rl::mdl::Kinematic) by reading model file using factory method. the model file can be either .xml(comau-smart5-nj4-220-27.xml) or .urdf(ur5.urdf).
+  - the comau robot is titled head with paral. J2, J3 coupling, similar to ABB robot behavior
+  - both models didn't yield same FK (tcp) results with RDK - TODO
+- robot forward kinematics: setPosition(q), forwardPosition(), getOperationalPosition(0).translation and getOperationalPosition(0).rotation.eulerAngles(2,1,0).reverse()
+- robot inverse kinematics
+  - Two solvers: rl::mdl::NloptInverseKinematics; rl::mdl::JacobianInverseKinematics
+  - methods: ik.setDuration(1sec), ik.addGoal(), ik.solve()
+  - don't understand: q = kinematic->generatePositionUniform(); kinematic->setPosition(q); is this setting initial condition for the inverse kinematics? - TODO
+- cross check with the solved joint angles; use q in FK again
+
+### rlEulerAnglesDemo
+
+shows equivalent forms of orientation representation: AngleAxis, rotation matrix, quaternion, eulerAngles(2-1-0, 0-1-2, 2-1-0.reverse)
+
+- rotation = rotation*rl::math::AngleAxis(angle, axis)
+- Quaternion quaternion(rotation)
+- AngleAxis angleAxis(rotation)
+- Vector3 orientation = rotation.eulerAngles(2, 1, 0); rotation.eulerAngles(0, 1, 2); rotation.eulerAngles(2, 1, 2)
+
+### rlQuaternionDemo
+
+Quaternions demonstration including derivative - TODO
+
+### ~~rlInverseKinematicsKinTest~~
+
+testing of rl::kin::Kinematics - this is abandoned
+
+### rlInverseKinematicsMdlTest
+
+Demonstration of solving robot inverse kinematics with several iterative methods
+
+- rl::mdl::JacobianInverseKinematics
+  - rl::mdl::JacobianInverseKinematics::Method::svd
+  - rl::mdl::JacobianInverseKinematics::Method::dls
+  - rl::mdl::JacobianInverseKinematics::Method::transpose
+- rl::mdl::NloptInverseKinematics
 
