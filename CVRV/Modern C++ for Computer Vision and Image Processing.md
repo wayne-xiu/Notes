@@ -20,6 +20,8 @@ GNU/Linux
 
 - Extremely popular: Android, ChromeOS, servers, supercomputers
 
+**Everything is a file in Linux**
+
 Linux directory tree
 
 ![linuxDirectoryTree](../Media/linuxDirectoryTree.png)
@@ -33,8 +35,8 @@ Understanding files and folders
 - Folders end with / e.g. /path/folder/
 - Everything else are files, e.g. /path/file
 - Absolute paths start with / while all other paths are relative
-  - /home/folder/  - absolute
-  - folder/filer  - relative
+  - /home/folder/  - `absolute`
+  - folder/filer  - `relative`
 - Paths are case sensitive: filename is different from FileName
 - extension is part of a name
 
@@ -59,6 +61,8 @@ Linux terminal
 
 - --help
 
+Commonly used commands
+
 - mkdir
 
 - rm -[r]f: remove [recursive] [force]
@@ -67,7 +71,7 @@ Linux terminal
 
 - mv <source> <dest> - move
 
-- Using placeholders: can be used with most terminal commands: ls, rm, mv
+- Using placeholders: can be used with most terminal commands(powerful and flexible): ls, rm, mv
 
   - \* : Any set of characters
 
@@ -79,9 +83,13 @@ Linux terminal
 
 Standard input/output channels
 
-- stdin
-- stdout
-- stderr
+- stdin: 0
+- stdout: 1
+- stderr: 2
+
+```shell
+$ ./linux_example 1>std_output.txt 2>stderr.txt
+```
 
 Working with files
 
@@ -92,7 +100,17 @@ Working with files
 
 ![linuxGrepDemo](../Media/linuxGrepDemo.png)
 
+- find `<in-folder>` -name `<filename>`
+- locate `<filename>`: search for file `<filename>` in the entire system
+
 Chaining commands
+
+```shell
+# execute both
+cat file.txt; cat file2.txt
+# execute 2 only when 1 succeeds
+cat file.txt && cat file2.txt
+```
 
 Linux command line pipes and redirection
 
@@ -451,7 +469,7 @@ hard to build by hand. Use modules and libraries
 - Compile modules
 
 ```c++
-c++ -std=c++11 -c tools.cpp -o tools.o
+c++ -std=c++17 -c tools.cpp -o tools.o
 ```
 
 - Organize modules into libraries
@@ -463,7 +481,7 @@ ar rcs libtools.a tools.o <other modules>
 - Link libraries when building code
 
 ```c++
-c++ -std=c++11 main.cpp -L . -ltools -o main
+c++ -std=c++17 main.cpp -L . -ltools -o main
 ```
 
 - Run the code
@@ -476,8 +494,8 @@ c++ -std=c++11 main.cpp -L . -ltools -o main
 
 - Library: multiple object files that are logically connected
 - Types of libraries:
-  - **Static**: faster, take a lot of space, become part of the end binary, named: lib*.a
-  - **Dynamic**: slower, can be copied, referenced by a program, named lib*.so
+  - **Static**: faster, take a lot of space, become part of the end binary, named: `lib*.a` 
+  - **Dynamic**: slower, can be copied, referenced by a program, named `lib*.so` 
 - Create a static library with
 
 ```c++
@@ -504,17 +522,30 @@ Use CMake to simplify the build
 - Very powerful, still build receipt is readable
 - The library creation and linking can be rewritten as follows:
 
+Replace the build commands:
+
+```bash
+1. c++ -std=c++17 -c tools.cpp
+2. ar rcs libtools.a tools.o <other_modules>
+3. c++ -std=c++17 -c main.cpp
+4. c++ -std=c+=17 main.o -L . -ltools -o main
+```
+
+with `CMake` scripts
+
 ```cmake
-add_library(tools tools.cpp)
-add_executable(main main.cpp)
-target_link_libraries(main tools)
+add_library(tools tools.cpp)		# steps 1 and 2
+add_executable(main main.cpp)		# steps 3
+target_link_libraries(main tools)	# steps 4
 ```
 
 #### Typical Project Structure
 
 ![CMakeProjectStructure](../Media/CMakeProjectStructure.png)
 
-we usually separate include/ from src/ folder
+we usually separate `include/` from `src/` folder
+
+![CMakeProjectStructure2](../Media/CMakeProjectStructure2.png)
 
 #### Build Process
 
@@ -530,16 +561,19 @@ we usually separate include/ from src/ folder
 Working CMakeLists.txt
 
 ```cmake
+cmake_minimum_required(VERSION 3.10) # Mandatory
 project(first_project)              # Mandatory
-cmake_minimum_required(VERSION 3.1) # Mandatory
-set(CMAKE_CXX_STANDARD 11)
+
+set(CMAKE_CXX_STANDARD 17)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)  # Optional
 
 # tell cmake to output binaries here:
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/LIB)
 
 # tell cmake where to look for *.h files
-include_directories(include)
+include_directories(include/)
 
 # create library "libtools"
 add_library(tools src/tools.cpp)
@@ -590,7 +624,7 @@ Use CMake in our own builds
 Set compilation options in CMake
 
 ```cmake
-set (CMAKE_CXX_STANDARD 14)
+set (CMAKE_CXX_STANDARD 17)
 # set build type if not set
 if (NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Release)
@@ -608,6 +642,8 @@ Remove build folder for performing a clean build
 cd project/build
 make clean  # remove generated binaries
 rm -r *  # make sure in the build folder
+# or
+rm -rf build  # remove whole build directory
 ```
 
 Use pre-compiled library
@@ -627,6 +663,15 @@ Whenever we use `add_subdirectory`, there must be a `CMakeLists.txt` in it; this
 nobody should ever see the build folder in the (github) repo
 
 static vs shared (dynamic library): .a; .so
+
+`find_package`
+
+- `find_package` calls multiple `find_path` and `find_library` functions
+- to use `find_package(<pkg>)` CMake must have a file `Find<pkg>.cmake` in `CMAKE_MODULE_PATH` folders
+- `Find<pkg>.cmake` defines which libraries and headers belong to package `<pkg>` 
+- Pre-defined for most popular libraries, e.g. `OpenCV`, `libpng` etc
+
+
 
 ## Google Test, Namespaces, Classes
 
@@ -700,13 +745,13 @@ using std::cout;
 using std::endl;
 ```
 
-If you find yourself relying on some constants in a file and these constants should not be seen in any other file, put them into a nameless namespace on the top of this file
+`GOOGLE-STYLE`If you find yourself relying on some constants in a file and these constants should not be seen in any other file, put them into a nameless namespace on the top of this file
 
 ```c++
 // instead of using hard-coded values
 namespace {
     const int kLocalImportantInt = 13;
-    cosnt float kLocalFloat = 13.0f;
+    const float kLocalFloat = 13.0f;
 }
 ```
 
@@ -2112,4 +2157,82 @@ kdtree.knnSearch(query, nearest_vector_idx, nearest_vector_dist, k);
 - Be careful of the differences of OpenCV3 and OpenCV2
 
 
+
+---
+
+# Modern C++ Course - 2021 version
+
+ROS
+
+## 0. Introduction
+
+Code style
+
+- use `clang_format` to format code
+- use `cpplint` to check the style
+
+
+
+## 1. Build Systems
+
+<img src="../Media/SwDevEcoSystem.png" alt="SwDevEcoSystem" style="zoom:50%;" />
+
+Process:
+
+<img src="../Media/CppCompilationProcess.png" alt="CppCompilationProcess" style="zoom:50%;" />
+
+```bash
+c++ -E main.cpp
+c++ -S main.i
+c++ -c main.s
+c++ 
+```
+
+## 2. C++ Basic Syntax
+
+```c++
+std::map<char, int> my_dict{{'a', 27}, {'b', 3}};
+for (const auto& [key, value] : my_dict) {
+    std::cout << key << ", " << value << std::endl;
+}
+```
+
+```python
+my_dict = {'a': 27, 'b': 3}
+for key, value in my_dict.items():
+    print(key, ", ", value)
+```
+
+C-style strings are evil
+
+```c++
+int main(int argc, const char* argv[])
+```
+
+Automatic return type deduction C++14
+
+```c++
+auto GetDictionary() {
+	return std::map<char, int>{{'a', 27}, {'b', 3}};
+}
+```
+
+structured binding C++17
+
+```c++
+auto Foo() {
+    return std::make_tuple("Super", 5);
+}
+
+// usage
+auto [name, value] = Foo();
+```
+
+`WARNING:` never return reference to local variables
+
+Compiler got your back: `Return value optimization`, e.g. big object
+
+`inline` is a hint for the compiler for possible compile time function optimization
+
+## C++ Utilities
 
